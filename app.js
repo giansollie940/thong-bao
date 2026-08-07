@@ -368,7 +368,10 @@
           <p>${escapeHtml(week.summary || "Theo dõi các thông báo quan trọng của tuần.")}</p>
           <span class="week-date">📅 ${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
           ${week.school_year ? `<span class="week-school-year">🎓 ${escapeHtml(week.school_year)}</span>` : ""}
-          ${isAdmin() ? `<div class="week-admin-actions"><button class="button button-secondary button-small" data-action="edit-week" data-id="${week.id}">✏️ Sửa tuần</button></div>` : ""}
+          ${isAdmin() ? `<div class="week-admin-actions">
+            <button class="button button-secondary button-small" data-action="edit-week" data-id="${week.id}">✏️ Sửa tuần</button>
+            <button class="button button-danger button-small" data-action="delete-week" data-id="${week.id}">🗑️ Xóa tuần</button>
+          </div>` : ""}
         </div>
       </div>`;
 
@@ -396,6 +399,10 @@
           <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
           ${week.school_year ? `<small>${escapeHtml(week.school_year)}</small>` : ""}
           <span class="year-week-state">${label}</span>
+          ${isAdmin() ? `<div class="year-week-actions">
+            <button class="mini-action" data-action="edit-week" data-id="${week.id}" aria-label="Sửa Tuần ${escapeHtml(week.week_number)}">✏️</button>
+            <button class="mini-action mini-danger" data-action="delete-week" data-id="${week.id}" aria-label="Xóa Tuần ${escapeHtml(week.week_number)}">🗑️</button>
+          </div>` : ""}
         </article>`;
     }).join("");
   }
@@ -430,7 +437,10 @@
           </div>
           <div class="archive-card-footer">
             <button class="text-button" data-action="open-archive" data-id="${week.id}">Xem lại →</button>
-            ${isAdmin() ? `<button class="text-button" data-action="edit-week" data-id="${week.id}">Sửa tuần</button>` : ""}
+            ${isAdmin() ? `<span class="archive-admin-actions">
+              <button class="text-button" data-action="edit-week" data-id="${week.id}">Sửa tuần</button>
+              <button class="text-button danger-text" data-action="delete-week" data-id="${week.id}">Xóa tuần</button>
+            </span>` : ""}
           </div>
         </article>`;
     }).join("");
@@ -873,6 +883,35 @@
     showToast(`Đã tạo ${preview.length} tuần cho năm học ${schoolYear}.`);
   }
 
+  async function deleteWeek(id) {
+    if (!client || !isAdmin()) return;
+
+    const week = state.weeks.find(w => w.id === id);
+    if (!week) return;
+
+    const itemCount = state.announcements.filter(item => item.week_id === id).length;
+    const detail = itemCount
+      ? `\n\nTuần này đang có ${itemCount} thông báo. Khi xóa tuần, các thông báo thuộc tuần cũng sẽ bị xóa.`
+      : "";
+
+    const ok = window.confirm(
+      `Bạn chắc chắn muốn xóa Tuần ${week.week_number} (${formatDate(week.start_date)} — ${formatDate(week.end_date)})?${detail}\n\nThao tác này không thể hoàn tác.`
+    );
+
+    if (!ok) return;
+
+    const { error } = await client.from("weeks").delete().eq("id", id);
+
+    if (error) {
+      console.error(error);
+      showToast("Không xóa được tuần. Hãy kiểm tra quyền RLS.");
+      return;
+    }
+
+    await loadData();
+    showToast(`Đã xóa Tuần ${week.week_number}.`);
+  }
+
   async function copyAnnouncement(id) {
     const item = state.announcements.find(x => x.id === id);
     if (!item) return;
@@ -962,6 +1001,7 @@
 
     if (action === "copy-announcement") copyAnnouncement(id);
     if (action === "delete-announcement") deleteAnnouncement(id);
+    if (action === "delete-week") deleteWeek(id);
     if (action === "open-archive") openArchive(id);
 
     if (action === "edit-announcement") {
