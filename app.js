@@ -16,101 +16,101 @@
     user: null,
     weeks: [],
     announcements: [],
-    currentWeek: null
+    currentWeek: null,
+    currentWeekState: "none",
+    schoolYearPreview: []
   };
 
+  const $ = selector => document.querySelector(selector);
+
   const el = {
-    currentWeekCard: document.querySelector("#current-week-card"),
-    currentAnnouncements: document.querySelector("#current-announcements"),
-    archiveGrid: document.querySelector("#archive-grid"),
-    archiveCount: document.querySelector("#archive-count"),
-    adminToolbar: document.querySelector("#admin-toolbar"),
-    loginButton: document.querySelector("#login-button"),
-    logoutButton: document.querySelector("#logout-button"),
-    connectionBanner: document.querySelector("#connection-banner"),
-    searchForm: document.querySelector("#search-form"),
-    searchInput: document.querySelector("#search-input"),
-    searchResultsSection: document.querySelector("#search-results-section"),
-    searchResults: document.querySelector("#search-results"),
-    clearSearchButton: document.querySelector("#clear-search-button"),
-    themeToggle: document.querySelector("#theme-toggle"),
-    toast: document.querySelector("#toast"),
+    currentWeekCard: $("#current-week-card"),
+    currentAnnouncements: $("#current-announcements"),
+    archiveGrid: $("#archive-grid"),
+    archiveCount: $("#archive-count"),
+    yearStrip: $("#year-strip"),
+    yearCount: $("#year-count"),
+    weekStateBadge: $("#week-state-badge"),
+    adminToolbar: $("#admin-toolbar"),
+    loginButton: $("#login-button"),
+    logoutButton: $("#logout-button"),
+    connectionBanner: $("#connection-banner"),
+    searchForm: $("#search-form"),
+    searchInput: $("#search-input"),
+    searchResultsSection: $("#search-results-section"),
+    searchResults: $("#search-results"),
+    clearSearchButton: $("#clear-search-button"),
+    themeToggle: $("#theme-toggle"),
+    toast: $("#toast"),
 
-    loginDialog: document.querySelector("#login-dialog"),
-    loginForm: document.querySelector("#login-form"),
-    loginMessage: document.querySelector("#login-message"),
+    loginDialog: $("#login-dialog"),
+    loginForm: $("#login-form"),
+    loginMessage: $("#login-message"),
 
-    announcementDialog: document.querySelector("#announcement-dialog"),
-    announcementForm: document.querySelector("#announcement-form"),
-    announcementDialogTitle: document.querySelector("#announcement-dialog-title"),
-    announcementMessage: document.querySelector("#announcement-message"),
+    announcementDialog: $("#announcement-dialog"),
+    announcementForm: $("#announcement-form"),
+    announcementDialogTitle: $("#announcement-dialog-title"),
+    announcementMessage: $("#announcement-message"),
 
-    weekDialog: document.querySelector("#week-dialog"),
-    weekForm: document.querySelector("#week-form"),
-    weekDialogTitle: document.querySelector("#week-dialog-title"),
-    weekMessage: document.querySelector("#week-message"),
+    weekDialog: $("#week-dialog"),
+    weekForm: $("#week-form"),
+    weekDialogTitle: $("#week-dialog-title"),
+    weekMessage: $("#week-message"),
 
-    archiveDialog: document.querySelector("#archive-dialog"),
-    archiveDialogTitle: document.querySelector("#archive-dialog-title"),
-    archiveDialogContent: document.querySelector("#archive-dialog-content")
+    bulkDialog: $("#bulk-dialog"),
+    bulkForm: $("#bulk-form"),
+    bulkMessage: $("#bulk-message"),
+    bulkPreviewCount: $("#bulk-preview-count"),
+
+    schoolYearDialog: $("#school-year-dialog"),
+    schoolYearForm: $("#school-year-form"),
+    schoolYearMessage: $("#school-year-message"),
+    schoolYearPreview: $("#school-year-preview"),
+    schoolYearPreviewSummary: $("#school-year-preview-summary"),
+
+    archiveDialog: $("#archive-dialog"),
+    archiveDialogTitle: $("#archive-dialog-title"),
+    archiveDialogContent: $("#archive-dialog-content")
   };
 
   const demoData = {
     weeks: [
       {
-        id: "demo-week-3",
-        week_number: "03",
-        title: "Tuần hiện tại",
-        start_date: "2026-08-10",
-        end_date: "2026-08-16",
-        summary: "Các lịch quan trọng và công việc cần lưu ý trong tuần.",
+        id: "demo-week-1",
+        week_number: "01",
+        title: "Tuần đầu năm học",
+        school_year: "2026-2027",
+        sequence_number: 1,
+        start_date: "2026-08-03",
+        end_date: "2026-08-08",
+        summary: "Các nội dung quan trọng trong tuần đầu.",
         status: "current",
-        created_at: "2026-08-07T12:00:00Z"
+        created_at: "2026-08-01T12:00:00Z"
       },
       {
         id: "demo-week-2",
         week_number: "02",
-        title: "Tuần trước",
-        start_date: "2026-08-03",
-        end_date: "2026-08-09",
-        summary: "Đã hoàn thành lịch họp, kiểm tra tài liệu và hoạt động đầu tháng.",
+        title: "Tuần 02",
+        school_year: "2026-2027",
+        sequence_number: 2,
+        start_date: "2026-08-10",
+        end_date: "2026-08-15",
+        summary: null,
         status: "archived",
-        created_at: "2026-08-01T12:00:00Z"
+        created_at: "2026-08-01T12:01:00Z"
       }
     ],
     announcements: [
       {
         id: "demo-a1",
-        week_id: "demo-week-3",
-        title: "Lịch tập trung đầu tuần",
-        content: "Có mặt đúng giờ và chuẩn bị đầy đủ tài liệu cần thiết.",
-        category: "Lịch chung",
-        event_date: "2026-08-10",
+        week_id: "demo-week-1",
+        title: "Hoàn thành Bản cam kết học đường",
+        content: "- **Nội dung:** Học sinh nhận Bản cam kết học đường từ GVCN.\n- **Yêu cầu:** Học sinh cùng Phụ huynh đọc kỹ và ký tên.\n- **Hạn nộp:** chậm nhất ngày 19/08/2026.",
+        category: "Nội quy",
+        event_date: "2026-08-08",
         priority: "important",
         is_pinned: true,
         created_at: "2026-08-07T12:20:00Z"
-      },
-      {
-        id: "demo-a2",
-        week_id: "demo-week-3",
-        title: "Chuẩn bị tài liệu",
-        content: "Kiểm tra và hoàn thiện các tài liệu trước chiều thứ Tư.",
-        category: "Công việc",
-        event_date: "2026-08-12",
-        priority: "normal",
-        is_pinned: false,
-        created_at: "2026-08-07T12:10:00Z"
-      },
-      {
-        id: "demo-a3",
-        week_id: "demo-week-2",
-        title: "Tổng hợp công việc đầu tháng",
-        content: "Các đầu việc đầu tháng đã được tổng hợp và lưu lại.",
-        category: "Tổng hợp",
-        event_date: "2026-08-05",
-        priority: "normal",
-        is_pinned: false,
-        created_at: "2026-08-05T09:10:00Z"
       }
     ]
   };
@@ -132,21 +132,67 @@
       .trim();
   }
 
-  function formatDate(dateString) {
-    if (!dateString) return "Chưa đặt ngày";
-    const date = new Date(`${dateString}T00:00:00`);
+  function todayIso() {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date());
+  }
+
+  function dateObj(iso) {
+    return new Date(`${iso}T00:00:00`);
+  }
+
+  function addDays(iso, days) {
+    const d = dateObj(iso);
+    d.setDate(d.getDate() + days);
+    return new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(d);
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "Chưa đặt ngày";
     return new Intl.DateTimeFormat("vi-VN", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric"
-    }).format(date);
+    }).format(dateObj(iso));
   }
 
-  function formatDateRange(start, end) {
-    return `${formatDate(start)} — ${formatDate(end)}`;
+  function formatShortDate(iso) {
+    if (!iso) return "";
+    return new Intl.DateTimeFormat("vi-VN", {
+      day: "2-digit",
+      month: "2-digit"
+    }).format(dateObj(iso));
   }
 
-  function getAnnouncementsForWeek(weekId) {
+  function weekState(week, today = todayIso()) {
+    if (!week) return "none";
+    if (today >= week.start_date && today <= week.end_date) return "current";
+    return today < week.start_date ? "upcoming" : "past";
+  }
+
+  function chooseFeaturedWeek() {
+    const weeks = [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    const today = todayIso();
+
+    const current = weeks.find(w => weekState(w, today) === "current");
+    if (current) return [current, "current"];
+
+    const upcoming = weeks.find(w => w.start_date > today);
+    if (upcoming) return [upcoming, "upcoming"];
+
+    const past = [...weeks].reverse().find(w => w.end_date < today);
+    return past ? [past, "past"] : [null, "none"];
+  }
+
+  function getItems(weekId) {
     return state.announcements
       .filter(item => item.week_id === weekId)
       .sort((a, b) => {
@@ -156,28 +202,92 @@
       });
   }
 
+  function tone(seed = "") {
+    let total = 0;
+    for (const ch of String(seed)) total += ch.charCodeAt(0);
+    return (total % 5) + 1;
+  }
+
+  function inlineMarkdown(text = "") {
+    return escapeHtml(text)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/`(.+?)`/g, "<code>$1</code>");
+  }
+
+  function richContent(raw = "") {
+    const lines = String(raw).replace(/\r\n/g, "\n").split("\n");
+    const out = [];
+    let list = [];
+
+    const flush = () => {
+      if (!list.length) return;
+      out.push(`<ul>${list.map(x => `<li>${inlineMarkdown(x)}</li>`).join("")}</ul>`);
+      list = [];
+    };
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) {
+        flush();
+      } else if (/^-\s+/.test(line)) {
+        list.push(line.replace(/^-\s+/, ""));
+      } else {
+        flush();
+        out.push(`<p>${inlineMarkdown(line)}</p>`);
+      }
+    }
+
+    flush();
+    return out.join("");
+  }
+
+  function parseQuickInput(raw = "") {
+    const source = String(raw).replace(/\r\n/g, "\n").trim();
+    const matches = [...source.matchAll(/^#{3,4}\s*(.+)$/gm)];
+    if (!matches.length) return [];
+
+    return matches.map((match, i) => {
+      const next = matches[i + 1];
+      const title = match[1].replace(/^\d+\.\s*/, "").trim();
+      const start = match.index + match[0].length;
+      const end = next ? next.index : source.length;
+      const content = source.slice(start, end)
+        .replace(/^\s*---+\s*$/gm, "")
+        .trim();
+      return { title, content };
+    }).filter(x => x.title && x.content);
+  }
+
+  function extractDate(text, fallback) {
+    const match = String(text).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (!match) return fallback;
+    const [, d, m, y] = match;
+    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+
+  function setMessage(node, message = "") {
+    if (node) node.textContent = message;
+  }
+
   function showToast(message) {
     el.toast.textContent = message;
     el.toast.classList.add("show");
-    window.clearTimeout(showToast.timer);
-    showToast.timer = window.setTimeout(() => el.toast.classList.remove("show"), 2200);
-  }
-
-  function setMessage(element, message = "") {
-    element.textContent = message;
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => el.toast.classList.remove("show"), 2300);
   }
 
   function isAdmin() {
     return Boolean(state.user);
   }
 
-  function renderAdminState() {
+  function renderAdmin() {
     el.adminToolbar.classList.toggle("hidden", !isAdmin());
     el.loginButton.classList.toggle("hidden", isAdmin());
     el.logoutButton.classList.toggle("hidden", !isAdmin());
   }
 
-  function renderConnectionState() {
+  function renderConnection() {
     if (isConfigured) {
       el.connectionBanner.classList.add("hidden");
       return;
@@ -185,189 +295,184 @@
 
     el.connectionBanner.className = "status-banner warning";
     el.connectionBanner.innerHTML =
-      "<strong>Chế độ xem thử:</strong> chưa điền thông tin Supabase trong <code>config.js</code>. " +
-      "Dữ liệu bên dưới chỉ là mẫu để xem giao diện.";
+      "<strong>Chế độ xem thử:</strong> chưa có cấu hình Supabase trong <code>config.js</code>.";
   }
 
-  function renderCurrentWeek() {
-    const week = state.currentWeek;
-
-    if (!week) {
-      el.currentWeekCard.innerHTML =
-        '<div class="loading-card">Chưa có tuần hiện tại. Quản trị viên có thể tạo tuần mới.</div>';
-      el.currentAnnouncements.innerHTML =
-        '<div class="empty-state">Chưa có thông báo nào để hiển thị.</div>';
-      return;
-    }
-
-    const adminActions = isAdmin()
-      ? `<div class="week-admin-actions">
-           <button class="button button-secondary button-small" data-action="edit-week" data-id="${escapeHtml(week.id)}">Sửa thông tin tuần</button>
-         </div>`
-      : "";
-
-    el.currentWeekCard.innerHTML = `
-      <div class="week-hero-content">
-        <div class="week-number">
-          <div>
-            <small>Tuần</small>
-            <strong>${escapeHtml(week.week_number)}</strong>
-          </div>
-        </div>
-        <div class="week-details">
-          <h3>${escapeHtml(week.title || `Tuần ${week.week_number}`)}</h3>
-          <p>${escapeHtml(week.summary || "Theo dõi các thông báo mới nhất của tuần này.")}</p>
-          <span class="week-date" aria-label="Khoảng thời gian">
-            📅 ${escapeHtml(formatDateRange(week.start_date, week.end_date))}
-          </span>
-          ${adminActions}
-        </div>
-      </div>
-    `;
-
-    const announcements = getAnnouncementsForWeek(week.id);
-    el.currentAnnouncements.innerHTML = announcements.length
-      ? announcements.map(renderAnnouncementCard).join("")
-      : '<div class="empty-state">Tuần này chưa có thông báo. Nội dung mới sẽ xuất hiện tại đây.</div>';
-  }
-
-  function renderAnnouncementCard(item, showWeek = false) {
+  function announcementCard(item, showWeek = false) {
     const week = state.weeks.find(w => w.id === item.week_id);
-    const priority = item.priority === "important";
-    const weekChip = showWeek && week
-      ? `<span class="meta-chip">Tuần ${escapeHtml(week.week_number)}</span>`
-      : "";
-
     const adminButtons = isAdmin()
-      ? `
-        <button class="button button-secondary button-small" data-action="edit-announcement" data-id="${escapeHtml(item.id)}">Sửa</button>
-        <button class="button button-danger button-small" data-action="delete-announcement" data-id="${escapeHtml(item.id)}">Xóa</button>
-      `
+      ? `<button class="button button-secondary button-small" data-action="edit-announcement" data-id="${escapeHtml(item.id)}">Sửa</button>
+         <button class="button button-danger button-small" data-action="delete-announcement" data-id="${escapeHtml(item.id)}">Xóa</button>`
       : "";
 
     return `
-      <article class="announcement-card ${priority ? "important" : ""}">
+      <article class="announcement-card tone-${tone(item.title + item.id)} ${item.priority === "important" ? "important" : ""}">
         <div class="announcement-inner">
-          <div class="announcement-top">
-            <div>
-              <div class="announcement-title-row">
-                ${item.is_pinned ? '<span class="pin" title="Đã ghim" aria-label="Đã ghim">📌</span>' : ""}
-                <h3>${escapeHtml(item.title)}</h3>
-                ${priority ? '<span class="priority-chip">Quan trọng</span>' : ""}
-              </div>
-            </div>
+          <div class="announcement-title-row">
+            ${item.is_pinned ? '<span class="pin" aria-label="Đã ghim">📌</span>' : ""}
+            <h3>${escapeHtml(item.title)}</h3>
+            ${item.priority === "important" ? '<span class="priority-chip">Quan trọng</span>' : ""}
           </div>
 
-          <p class="announcement-content">${escapeHtml(item.content)}</p>
+          <div class="announcement-content">${richContent(item.content)}</div>
 
           <div class="announcement-meta">
             <span class="meta-chip">📅 ${escapeHtml(formatDate(item.event_date))}</span>
             ${item.category ? `<span class="meta-chip">${escapeHtml(item.category)}</span>` : ""}
-            ${weekChip}
+            ${showWeek && week ? `<span class="meta-chip">Tuần ${escapeHtml(week.week_number)}</span>` : ""}
           </div>
 
           <div class="card-actions">
-            <button class="button button-secondary button-small" data-action="copy-announcement" data-id="${escapeHtml(item.id)}">Sao chép</button>
+            <button class="button button-secondary button-small" data-action="copy-announcement" data-id="${escapeHtml(item.id)}">📋 Sao chép</button>
             ${adminButtons}
           </div>
         </div>
-      </article>
-    `;
+      </article>`;
   }
 
-  function renderArchives() {
-    const archivedWeeks = state.weeks
-      .filter(week => week.status !== "current")
-      .sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+  function renderCurrent() {
+    const week = state.currentWeek;
 
-    el.archiveCount.textContent = `${archivedWeeks.length} tuần đã lưu`;
+    const badgeLabels = {
+      current: "Đang hoạt động",
+      upcoming: "Sắp bắt đầu",
+      past: "Tuần gần nhất",
+      none: "Chưa có lịch"
+    };
 
-    if (!archivedWeeks.length) {
-      el.archiveGrid.innerHTML =
-        '<div class="empty-state">Chưa có tuần cũ. Khi tạo tuần mới, các tuần trước sẽ xuất hiện ở đây.</div>';
+    if (el.weekStateBadge) {
+      el.weekStateBadge.innerHTML =
+        `<span aria-hidden="true"></span> ${badgeLabels[state.currentWeekState] || badgeLabels.none}`;
+    }
+
+    if (!week) {
+      el.currentWeekCard.innerHTML = '<div class="loading-card">Chưa có lịch tuần.</div>';
+      el.currentAnnouncements.innerHTML = '<div class="empty-state">Chưa có thông báo.</div>';
       return;
     }
 
-    el.archiveGrid.innerHTML = archivedWeeks.map(week => {
-      const items = getAnnouncementsForWeek(week.id);
-      const preview = items.slice(0, 3);
+    const labels = {
+      current: "Đang diễn ra",
+      upcoming: "Sắp bắt đầu",
+      past: "Tuần gần nhất"
+    };
 
+    el.currentWeekCard.innerHTML = `
+      <div class="week-hero-content">
+        <div class="week-number">
+          <div><small>Tuần</small><strong>${escapeHtml(week.week_number)}</strong></div>
+        </div>
+        <div class="week-details">
+          <p class="eyebrow" style="color:rgba(255,255,255,.8)">${labels[state.currentWeekState] || ""}</p>
+          <h3>${escapeHtml(week.title || `Tuần ${week.week_number}`)}</h3>
+          <p>${escapeHtml(week.summary || "Theo dõi các thông báo quan trọng của tuần.")}</p>
+          <span class="week-date">📅 ${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
+          ${week.school_year ? `<span class="week-school-year">🎓 ${escapeHtml(week.school_year)}</span>` : ""}
+          ${isAdmin() ? `<div class="week-admin-actions"><button class="button button-secondary button-small" data-action="edit-week" data-id="${week.id}">✏️ Sửa tuần</button></div>` : ""}
+        </div>
+      </div>`;
+
+    const items = getItems(week.id);
+    el.currentAnnouncements.innerHTML = items.length
+      ? items.map(announcementCard).join("")
+      : '<div class="empty-state">Tuần này chưa có thông báo.</div>';
+  }
+
+  function renderYearStrip() {
+    const weeks = [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    el.yearCount.textContent = `${weeks.length} tuần`;
+
+    if (!weeks.length) {
+      el.yearStrip.innerHTML = '<div class="empty-state">Chưa có lịch năm học.</div>';
+      return;
+    }
+
+    el.yearStrip.innerHTML = weeks.map(week => {
+      const s = weekState(week);
+      const label = s === "current" ? "● Hiện tại" : s === "upcoming" ? "Sắp tới" : "✓ Đã qua";
+      return `
+        <article class="year-week-card ${s}">
+          <strong>Tuần ${escapeHtml(week.week_number)}</strong>
+          <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
+          ${week.school_year ? `<small>${escapeHtml(week.school_year)}</small>` : ""}
+          <span class="year-week-state">${label}</span>
+        </article>`;
+    }).join("");
+  }
+
+  function renderArchives() {
+    const today = todayIso();
+    const weeks = state.weeks
+      .filter(w => w.end_date < today)
+      .sort((a, b) => b.start_date.localeCompare(a.start_date));
+
+    el.archiveCount.textContent = `${weeks.length} tuần đã qua`;
+
+    if (!weeks.length) {
+      el.archiveGrid.innerHTML = '<div class="empty-state">Chưa có tuần cũ.</div>';
+      return;
+    }
+
+    el.archiveGrid.innerHTML = weeks.map(week => {
+      const items = getItems(week.id);
       return `
         <article class="archive-card">
-          <div>
-            <div class="archive-summary-head" style="padding:20px 20px 0;">
-              <div>
-                <h3 class="archive-week-name">Tuần ${escapeHtml(week.week_number)}</h3>
-                <span class="archive-date">${escapeHtml(formatDateRange(week.start_date, week.end_date))}</span>
-              </div>
-              <span class="archive-count-chip">${items.length} thông báo</span>
+          <div style="padding:20px 20px 0" class="archive-summary-head">
+            <div>
+              <h3 class="archive-week-name">Tuần ${escapeHtml(week.week_number)}</h3>
+              <span class="archive-date">${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
             </div>
-
-            <div style="padding:0 20px;">
-              <p class="archive-summary-text">${escapeHtml(week.summary || "Tuần đã được lưu trữ.")}</p>
-              ${
-                preview.length
-                  ? `<ul class="archive-peek">${preview.map(item => `<li>${escapeHtml(item.title)}</li>`).join("")}</ul>`
-                  : '<p class="muted">Không có thông báo trong tuần này.</p>'
-              }
-            </div>
-
-            <div class="archive-card-footer">
-              <button class="text-button" data-action="open-archive" data-id="${escapeHtml(week.id)}">Xem lại →</button>
-              ${
-                isAdmin()
-                  ? `<button class="text-button" data-action="edit-week" data-id="${escapeHtml(week.id)}">Sửa tuần</button>`
-                  : ""
-              }
-            </div>
+            <span class="archive-count-chip">${items.length} thông báo</span>
           </div>
-        </article>
-      `;
+          <div style="padding:0 20px">
+            <p class="archive-summary-text">${escapeHtml(week.summary || "Tuần đã qua.")}</p>
+            ${items.length ? `<ul class="archive-peek">${items.slice(0,3).map(x => `<li>${escapeHtml(x.title)}</li>`).join("")}</ul>` : '<p class="muted">Không có thông báo.</p>'}
+          </div>
+          <div class="archive-card-footer">
+            <button class="text-button" data-action="open-archive" data-id="${week.id}">Xem lại →</button>
+            ${isAdmin() ? `<button class="text-button" data-action="edit-week" data-id="${week.id}">Sửa tuần</button>` : ""}
+          </div>
+        </article>`;
     }).join("");
   }
 
   function renderAll() {
-    renderAdminState();
-    renderConnectionState();
-    renderCurrentWeek();
+    renderAdmin();
+    renderConnection();
+    renderCurrent();
+    renderYearStrip();
     renderArchives();
   }
+
 
   async function loadData() {
     if (!client) {
       state.weeks = demoData.weeks;
       state.announcements = demoData.announcements;
-      state.currentWeek = state.weeks.find(week => week.status === "current") || null;
-      renderAll();
-      return;
-    }
-
-    const [{ data: weeks, error: weeksError }, { data: announcements, error: announcementsError }] =
-      await Promise.all([
-        client.from("weeks").select("*").order("start_date", { ascending: false }),
+    } else {
+      const [{ data: weeks, error: weekError }, { data: items, error: itemError }] = await Promise.all([
+        client.from("weeks").select("*").order("start_date", { ascending: true }),
         client.from("announcements").select("*").order("created_at", { ascending: false })
       ]);
 
-    if (weeksError || announcementsError) {
-      console.error(weeksError || announcementsError);
-      el.connectionBanner.className = "status-banner warning";
-      el.connectionBanner.textContent =
-        "Không tải được dữ liệu. Hãy kiểm tra config.js, bảng dữ liệu và chính sách RLS trong Supabase.";
-      return;
+      if (weekError || itemError) {
+        console.error(weekError || itemError);
+        el.connectionBanner.className = "status-banner warning";
+        el.connectionBanner.textContent =
+          "Không tải được dữ liệu. Hãy kiểm tra config.js và chạy migration-v2.sql.";
+        return;
+      }
+
+      state.weeks = weeks || [];
+      state.announcements = items || [];
     }
 
-    state.weeks = weeks || [];
-    state.announcements = announcements || [];
-    state.currentWeek = state.weeks.find(week => week.status === "current") || null;
+    [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek();
     renderAll();
   }
 
   async function loadSession() {
-    if (!client) {
-      state.user = null;
-      return;
-    }
-
+    if (!client) return;
     const { data, error } = await client.auth.getSession();
     if (error) console.error(error);
     state.user = data?.session?.user || null;
@@ -377,25 +482,24 @@
     event.preventDefault();
 
     if (!client) {
-      setMessage(el.loginMessage, "Hãy kết nối Supabase trước khi đăng nhập.");
+      setMessage(el.loginMessage, "Hãy kết nối Supabase trước.");
       return;
     }
 
-    const formData = new FormData(el.loginForm);
+    const form = new FormData(el.loginForm);
     setMessage(el.loginMessage, "Đang đăng nhập...");
 
     const { data, error } = await client.auth.signInWithPassword({
-      email: formData.get("email"),
-      password: formData.get("password")
+      email: form.get("email"),
+      password: form.get("password")
     });
 
     if (error) {
-      setMessage(el.loginMessage, "Đăng nhập không thành công. Hãy kiểm tra email và mật khẩu.");
+      setMessage(el.loginMessage, "Email hoặc mật khẩu chưa đúng.");
       return;
     }
 
     state.user = data.user;
-    setMessage(el.loginMessage, "");
     el.loginForm.reset();
     el.loginDialog.close();
     renderAll();
@@ -416,14 +520,14 @@
     el.announcementForm.reset();
     setMessage(el.announcementMessage, "");
 
-    document.querySelector("#announcement-id").value = item?.id || "";
-    document.querySelector("#announcement-title").value = item?.title || "";
-    document.querySelector("#announcement-date").value =
-      item?.event_date || state.currentWeek?.start_date || new Date().toISOString().slice(0, 10);
-    document.querySelector("#announcement-category").value = item?.category || "";
-    document.querySelector("#announcement-priority").value = item?.priority || "normal";
-    document.querySelector("#announcement-pinned").checked = Boolean(item?.is_pinned);
-    document.querySelector("#announcement-content").value = item?.content || "";
+    $("#announcement-id").value = item?.id || "";
+    $("#announcement-title").value = item?.title || "";
+    $("#announcement-date").value =
+      item?.event_date || state.currentWeek?.start_date || todayIso();
+    $("#announcement-category").value = item?.category || "";
+    $("#announcement-priority").value = item?.priority || "normal";
+    $("#announcement-pinned").checked = Boolean(item?.is_pinned);
+    $("#announcement-content").value = item?.content || "";
 
     el.announcementDialogTitle.textContent = item ? "Sửa thông báo" : "Đăng thông báo mới";
     el.announcementDialog.showModal();
@@ -437,22 +541,22 @@
       return;
     }
 
-    const id = document.querySelector("#announcement-id").value;
-    const existing = id ? state.announcements.find(item => item.id === id) : null;
-
-    if (!id && !state.currentWeek) {
-      setMessage(el.announcementMessage, "Hãy tạo tuần hiện tại trước khi đăng thông báo.");
+    if (!state.currentWeek) {
+      setMessage(el.announcementMessage, "Hãy tạo tuần trước khi đăng thông báo.");
       return;
     }
 
+    const id = $("#announcement-id").value;
+    const existing = state.announcements.find(x => x.id === id);
+
     const payload = {
       week_id: existing?.week_id || state.currentWeek.id,
-      title: document.querySelector("#announcement-title").value.trim(),
-      content: document.querySelector("#announcement-content").value.trim(),
-      category: document.querySelector("#announcement-category").value.trim() || null,
-      event_date: document.querySelector("#announcement-date").value,
-      priority: document.querySelector("#announcement-priority").value,
-      is_pinned: document.querySelector("#announcement-pinned").checked,
+      title: $("#announcement-title").value.trim(),
+      content: $("#announcement-content").value.trim(),
+      category: $("#announcement-category").value.trim() || null,
+      event_date: $("#announcement-date").value,
+      priority: $("#announcement-priority").value,
+      is_pinned: $("#announcement-pinned").checked,
       updated_at: new Date().toISOString()
     };
 
@@ -466,22 +570,20 @@
 
     if (error) {
       console.error(error);
-      setMessage(el.announcementMessage, "Không lưu được. Hãy kiểm tra quyền RLS và dữ liệu.");
+      setMessage(el.announcementMessage, "Không lưu được. Hãy kiểm tra RLS.");
       return;
     }
 
     el.announcementDialog.close();
-    if (el.archiveDialog.open) el.archiveDialog.close();
     await loadData();
     showToast(id ? "Đã cập nhật thông báo." : "Đã đăng thông báo.");
   }
 
   async function deleteAnnouncement(id) {
     if (!client || !isAdmin()) return;
-    if (!window.confirm("Bạn chắc chắn muốn xóa thông báo này?")) return;
+    if (!confirm("Bạn chắc chắn muốn xóa thông báo này?")) return;
 
     const { error } = await client.from("announcements").delete().eq("id", id);
-
     if (error) {
       console.error(error);
       showToast("Không xóa được thông báo.");
@@ -498,15 +600,16 @@
     el.weekForm.reset();
     setMessage(el.weekMessage, "");
 
-    document.querySelector("#week-id").value = week?.id || "";
-    document.querySelector("#week-number").value = week?.week_number || "";
-    document.querySelector("#week-title").value = week?.title || "";
-    document.querySelector("#week-start").value = week?.start_date || "";
-    document.querySelector("#week-end").value = week?.end_date || "";
-    document.querySelector("#week-summary").value = week?.summary || "";
-    document.querySelector("#week-current").checked = week ? week.status === "current" : true;
+    $("#week-id").value = week?.id || "";
+    $("#week-number").value = week?.week_number || "";
+    $("#week-title").value = week?.title || "";
+    $("#week-school-year").value = week?.school_year || "";
+    $("#week-start").value = week?.start_date || "";
+    $("#week-end").value = week?.end_date || "";
+    $("#week-summary").value = week?.summary || "";
+    $("#week-current").checked = week ? week.status === "current" : true;
 
-    el.weekDialogTitle.textContent = week ? "Sửa thông tin tuần" : "Tạo tuần mới";
+    el.weekDialogTitle.textContent = week ? `Sửa Tuần ${week.week_number}` : "Tạo một tuần";
     el.weekDialog.showModal();
   }
 
@@ -518,43 +621,39 @@
       return;
     }
 
-    const id = document.querySelector("#week-id").value;
-    const startDate = document.querySelector("#week-start").value;
-    const endDate = document.querySelector("#week-end").value;
-    const makeCurrent = document.querySelector("#week-current").checked;
+    const id = $("#week-id").value;
+    const start = $("#week-start").value;
+    const end = $("#week-end").value;
+    const makeCurrent = $("#week-current").checked;
 
-    if (new Date(endDate) < new Date(startDate)) {
-      setMessage(el.weekMessage, "Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.");
+    if (dateObj(end) < dateObj(start)) {
+      setMessage(el.weekMessage, "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
       return;
     }
 
-    const payload = {
-      week_number: document.querySelector("#week-number").value.trim(),
-      title: document.querySelector("#week-title").value.trim() || null,
-      start_date: startDate,
-      end_date: endDate,
-      summary: document.querySelector("#week-summary").value.trim() || null,
-      status: makeCurrent ? "current" : "archived",
-      updated_at: new Date().toISOString()
-    };
-
-    setMessage(el.weekMessage, "Đang lưu...");
-
     if (makeCurrent) {
-      let archiveQuery = client
-        .from("weeks")
+      let query = client.from("weeks")
         .update({ status: "archived", updated_at: new Date().toISOString() })
         .eq("status", "current");
+      if (id) query = query.neq("id", id);
 
-      if (id) archiveQuery = archiveQuery.neq("id", id);
-
-      const { error: archiveError } = await archiveQuery;
-      if (archiveError) {
-        console.error(archiveError);
-        setMessage(el.weekMessage, "Không thể lưu trữ tuần hiện tại.");
+      const { error } = await query;
+      if (error) {
+        setMessage(el.weekMessage, "Không thể cập nhật tuần hiện tại.");
         return;
       }
     }
+
+    const payload = {
+      week_number: $("#week-number").value.trim(),
+      title: $("#week-title").value.trim() || null,
+      school_year: $("#week-school-year").value.trim() || null,
+      start_date: start,
+      end_date: end,
+      summary: $("#week-summary").value.trim() || null,
+      status: makeCurrent ? "current" : "archived",
+      updated_at: new Date().toISOString()
+    };
 
     const request = id
       ? client.from("weeks").update(payload).eq("id", id)
@@ -564,17 +663,218 @@
 
     if (error) {
       console.error(error);
-      setMessage(el.weekMessage, "Không lưu được tuần. Hãy kiểm tra dữ liệu và quyền RLS.");
+      setMessage(el.weekMessage, "Không lưu được tuần. Hãy chạy migration V2 nếu chưa chạy.");
       return;
     }
 
     el.weekDialog.close();
     await loadData();
-    showToast(id ? "Đã cập nhật tuần." : "Đã tạo tuần mới.");
+    showToast(id ? "Đã cập nhật tuần." : "Đã tạo tuần.");
+  }
+
+  function openBulkDialog() {
+    if (!isAdmin()) return;
+    if (!state.currentWeek) {
+      showToast("Hãy tạo lịch tuần trước.");
+      return;
+    }
+
+    el.bulkForm.reset();
+    setMessage(el.bulkMessage, "");
+    el.bulkPreviewCount.textContent = "Chưa có mục nào";
+    $("#bulk-date").value =
+      state.currentWeekState === "current" ? todayIso() : state.currentWeek.start_date;
+
+    el.bulkDialog.showModal();
+  }
+
+  function previewBulk() {
+    const items = parseQuickInput($("#bulk-raw").value);
+    el.bulkPreviewCount.textContent = items.length
+      ? `Đã nhận diện ${items.length} thông báo`
+      : "Chưa nhận diện được mục nào";
+  }
+
+  async function saveBulk(event) {
+    event.preventDefault();
+
+    if (!client || !isAdmin() || !state.currentWeek) return;
+
+    const items = parseQuickInput($("#bulk-raw").value);
+    if (!items.length) {
+      setMessage(el.bulkMessage, "Mỗi mục cần bắt đầu bằng ### hoặc ####.");
+      return;
+    }
+
+    const fallbackDate = $("#bulk-date").value;
+    const category = $("#bulk-category").value.trim() || null;
+    const priority = $("#bulk-priority").value;
+    const pinFirst = $("#bulk-pin-first").checked;
+
+    const payload = items.map((item, index) => ({
+      week_id: state.currentWeek.id,
+      title: item.title,
+      content: item.content,
+      category,
+      event_date: extractDate(item.content, fallbackDate),
+      priority,
+      is_pinned: pinFirst && index === 0,
+      updated_at: new Date().toISOString()
+    }));
+
+    setMessage(el.bulkMessage, `Đang tạo ${payload.length} thông báo...`);
+
+    const { error } = await client.from("announcements").insert(payload);
+    if (error) {
+      console.error(error);
+      setMessage(el.bulkMessage, "Không tạo được danh sách thông báo.");
+      return;
+    }
+
+    el.bulkDialog.close();
+    await loadData();
+    showToast(`Đã tạo ${payload.length} thông báo.`);
+  }
+
+  function openSchoolYear() {
+    if (!isAdmin()) return;
+
+    el.schoolYearForm.reset();
+    state.schoolYearPreview = [];
+    el.schoolYearPreview.innerHTML = "";
+    el.schoolYearPreviewSummary.textContent = "Chưa tạo bản xem trước.";
+    setMessage(el.schoolYearMessage, "");
+
+    $("#school-year-start-number").value = "01";
+    $("#school-year-count-input").value = "35";
+    el.schoolYearDialog.showModal();
+  }
+
+  function generateSchoolYearPreview() {
+    setMessage(el.schoolYearMessage, "");
+
+    const schoolYear = $("#school-year-name").value.trim();
+    const startRaw = $("#school-year-start-number").value.trim();
+    const firstStart = $("#school-year-first-start").value;
+    const firstEnd = $("#school-year-first-end").value;
+    const count = Number($("#school-year-count-input").value);
+    const titlePrefix = $("#school-year-title-prefix").value.trim();
+
+    if (!schoolYear || !startRaw || !firstStart || !firstEnd || !count) {
+      setMessage(el.schoolYearMessage, "Hãy nhập đủ thông tin.");
+      return [];
+    }
+
+    if (dateObj(firstEnd) < dateObj(firstStart)) {
+      setMessage(el.schoolYearMessage, "Ngày kết thúc tuần đầu không hợp lệ.");
+      return [];
+    }
+
+    if (count < 1 || count > 60) {
+      setMessage(el.schoolYearMessage, "Số tuần phải từ 1 đến 60.");
+      return [];
+    }
+
+    const numeric = /^\d+$/.test(startRaw);
+    const startNumber = Number(startRaw);
+    const width = Math.max(2, startRaw.length);
+
+    const preview = Array.from({ length: count }, (_, index) => {
+      const weekNumber = numeric
+        ? String(startNumber + index).padStart(width, "0")
+        : index === 0 ? startRaw : `${startRaw}-${index + 1}`;
+
+      return {
+        week_number: weekNumber,
+        title: titlePrefix ? `${titlePrefix} ${weekNumber}` : `Tuần ${weekNumber}`,
+        school_year: schoolYear,
+        sequence_number: numeric ? startNumber + index : index + 1,
+        start_date: addDays(firstStart, index * 7),
+        end_date: addDays(firstEnd, index * 7),
+        summary: null,
+        status: "archived"
+      };
+    });
+
+    state.schoolYearPreview = preview;
+
+    el.schoolYearPreviewSummary.textContent =
+      `${preview.length} tuần · ${formatDate(preview[0].start_date)} → ${formatDate(preview.at(-1).end_date)}`;
+
+    el.schoolYearPreview.innerHTML = preview.map(week => `
+      <div class="week-preview-item">
+        <strong>Tuần ${escapeHtml(week.week_number)}</strong>
+        <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
+      </div>`).join("");
+
+    return preview;
+  }
+
+  async function saveSchoolYear(event) {
+    event.preventDefault();
+
+    if (!client || !isAdmin()) return;
+
+    const preview = generateSchoolYearPreview();
+    if (!preview.length) return;
+
+    const duplicates = preview.filter(candidate =>
+      state.weeks.some(existing =>
+        existing.school_year === candidate.school_year &&
+        (
+          existing.week_number === candidate.week_number ||
+          existing.sequence_number === candidate.sequence_number ||
+          existing.start_date === candidate.start_date
+        )
+      )
+    );
+
+    if (duplicates.length) {
+      setMessage(
+        el.schoolYearMessage,
+        `Có ${duplicates.length} tuần bị trùng với lịch đã có. Hãy kiểm tra lịch cũ trước.`
+      );
+      return;
+    }
+
+    const today = todayIso();
+    const currentIndex = preview.findIndex(w => today >= w.start_date && today <= w.end_date);
+
+    if (currentIndex >= 0) {
+      preview[currentIndex].status = "current";
+      const { error } = await client.from("weeks")
+        .update({ status: "archived", updated_at: new Date().toISOString() })
+        .eq("status", "current");
+
+      if (error) {
+        setMessage(el.schoolYearMessage, "Không thể chuẩn bị trạng thái tuần hiện tại.");
+        return;
+      }
+    }
+
+    setMessage(el.schoolYearMessage, `Đang tạo ${preview.length} tuần...`);
+
+    const payload = preview.map(w => ({
+      ...w,
+      updated_at: new Date().toISOString()
+    }));
+
+    const { error } = await client.from("weeks").insert(payload);
+
+    if (error) {
+      console.error(error);
+      setMessage(el.schoolYearMessage, "Không tạo được lịch. Hãy chạy migration-v2.sql rồi thử lại.");
+      return;
+    }
+
+    const schoolYear = preview[0].school_year;
+    el.schoolYearDialog.close();
+    await loadData();
+    showToast(`Đã tạo ${preview.length} tuần cho năm học ${schoolYear}.`);
   }
 
   async function copyAnnouncement(id) {
-    const item = state.announcements.find(a => a.id === id);
+    const item = state.announcements.find(x => x.id === id);
     if (!item) return;
 
     const week = state.weeks.find(w => w.id === item.week_id);
@@ -605,18 +905,16 @@
     const week = state.weeks.find(w => w.id === weekId);
     if (!week) return;
 
-    const items = getAnnouncementsForWeek(week.id);
-    el.archiveDialogTitle.textContent = `Tuần ${week.week_number} · ${formatDateRange(week.start_date, week.end_date)}`;
+    const items = getItems(week.id);
+    el.archiveDialogTitle.textContent =
+      `Tuần ${week.week_number} · ${formatDate(week.start_date)} — ${formatDate(week.end_date)}`;
+
     el.archiveDialogContent.innerHTML = `
-      <p class="muted">${escapeHtml(week.summary || "Không có tóm tắt riêng cho tuần này.")}</p>
+      <p class="muted">${escapeHtml(week.summary || "Không có tóm tắt riêng.")}</p>
       <div class="announcement-list">
-        ${
-          items.length
-            ? items.map(item => renderAnnouncementCard(item)).join("")
-            : '<div class="empty-state">Tuần này không có thông báo.</div>'
-        }
-      </div>
-    `;
+        ${items.length ? items.map(announcementCard).join("") : '<div class="empty-state">Không có thông báo.</div>'}
+      </div>`;
+
     el.archiveDialog.showModal();
   }
 
@@ -636,16 +934,16 @@
         item.event_date,
         week?.week_number,
         week?.title,
+        week?.school_year,
         week?.summary
       ].filter(Boolean).join(" "));
-
       return haystack.includes(q);
     });
 
     el.searchResultsSection.classList.remove("hidden");
     el.searchResults.innerHTML = results.length
-      ? results.map(item => renderAnnouncementCard(item, true)).join("")
-      : '<div class="empty-state">Không tìm thấy thông báo phù hợp. Thử một từ khóa ngắn hơn.</div>';
+      ? results.map(item => announcementCard(item, true)).join("")
+      : '<div class="empty-state">Không tìm thấy thông báo phù hợp.</div>';
 
     el.searchResultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -656,22 +954,23 @@
     el.searchResults.innerHTML = "";
   }
 
-  function handleActionClick(event) {
+  function handleAction(event) {
     const button = event.target.closest("[data-action]");
     if (!button) return;
 
-    const action = button.dataset.action;
-    const id = button.dataset.id;
+    const { action, id } = button.dataset;
 
     if (action === "copy-announcement") copyAnnouncement(id);
-    if (action === "edit-announcement") {
-      const item = state.announcements.find(a => a.id === id);
-      if (item) openAnnouncementForm(item);
-    }
     if (action === "delete-announcement") deleteAnnouncement(id);
     if (action === "open-archive") openArchive(id);
+
+    if (action === "edit-announcement") {
+      const item = state.announcements.find(x => x.id === id);
+      if (item) openAnnouncementForm(item);
+    }
+
     if (action === "edit-week") {
-      const week = state.weeks.find(w => w.id === id);
+      const week = state.weeks.find(x => x.id === id);
       if (week) openWeekForm(week);
     }
   }
@@ -679,8 +978,6 @@
   function initTheme() {
     const stored = localStorage.getItem("weekly-board-theme");
     if (stored) document.documentElement.dataset.theme = stored;
-    el.themeToggle.querySelector("span").textContent =
-      document.documentElement.dataset.theme === "dark" ? "☾" : "☼";
 
     el.themeToggle.addEventListener("click", () => {
       const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -711,13 +1008,20 @@
     el.logoutButton.addEventListener("click", handleLogout);
     el.loginForm.addEventListener("submit", handleLogin);
 
-    document.querySelector("#new-announcement-button").addEventListener("click", () => openAnnouncementForm());
-    document.querySelector("#new-week-button").addEventListener("click", () => openWeekForm());
+    $("#new-announcement-button").addEventListener("click", () => openAnnouncementForm());
+    $("#new-week-button").addEventListener("click", () => openWeekForm());
+    $("#quick-input-button").addEventListener("click", openBulkDialog);
+    $("#school-year-button").addEventListener("click", openSchoolYear);
 
     el.announcementForm.addEventListener("submit", saveAnnouncement);
     el.weekForm.addEventListener("submit", saveWeek);
+    el.bulkForm.addEventListener("submit", saveBulk);
+    el.schoolYearForm.addEventListener("submit", saveSchoolYear);
 
-    document.addEventListener("click", handleActionClick);
+    $("#bulk-preview-button").addEventListener("click", previewBulk);
+    $("#school-year-preview-button").addEventListener("click", generateSchoolYearPreview);
+
+    document.addEventListener("click", handleAction);
 
     el.searchForm.addEventListener("submit", event => {
       event.preventDefault();
@@ -725,7 +1029,8 @@
     });
 
     el.clearSearchButton.addEventListener("click", clearSearch);
-    document.querySelector("#scroll-top-button").addEventListener("click", () => {
+
+    $("#scroll-top-button").addEventListener("click", () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
@@ -748,6 +1053,7 @@
   init().catch(error => {
     console.error(error);
     el.connectionBanner.className = "status-banner warning";
-    el.connectionBanner.textContent = "Ứng dụng gặp lỗi khi khởi động. Mở DevTools > Console để xem chi tiết.";
+    el.connectionBanner.textContent =
+      "Ứng dụng gặp lỗi khi khởi động. Mở DevTools > Console để xem chi tiết.";
   });
 })();

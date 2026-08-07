@@ -70,7 +70,9 @@
         <span>Bạn có quyền thêm, sửa và xóa nội dung.</span>
       </div>
       <div class="toolbar-actions">
-        <button class="button button-secondary" id="new-week-button" type="button">+ Tạo tuần</button>
+        <button class="button button-secondary" id="school-year-button" type="button">📅 Tạo tuần năm học</button>
+        <button class="button button-secondary" id="new-week-button" type="button">+ Tạo 1 tuần</button>
+        <button class="button button-secondary" id="quick-input-button" type="button">⚡ Nhập nhanh</button>
         <button class="button button-primary" id="new-announcement-button" type="button">+ Đăng thông báo</button>
       </div>
     </section>
@@ -79,9 +81,9 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">ĐANG HIỂN THỊ</p>
-          <h2 id="current-heading">Tuần hiện tại</h2>
+          <h2 id="current-heading">Tuần nổi bật</h2>
         </div>
-        <span class="live-badge"><span aria-hidden="true"></span> Đang hoạt động</span>
+        <span class="live-badge" id="week-state-badge"><span aria-hidden="true"></span> Đang hoạt động</span>
       </div>
 
       <article class="week-hero" id="current-week-card" aria-live="polite">
@@ -89,6 +91,20 @@
       </article>
 
       <div class="announcement-list" id="current-announcements" aria-live="polite"></div>
+    </section>
+
+    <section class="year-section" aria-labelledby="year-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">LỊCH NĂM HỌC</p>
+          <h2 id="year-heading">Các tuần đã thiết lập</h2>
+        </div>
+        <span class="muted" id="year-count"></span>
+      </div>
+
+      <div class="year-strip" id="year-strip" aria-live="polite">
+        <div class="loading-card">Đang tải lịch năm học...</div>
+      </div>
     </section>
 
     <section class="search-results-section hidden" id="search-results-section" aria-labelledby="search-results-heading">
@@ -224,6 +240,11 @@
           <input id="week-title" type="text" maxlength="120" placeholder="Ví dụ: Tuần sinh hoạt đầu tháng">
         </div>
 
+        <div class="field field-span-2">
+          <label for="week-school-year">Năm học</label>
+          <input id="week-school-year" type="text" maxlength="30" placeholder="Ví dụ: 2026-2027">
+        </div>
+
         <div class="field">
           <label for="week-start">Ngày bắt đầu</label>
           <input id="week-start" type="date" required>
@@ -250,6 +271,144 @@
       <div class="modal-actions">
         <button class="button button-secondary close-dialog" type="button">Hủy</button>
         <button class="button button-primary" type="submit">Lưu tuần</button>
+      </div>
+    </form>
+  </dialog>
+
+
+  <dialog id="bulk-dialog" class="modal">
+    <form class="modal-card modal-card-wide" id="bulk-form">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">NHẬP NHANH</p>
+          <h2>Dán danh sách thông báo</h2>
+        </div>
+        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
+      </div>
+
+      <div class="quick-guide">
+        <strong>Cách nhập nhanh</strong>
+        <span>Mỗi mục bắt đầu bằng <code>###</code> hoặc <code>####</code>; dòng bắt đầu bằng <code>-</code> sẽ giữ dạng danh sách.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="bulk-date">Ngày mặc định</label>
+          <input id="bulk-date" type="date" required>
+        </div>
+
+        <div class="field">
+          <label for="bulk-category">Chuyên mục chung</label>
+          <input id="bulk-category" type="text" maxlength="60" placeholder="Ví dụ: Nội quy">
+        </div>
+
+        <div class="field">
+          <label for="bulk-priority">Mức độ chung</label>
+          <select id="bulk-priority">
+            <option value="normal">Bình thường</option>
+            <option value="important">Quan trọng</option>
+          </select>
+        </div>
+
+        <div class="field checkbox-field">
+          <input id="bulk-pin-first" type="checkbox">
+          <label for="bulk-pin-first">Ghim mục đầu tiên</label>
+        </div>
+
+        <div class="field field-span-2">
+          <label for="bulk-raw">Danh sách nội dung</label>
+          <textarea id="bulk-raw" rows="17" required
+            placeholder="#### 1. Hoàn thành Bản cam kết học đường
+- **Nội dung:** ...
+- **Yêu cầu:** ...
+- **Hạn nộp:** ...
+
+#### 2. Quy định Căn tin
+- **Thời gian:** ...
+- **Khu vực:** ..."></textarea>
+        </div>
+      </div>
+
+      <div class="preview-bar">
+        <span id="bulk-preview-count">Chưa có mục nào</span>
+        <button class="text-button" id="bulk-preview-button" type="button">Kiểm tra số mục</button>
+      </div>
+
+      <p class="form-message" id="bulk-message" aria-live="polite"></p>
+
+      <div class="modal-actions">
+        <button class="button button-secondary close-dialog" type="button">Hủy</button>
+        <button class="button button-primary" type="submit">Tạo hàng loạt</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="school-year-dialog" class="modal">
+    <form class="modal-card modal-card-wide" id="school-year-form">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">TẠO NHANH</p>
+          <h2>Tạo tuần năm học</h2>
+        </div>
+        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
+      </div>
+
+      <div class="school-year-intro">
+        <span aria-hidden="true">📅</span>
+        <div>
+          <strong>Chỉ cần khai báo tuần đầu.</strong>
+          <p>Các tuần sau tự tăng 7 ngày và dừng đúng số lượng bạn quy định.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="school-year-name">Năm học</label>
+          <input id="school-year-name" type="text" maxlength="30" placeholder="2026-2027" required>
+        </div>
+
+        <div class="field">
+          <label for="school-year-start-number">Tuần bắt đầu</label>
+          <input id="school-year-start-number" type="text" value="01" maxlength="10" required>
+        </div>
+
+        <div class="field">
+          <label for="school-year-first-start">Ngày bắt đầu tuần đầu</label>
+          <input id="school-year-first-start" type="date" required>
+        </div>
+
+        <div class="field">
+          <label for="school-year-first-end">Ngày kết thúc tuần đầu</label>
+          <input id="school-year-first-end" type="date" required>
+        </div>
+
+        <div class="field">
+          <label for="school-year-count-input">Số tuần cần tạo</label>
+          <input id="school-year-count-input" type="number" min="1" max="60" value="35" required>
+        </div>
+
+        <div class="field">
+          <label for="school-year-title-prefix">Tên phụ chung</label>
+          <input id="school-year-title-prefix" type="text" maxlength="60" placeholder="Để trống cũng được">
+        </div>
+      </div>
+
+      <div class="generation-note">
+        Ví dụ: Tuần 01 = 03/08–08/08 → Tuần 02 = 10/08–15/08 → Tuần 03 = 17/08–22/08...
+      </div>
+
+      <div class="generation-actions">
+        <button class="button button-secondary" id="school-year-preview-button" type="button">✨ Xem trước</button>
+        <span class="muted" id="school-year-preview-summary">Chưa tạo bản xem trước.</span>
+      </div>
+
+      <div class="week-preview-grid" id="school-year-preview"></div>
+
+      <p class="form-message" id="school-year-message" aria-live="polite"></p>
+
+      <div class="modal-actions">
+        <button class="button button-secondary close-dialog" type="button">Hủy</button>
+        <button class="button button-primary" type="submit">✓ Tạo các tuần</button>
       </div>
     </form>
   </dialog>
