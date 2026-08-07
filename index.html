@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
+  <title>Bảng thông báo theo tuần</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#" aria-label="Trang chủ bảng thông báo">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span>
+          <strong>Bảng thông báo</strong>
+          <small>Theo tuần</small>
+        </span>
+      </a>
+
+      <nav class="top-actions" aria-label="Điều hướng chính">
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Đổi giao diện sáng tối" title="Đổi giao diện">
+          <span aria-hidden="true">☼</span>
+        </button>
+        <button class="button button-secondary" id="login-button" type="button">
+          Quản trị
+        </button>
+        <button class="button button-secondary hidden" id="logout-button" type="button">
+          Đăng xuất
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="shell main-layout">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">THÔNG TIN MỚI NHẤT</p>
+        <h1 id="hero-title">Mọi thông báo quan trọng, gọn trong từng tuần.</h1>
+        <p class="hero-description">
+          Xem nhanh tuần hiện tại, sao chép nội dung cần thiết và tìm lại thông báo cũ bất cứ lúc nào.
+        </p>
+      </div>
+
+      <form class="search-panel" id="search-form" role="search">
+        <label for="search-input">Tìm thông báo</label>
+        <div class="search-row">
+          <input
+            id="search-input"
+            name="q"
+            type="search"
+            autocomplete="off"
+            placeholder="Ví dụ: lịch họp, học tập, thứ Hai..."
+          >
+          <button class="button button-primary" type="submit">Tìm</button>
+        </div>
+        <p class="field-hint">Tìm theo tiêu đề, nội dung, tuần, ngày hoặc chuyên mục.</p>
+      </form>
+    </section>
+
+    <aside class="status-banner hidden" id="connection-banner" aria-live="polite"></aside>
+
+    <section class="admin-toolbar hidden" id="admin-toolbar" aria-label="Công cụ quản trị">
+      <div>
+        <span class="admin-dot" aria-hidden="true"></span>
+        <strong>Chế độ quản trị</strong>
+        <span>Bạn có quyền thêm, sửa và xóa nội dung.</span>
+      </div>
+      <div class="toolbar-actions">
+        <button class="button button-secondary" id="new-week-button" type="button">+ Tạo tuần</button>
+        <button class="button button-primary" id="new-announcement-button" type="button">+ Đăng thông báo</button>
+      </div>
+    </section>
+
+    <section class="current-section" aria-labelledby="current-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">ĐANG HIỂN THỊ</p>
+          <h2 id="current-heading">Tuần hiện tại</h2>
+        </div>
+        <span class="live-badge"><span aria-hidden="true"></span> Đang hoạt động</span>
+      </div>
+
+      <article class="week-hero" id="current-week-card" aria-live="polite">
+        <div class="loading-card">Đang tải tuần hiện tại...</div>
+      </article>
+
+      <div class="announcement-list" id="current-announcements" aria-live="polite"></div>
+    </section>
+
+    <section class="search-results-section hidden" id="search-results-section" aria-labelledby="search-results-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">KẾT QUẢ</p>
+          <h2 id="search-results-heading">Kết quả tìm kiếm</h2>
+        </div>
+        <button class="text-button" id="clear-search-button" type="button">Xóa tìm kiếm</button>
+      </div>
+      <div class="announcement-list" id="search-results"></div>
+    </section>
+
+    <section class="archive-section" aria-labelledby="archive-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">LƯU TRỮ</p>
+          <h2 id="archive-heading">Các tuần trước</h2>
+        </div>
+        <span class="muted" id="archive-count"></span>
+      </div>
+
+      <div class="archive-grid" id="archive-grid">
+        <div class="loading-card">Đang tải dữ liệu lưu trữ...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <p>Thông báo được lưu theo tuần để dễ xem và tra cứu.</p>
+      <button class="text-button" id="scroll-top-button" type="button">Về đầu trang ↑</button>
+    </div>
+  </footer>
+
+  <dialog id="login-dialog" class="modal">
+    <form class="modal-card" id="login-form">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">QUẢN TRỊ</p>
+          <h2>Đăng nhập</h2>
+        </div>
+        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
+      </div>
+
+      <label for="admin-email">Email</label>
+      <input id="admin-email" name="email" type="email" autocomplete="username" required>
+
+      <label for="admin-password">Mật khẩu</label>
+      <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+
+      <p class="form-message" id="login-message" aria-live="polite"></p>
+      <button class="button button-primary button-wide" type="submit">Đăng nhập</button>
+    </form>
+  </dialog>
+
+  <dialog id="announcement-dialog" class="modal">
+    <form class="modal-card modal-card-wide" id="announcement-form">
+      <input type="hidden" id="announcement-id">
+
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">THÔNG BÁO</p>
+          <h2 id="announcement-dialog-title">Đăng thông báo mới</h2>
+        </div>
+        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field field-span-2">
+          <label for="announcement-title">Tiêu đề</label>
+          <input id="announcement-title" type="text" maxlength="150" required>
+        </div>
+
+        <div class="field">
+          <label for="announcement-date">Ngày</label>
+          <input id="announcement-date" type="date" required>
+        </div>
+
+        <div class="field">
+          <label for="announcement-category">Chuyên mục</label>
+          <input id="announcement-category" type="text" maxlength="60" placeholder="Học tập, công việc...">
+        </div>
+
+        <div class="field">
+          <label for="announcement-priority">Mức độ</label>
+          <select id="announcement-priority">
+            <option value="normal">Bình thường</option>
+            <option value="important">Quan trọng</option>
+          </select>
+        </div>
+
+        <div class="field checkbox-field">
+          <input id="announcement-pinned" type="checkbox">
+          <label for="announcement-pinned">Ghim lên đầu tuần</label>
+        </div>
+
+        <div class="field field-span-2">
+          <label for="announcement-content">Nội dung</label>
+          <textarea id="announcement-content" rows="8" required placeholder="Nhập nội dung thông báo..."></textarea>
+        </div>
+      </div>
+
+      <p class="form-message" id="announcement-message" aria-live="polite"></p>
+
+      <div class="modal-actions">
+        <button class="button button-secondary close-dialog" type="button">Hủy</button>
+        <button class="button button-primary" type="submit">Lưu thông báo</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="week-dialog" class="modal">
+    <form class="modal-card modal-card-wide" id="week-form">
+      <input type="hidden" id="week-id">
+
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">TUẦN</p>
+          <h2 id="week-dialog-title">Tạo tuần mới</h2>
+        </div>
+        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="week-number">Số / tên tuần</label>
+          <input id="week-number" type="text" maxlength="30" placeholder="Ví dụ: 03 hoặc Tuần A" required>
+        </div>
+
+        <div class="field">
+          <label for="week-title">Tên phụ</label>
+          <input id="week-title" type="text" maxlength="120" placeholder="Ví dụ: Tuần sinh hoạt đầu tháng">
+        </div>
+
+        <div class="field">
+          <label for="week-start">Ngày bắt đầu</label>
+          <input id="week-start" type="date" required>
+        </div>
+
+        <div class="field">
+          <label for="week-end">Ngày kết thúc</label>
+          <input id="week-end" type="date" required>
+        </div>
+
+        <div class="field field-span-2">
+          <label for="week-summary">Tóm tắt tuần</label>
+          <textarea id="week-summary" rows="4" maxlength="500" placeholder="Một vài ý chính sẽ xuất hiện ở phần tuần cũ."></textarea>
+        </div>
+
+        <div class="field field-span-2 checkbox-field">
+          <input id="week-current" type="checkbox" checked>
+          <label for="week-current">Đặt làm tuần hiện tại và tự lưu trữ tuần cũ</label>
+        </div>
+      </div>
+
+      <p class="form-message" id="week-message" aria-live="polite"></p>
+
+      <div class="modal-actions">
+        <button class="button button-secondary close-dialog" type="button">Hủy</button>
+        <button class="button button-primary" type="submit">Lưu tuần</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="archive-dialog" class="modal">
+    <article class="modal-card modal-card-wide">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">LƯU TRỮ</p>
+          <h2 id="archive-dialog-title">Nội dung tuần</h2>
+        </div>
+        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
+      </div>
+      <div id="archive-dialog-content"></div>
+    </article>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
