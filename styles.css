@@ -1284,3 +1284,77 @@ select:focus {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================
+   V2.1 — cache refresh + quản trị tuần
+   ========================= */
+
+.version-badge {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 5px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand), #d85fca);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.week-admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.year-week-card {
+  position: relative;
+}
+
+.year-week-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.mini-action {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-solid);
+  color: var(--text);
+}
+
+.mini-action:hover {
+  transform: translateY(-1px);
+}
+
+.mini-danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 24%, var(--line));
+  background: color-mix(in srgb, var(--danger) 6%, var(--surface-solid));
+}
+
+.archive-admin-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+@media (max-width: 560px) {
+  .week-admin-actions .button {
+    flex: 1 1 auto;
+  }
+}
