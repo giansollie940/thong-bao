@@ -108,6 +108,8 @@
         content: "- **Nội dung:** Học sinh nhận Bản cam kết học đường từ GVCN.\n- **Yêu cầu:** Học sinh cùng Phụ huynh đọc kỹ và ký tên.\n- **Hạn nộp:** chậm nhất ngày 19/08/2026.",
         category: "Nội quy",
         event_date: "2026-08-08",
+        valid_from: "2026-08-03",
+        valid_until: "2026-08-15",
         priority: "important",
         is_pinned: true,
         created_at: "2026-08-07T12:20:00Z"
@@ -193,13 +195,66 @@
   }
 
   function getItems(weekId) {
+    const week = state.weeks.find(w => w.id === weekId);
+    if (!week) return [];
+
     return state.announcements
-      .filter(item => item.week_id === weekId)
+      .filter(item => {
+        // V2.2: nếu có thời gian hiệu lực, thông báo xuất hiện ở mọi tuần
+        // mà khoảng hiệu lực giao với khoảng thời gian của tuần đó.
+        if (item.valid_from || item.valid_until) {
+          const from = item.valid_from || item.event_date || week.start_date;
+          const until = item.valid_until || item.valid_from || item.event_date || week.end_date;
+          return from <= week.end_date && until >= week.start_date;
+        }
+
+        // Dữ liệu cũ chưa có cột hiệu lực: vẫn hiển thị theo week_id.
+        return item.week_id === weekId;
+      })
       .sort((a, b) => {
         if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
         if (a.priority !== b.priority) return a.priority === "important" ? -1 : 1;
         return new Date(b.created_at) - new Date(a.created_at);
       });
+  }
+
+  function sortedWeeks() {
+    return [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
+  }
+
+  function fillWeekSelect(select, selectedId = "") {
+    if (!select) return;
+
+    const weeks = sortedWeeks();
+    select.innerHTML = weeks.map(week =>
+      `<option value="${escapeHtml(week.id)}">${escapeHtml(
+        `Tuần ${week.week_number} · ${formatDate(week.start_date)} – ${formatDate(week.end_date)}`
+      )}</option>`
+    ).join("");
+
+    if (selectedId && weeks.some(w => w.id === selectedId)) {
+      select.value = selectedId;
+    } else if (state.currentWeek) {
+      select.value = state.currentWeek.id;
+    }
+  }
+
+  function getSelectedWeek(selectId) {
+    const id = $(selectId)?.value;
+    return state.weeks.find(w => w.id === id) || null;
+  }
+
+  function applyWeekDefaults(prefix) {
+    const week = getSelectedWeek(`#${prefix}-week`);
+    if (!week) return;
+
+    const dateInput = $(`#${prefix}-date`);
+    const fromInput = $(`#${prefix}-valid-from`);
+    const untilInput = $(`#${prefix}-valid-until`);
+
+    if (dateInput) dateInput.value = week.start_date;
+    if (fromInput) fromInput.value = week.start_date;
+    if (untilInput) untilInput.value = week.end_date;
   }
 
   function tone(seed = "") {
@@ -319,7 +374,12 @@
           <div class="announcement-meta">
             <span class="meta-chip">📅 ${escapeHtml(formatDate(item.event_date))}</span>
             ${item.category ? `<span class="meta-chip">${escapeHtml(item.category)}</span>` : ""}
-            ${showWeek && week ? `<span class="meta-chip">Tuần ${escapeHtml(week.week_number)}</span>` : ""}
+            ${showWeek && week ? `<span class="meta-chip">Đăng tại Tuần ${escapeHtml(week.week_number)}</span>` : ""}
+            ${
+              item.valid_from || item.valid_until
+                ? `<span class="meta-chip validity-chip">⏳ Hiệu lực ${escapeHtml(formatDate(item.valid_from || item.event_date))} → ${escapeHtml(formatDate(item.valid_until || item.valid_from || item.event_date))}</span>`
+                : ""
+            }
           </div>
 
           <div class="card-actions">
@@ -399,10 +459,13 @@
           <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
           ${week.school_year ? `<small>${escapeHtml(week.school_year)}</small>` : ""}
           <span class="year-week-state">${label}</span>
-          ${isAdmin() ? `<div class="year-week-actions">
-            <button class="mini-action" data-action="edit-week" data-id="${week.id}" aria-label="Sửa Tuần ${escapeHtml(week.week_number)}">✏️</button>
-            <button class="mini-action mini-danger" data-action="delete-week" data-id="${week.id}" aria-label="Xóa Tuần ${escapeHtml(week.week_number)}">🗑️</button>
-          </div>` : ""}
+          <div class="year-week-actions">
+            <button class="mini-action mini-view" data-action="view-week" data-id="${week.id}" aria-label="Xem Tuần ${escapeHtml(week.week_number)}">Xem</button>
+            ${isAdmin() ? `
+              <button class="mini-action" data-action="edit-week" data-id="${week.id}" aria-label="Sửa Tuần ${escapeHtml(week.week_number)}">✏️</button>
+              <button class="mini-action mini-danger" data-action="delete-week" data-id="${week.id}" aria-label="Xóa Tuần ${escapeHtml(week.week_number)}">🗑️</button>
+            ` : ""}
+          </div>
         </article>`;
     }).join("");
   }
@@ -527,13 +590,27 @@
   function openAnnouncementForm(item = null) {
     if (!isAdmin()) return;
 
+    if (!state.weeks.length) {
+      showToast("Hãy tạo lịch tuần trước.");
+      return;
+    }
+
     el.announcementForm.reset();
     setMessage(el.announcementMessage, "");
+
+    const targetWeekId = item?.week_id || state.currentWeek?.id || sortedWeeks()[0]?.id || "";
+    fillWeekSelect($("#announcement-week"), targetWeekId);
+
+    const targetWeek = state.weeks.find(w => w.id === targetWeekId) || state.currentWeek;
 
     $("#announcement-id").value = item?.id || "";
     $("#announcement-title").value = item?.title || "";
     $("#announcement-date").value =
-      item?.event_date || state.currentWeek?.start_date || todayIso();
+      item?.event_date || targetWeek?.start_date || todayIso();
+    $("#announcement-valid-from").value =
+      item?.valid_from || targetWeek?.start_date || todayIso();
+    $("#announcement-valid-until").value =
+      item?.valid_until || targetWeek?.end_date || todayIso();
     $("#announcement-category").value = item?.category || "";
     $("#announcement-priority").value = item?.priority || "normal";
     $("#announcement-pinned").checked = Boolean(item?.is_pinned);
@@ -551,20 +628,32 @@
       return;
     }
 
-    if (!state.currentWeek) {
-      setMessage(el.announcementMessage, "Hãy tạo tuần trước khi đăng thông báo.");
+    const targetWeek = getSelectedWeek("#announcement-week");
+
+    if (!targetWeek) {
+      setMessage(el.announcementMessage, "Hãy chọn đúng tuần cần đăng.");
+      return;
+    }
+
+    const validFrom = $("#announcement-valid-from").value;
+    const validUntil = $("#announcement-valid-until").value;
+
+    if (!validFrom || !validUntil || validUntil < validFrom) {
+      setMessage(el.announcementMessage, "Thời gian hiệu lực chưa hợp lệ.");
       return;
     }
 
     const id = $("#announcement-id").value;
-    const existing = state.announcements.find(x => x.id === id);
 
     const payload = {
-      week_id: existing?.week_id || state.currentWeek.id,
+      // V2.2: week_id lấy từ tuần admin chọn, không còn ép vào tuần hiện tại.
+      week_id: targetWeek.id,
       title: $("#announcement-title").value.trim(),
       content: $("#announcement-content").value.trim(),
       category: $("#announcement-category").value.trim() || null,
       event_date: $("#announcement-date").value,
+      valid_from: validFrom,
+      valid_until: validUntil,
       priority: $("#announcement-priority").value,
       is_pinned: $("#announcement-pinned").checked,
       updated_at: new Date().toISOString()
@@ -580,13 +669,13 @@
 
     if (error) {
       console.error(error);
-      setMessage(el.announcementMessage, "Không lưu được. Hãy kiểm tra RLS.");
+      setMessage(el.announcementMessage, "Không lưu được. Hãy chạy migration-v2-2.sql và kiểm tra RLS.");
       return;
     }
 
     el.announcementDialog.close();
     await loadData();
-    showToast(id ? "Đã cập nhật thông báo." : "Đã đăng thông báo.");
+    showToast(`${id ? "Đã cập nhật" : "Đã đăng"} vào Tuần ${targetWeek.week_number}.`);
   }
 
   async function deleteAnnouncement(id) {
@@ -684,7 +773,8 @@
 
   function openBulkDialog() {
     if (!isAdmin()) return;
-    if (!state.currentWeek) {
+
+    if (!state.weeks.length) {
       showToast("Hãy tạo lịch tuần trước.");
       return;
     }
@@ -692,8 +782,10 @@
     el.bulkForm.reset();
     setMessage(el.bulkMessage, "");
     el.bulkPreviewCount.textContent = "Chưa có mục nào";
-    $("#bulk-date").value =
-      state.currentWeekState === "current" ? todayIso() : state.currentWeek.start_date;
+
+    const targetWeekId = state.currentWeek?.id || sortedWeeks()[0]?.id || "";
+    fillWeekSelect($("#bulk-week"), targetWeekId);
+    applyWeekDefaults("bulk");
 
     el.bulkDialog.showModal();
   }
@@ -708,11 +800,25 @@
   async function saveBulk(event) {
     event.preventDefault();
 
-    if (!client || !isAdmin() || !state.currentWeek) return;
+    if (!client || !isAdmin()) return;
+
+    const targetWeek = getSelectedWeek("#bulk-week");
+    if (!targetWeek) {
+      setMessage(el.bulkMessage, "Hãy chọn tuần cần đăng.");
+      return;
+    }
 
     const items = parseQuickInput($("#bulk-raw").value);
     if (!items.length) {
       setMessage(el.bulkMessage, "Mỗi mục cần bắt đầu bằng ### hoặc ####.");
+      return;
+    }
+
+    const validFrom = $("#bulk-valid-from").value;
+    const validUntil = $("#bulk-valid-until").value;
+
+    if (!validFrom || !validUntil || validUntil < validFrom) {
+      setMessage(el.bulkMessage, "Thời gian hiệu lực chưa hợp lệ.");
       return;
     }
 
@@ -722,28 +828,30 @@
     const pinFirst = $("#bulk-pin-first").checked;
 
     const payload = items.map((item, index) => ({
-      week_id: state.currentWeek.id,
+      week_id: targetWeek.id,
       title: item.title,
       content: item.content,
       category,
       event_date: extractDate(item.content, fallbackDate),
+      valid_from: validFrom,
+      valid_until: validUntil,
       priority,
       is_pinned: pinFirst && index === 0,
       updated_at: new Date().toISOString()
     }));
 
-    setMessage(el.bulkMessage, `Đang tạo ${payload.length} thông báo...`);
+    setMessage(el.bulkMessage, `Đang tạo ${payload.length} thông báo cho Tuần ${targetWeek.week_number}...`);
 
     const { error } = await client.from("announcements").insert(payload);
     if (error) {
       console.error(error);
-      setMessage(el.bulkMessage, "Không tạo được danh sách thông báo.");
+      setMessage(el.bulkMessage, "Không tạo được danh sách. Hãy chạy migration-v2-2.sql.");
       return;
     }
 
     el.bulkDialog.close();
     await loadData();
-    showToast(`Đã tạo ${payload.length} thông báo.`);
+    showToast(`Đã tạo ${payload.length} thông báo tại Tuần ${targetWeek.week_number}.`);
   }
 
   function openSchoolYear() {
@@ -1002,7 +1110,7 @@
     if (action === "copy-announcement") copyAnnouncement(id);
     if (action === "delete-announcement") deleteAnnouncement(id);
     if (action === "delete-week") deleteWeek(id);
-    if (action === "open-archive") openArchive(id);
+    if (action === "open-archive" || action === "view-week") openArchive(id);
 
     if (action === "edit-announcement") {
       const item = state.announcements.find(x => x.id === id);
@@ -1060,6 +1168,14 @@
 
     $("#bulk-preview-button").addEventListener("click", previewBulk);
     $("#school-year-preview-button").addEventListener("click", generateSchoolYearPreview);
+
+    $("#announcement-week").addEventListener("change", () => {
+      applyWeekDefaults("announcement");
+    });
+
+    $("#bulk-week").addEventListener("change", () => {
+      applyWeekDefaults("bulk");
+    });
 
     document.addEventListener("click", handleAction);
 
