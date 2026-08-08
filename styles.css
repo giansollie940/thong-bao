@@ -1386,3 +1386,16 @@ select:focus {
 .field-hint {
   line-height: 1.45;
 }
+
+
+/* =========================
+   V2.3 — chuẩn bị tuần kế tiếp từ Thứ Bảy
+   ========================= */
+
+.year-week-card.upcoming {
+  border-color: color-mix(in srgb, var(--brand) 24%, var(--line));
+}
+
+#bulk-week {
+  min-height: 46px;
+}
