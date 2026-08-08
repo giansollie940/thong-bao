@@ -576,6 +576,7 @@
           <p>${escapeHtml(week.summary || "Theo dõi các thông báo quan trọng của tuần.")}</p>
           <span class="week-date">📅 ${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
           ${week.school_year ? `<span class="week-school-year">🎓 ${escapeHtml(week.school_year)}</span>` : ""}
+          <span class="week-school-year">📣 ${getItems(week.id).length} thông báo</span>
           ${isAdmin() ? `<div class="week-admin-actions">
             <button class="button button-secondary button-small" data-action="edit-week" data-id="${week.id}">✏️ Sửa tuần</button>
             <button class="button button-danger button-small" data-action="delete-week" data-id="${week.id}">🗑️ Xóa tuần</button>
@@ -601,9 +602,14 @@
     el.yearStrip.innerHTML = weeks.map(week => {
       const s = weekState(week);
       const label = s === "current" ? "● Hiện tại" : s === "upcoming" ? "Sắp tới" : "✓ Đã qua";
+      const announcementCount = getItems(week.id).length;
+
       return `
         <article class="year-week-card ${s}">
-          <strong>Tuần ${escapeHtml(week.week_number)}</strong>
+          <div class="year-week-head">
+            <strong>Tuần ${escapeHtml(week.week_number)}</strong>
+            <span class="week-count-badge">${announcementCount} thông báo</span>
+          </div>
           <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
           ${week.school_year ? `<small>${escapeHtml(week.school_year)}</small>` : ""}
           <span class="year-week-state">${label}</span>
