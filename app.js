@@ -185,7 +185,21 @@
     const today = todayIso();
 
     const current = weeks.find(w => weekState(w, today) === "current");
-    if (current) return [current, "current"];
+
+    // V2.3:
+    // Từ Thứ Bảy, nếu đã có tuần kế tiếp thì trang chính bắt đầu
+    // hiển thị nội dung của tuần kế tiếp để chuẩn bị sớm.
+    if (current) {
+      const todayDate = dateObj(today);
+      const dayOfWeek = todayDate.getDay(); // 0 CN ... 6 Thứ Bảy
+
+      if (dayOfWeek === 6) {
+        const next = weeks.find(w => w.start_date > current.end_date);
+        if (next) return [next, "upcoming"];
+      }
+
+      return [current, "current"];
+    }
 
     const upcoming = weeks.find(w => w.start_date > today);
     if (upcoming) return [upcoming, "upcoming"];
@@ -200,7 +214,7 @@
 
     return state.announcements
       .filter(item => {
-        // V2.2: nếu có thời gian hiệu lực, thông báo xuất hiện ở mọi tuần
+        // V2.3: nếu có thời gian hiệu lực, thông báo xuất hiện ở mọi tuần
         // mà khoảng hiệu lực giao với khoảng thời gian của tuần đó.
         if (item.valid_from || item.valid_until) {
           const from = item.valid_from || item.event_date || week.start_date;
@@ -413,7 +427,7 @@
 
     const labels = {
       current: "Đang diễn ra",
-      upcoming: "Sắp bắt đầu",
+      upcoming: "Chuẩn bị tuần tiếp theo",
       past: "Tuần gần nhất"
     };
 
@@ -646,7 +660,7 @@
     const id = $("#announcement-id").value;
 
     const payload = {
-      // V2.2: week_id lấy từ tuần admin chọn, không còn ép vào tuần hiện tại.
+      // V2.3: week_id lấy từ tuần admin chọn, không còn ép vào tuần hiện tại.
       week_id: targetWeek.id,
       title: $("#announcement-title").value.trim(),
       content: $("#announcement-content").value.trim(),
