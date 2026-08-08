@@ -1572,3 +1572,39 @@ select:focus {
     max-height: 300px;
   }
 }
+
+
+/* =========================
+   V2.4.1 — Số thông báo mỗi tuần
+   ========================= */
+
+.year-week-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.week-count-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 10%, var(--surface-solid));
+  color: var(--brand);
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.year-week-card.current .week-count-badge {
+  background: color-mix(in srgb, var(--success) 13%, var(--surface-solid));
+  color: var(--success);
+}
+
+@media (max-width: 560px) {
+  .week-count-badge {
+    font-size: 0.68rem;
+  }
+}
