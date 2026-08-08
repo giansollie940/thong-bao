@@ -12,6 +12,8 @@
     ? window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_KEY)
     : null;
 
+  const IMAGE_BUCKET = "announcement-images";
+
   const state = {
     user: null,
     weeks: [],
@@ -110,6 +112,8 @@
         event_date: "2026-08-08",
         valid_from: "2026-08-03",
         valid_until: "2026-08-15",
+        image_path: null,
+        image_alt: null,
         priority: "important",
         is_pinned: true,
         created_at: "2026-08-07T12:20:00Z"
@@ -339,6 +343,123 @@
     if (node) node.textContent = message;
   }
 
+  function validateImageFile(file) {
+    if (!file) return "";
+
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      return "Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP.";
+    }
+
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      return "Ảnh vượt quá 5 MB.";
+    }
+
+    return "";
+  }
+
+  function imageExtension(file) {
+    const map = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp"
+    };
+    return map[file?.type] || "jpg";
+  }
+
+  function getImagePublicUrl(path) {
+    if (!client || !path) return "";
+    const { data } = client.storage.from(IMAGE_BUCKET).getPublicUrl(path);
+    return data?.publicUrl || "";
+  }
+
+  async function uploadAnnouncementImage(file) {
+    const validation = validateImageFile(file);
+    if (validation) throw new Error(validation);
+
+    const randomId = window.crypto?.randomUUID
+      ? window.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const owner = state.user?.id || "admin";
+    const day = todayIso();
+    const path = `${owner}/${day}/${randomId}.${imageExtension(file)}`;
+
+    const { error } = await client.storage
+      .from(IMAGE_BUCKET)
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (error) throw error;
+    return path;
+  }
+
+  async function removeStorageImage(path) {
+    if (!client || !path) return;
+    const { error } = await client.storage.from(IMAGE_BUCKET).remove([path]);
+    if (error) console.error("Không xóa được ảnh Storage:", error);
+  }
+
+  async function cleanupImageIfUnused(path, excludedIds = []) {
+    if (!path) return;
+
+    const excluded = new Set(excludedIds.filter(Boolean));
+    const stillUsed = state.announcements.some(
+      item => item.image_path === path && !excluded.has(item.id)
+    );
+
+    if (!stillUsed) {
+      await removeStorageImage(path);
+    }
+  }
+
+  function clearImagePreview(container) {
+    if (!container) return;
+
+    if (container.dataset.objectUrl) {
+      URL.revokeObjectURL(container.dataset.objectUrl);
+      delete container.dataset.objectUrl;
+    }
+
+    container.innerHTML = "";
+    container.classList.add("hidden");
+  }
+
+  function showImagePreview(container, src, alt = "", label = "") {
+    if (!container || !src) {
+      clearImagePreview(container);
+      return;
+    }
+
+    container.innerHTML = `
+      <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}">
+      ${label ? `<span>${escapeHtml(label)}</span>` : ""}
+    `;
+    container.classList.remove("hidden");
+  }
+
+  function previewSelectedFile(input, container, altInput) {
+    clearImagePreview(container);
+
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (validation) {
+      input.value = "";
+      showToast(validation);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    container.dataset.objectUrl = objectUrl;
+    showImagePreview(container, objectUrl, altInput?.value || "Ảnh xem trước", "Ảnh mới");
+  }
+
   function showToast(message) {
     el.toast.textContent = message;
     el.toast.classList.add("show");
@@ -382,6 +503,19 @@
             <h3>${escapeHtml(item.title)}</h3>
             ${item.priority === "important" ? '<span class="priority-chip">Quan trọng</span>' : ""}
           </div>
+
+          ${
+            item.image_path
+              ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}" aria-label="Mở ảnh của thông báo ${escapeHtml(item.title)}">
+                   <img
+                     src="${escapeHtml(getImagePublicUrl(item.image_path))}"
+                     alt="${escapeHtml(item.image_alt || item.title)}"
+                     loading="lazy"
+                     decoding="async"
+                   >
+                 </button>`
+              : ""
+          }
 
           <div class="announcement-content">${richContent(item.content)}</div>
 
@@ -629,6 +763,24 @@
     $("#announcement-priority").value = item?.priority || "normal";
     $("#announcement-pinned").checked = Boolean(item?.is_pinned);
     $("#announcement-content").value = item?.content || "";
+    $("#announcement-image-alt").value = item?.image_alt || item?.title || "";
+    $("#announcement-remove-image").checked = false;
+
+    const preview = $("#announcement-image-preview");
+    const removeRow = $("#announcement-remove-image-row");
+
+    if (item?.image_path) {
+      showImagePreview(
+        preview,
+        getImagePublicUrl(item.image_path),
+        item.image_alt || item.title,
+        "Ảnh hiện tại"
+      );
+      removeRow.classList.remove("hidden");
+    } else {
+      clearImagePreview(preview);
+      removeRow.classList.add("hidden");
+    }
 
     el.announcementDialogTitle.textContent = item ? "Sửa thông báo" : "Đăng thông báo mới";
     el.announcementDialog.showModal();
@@ -643,7 +795,6 @@
     }
 
     const targetWeek = getSelectedWeek("#announcement-week");
-
     if (!targetWeek) {
       setMessage(el.announcementMessage, "Hãy chọn đúng tuần cần đăng.");
       return;
@@ -658,16 +809,45 @@
     }
 
     const id = $("#announcement-id").value;
+    const existing = state.announcements.find(item => item.id === id) || null;
+    const title = $("#announcement-title").value.trim();
+    const newFile = $("#announcement-image").files?.[0] || null;
+    const removeCurrent = $("#announcement-remove-image").checked;
+
+    let imagePath = existing?.image_path || null;
+    let uploadedPath = null;
+
+    try {
+      if (newFile) {
+        setMessage(el.announcementMessage, "Đang tải ảnh lên...");
+        uploadedPath = await uploadAnnouncementImage(newFile);
+        imagePath = uploadedPath;
+      } else if (removeCurrent) {
+        imagePath = null;
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        el.announcementMessage,
+        error?.message || "Không tải được ảnh. Hãy kiểm tra Storage."
+      );
+      return;
+    }
+
+    const imageAlt = imagePath
+      ? ($("#announcement-image-alt").value.trim() || title)
+      : null;
 
     const payload = {
-      // V2.3: week_id lấy từ tuần admin chọn, không còn ép vào tuần hiện tại.
       week_id: targetWeek.id,
-      title: $("#announcement-title").value.trim(),
+      title,
       content: $("#announcement-content").value.trim(),
       category: $("#announcement-category").value.trim() || null,
       event_date: $("#announcement-date").value,
       valid_from: validFrom,
       valid_until: validUntil,
+      image_path: imagePath,
+      image_alt: imageAlt,
       priority: $("#announcement-priority").value,
       is_pinned: $("#announcement-pinned").checked,
       updated_at: new Date().toISOString()
@@ -683,10 +863,19 @@
 
     if (error) {
       console.error(error);
-      setMessage(el.announcementMessage, "Không lưu được. Hãy chạy migration-v2-2.sql và kiểm tra RLS.");
+      if (uploadedPath) await removeStorageImage(uploadedPath);
+      setMessage(
+        el.announcementMessage,
+        "Không lưu được. Hãy chạy migration-v2-4.sql và kiểm tra Storage/RLS."
+      );
       return;
     }
 
+    if (existing?.image_path && existing.image_path !== imagePath) {
+      await cleanupImageIfUnused(existing.image_path, [existing.id]);
+    }
+
+    clearImagePreview($("#announcement-image-preview"));
     el.announcementDialog.close();
     await loadData();
     showToast(`${id ? "Đã cập nhật" : "Đã đăng"} vào Tuần ${targetWeek.week_number}.`);
@@ -694,6 +883,10 @@
 
   async function deleteAnnouncement(id) {
     if (!client || !isAdmin()) return;
+
+    const item = state.announcements.find(x => x.id === id);
+    if (!item) return;
+
     if (!confirm("Bạn chắc chắn muốn xóa thông báo này?")) return;
 
     const { error } = await client.from("announcements").delete().eq("id", id);
@@ -701,6 +894,10 @@
       console.error(error);
       showToast("Không xóa được thông báo.");
       return;
+    }
+
+    if (item.image_path) {
+      await cleanupImageIfUnused(item.image_path, [id]);
     }
 
     await loadData();
@@ -796,6 +993,7 @@
     el.bulkForm.reset();
     setMessage(el.bulkMessage, "");
     el.bulkPreviewCount.textContent = "Chưa có mục nào";
+    clearImagePreview($("#bulk-image-preview"));
 
     const targetWeekId = state.currentWeek?.id || sortedWeeks()[0]?.id || "";
     fillWeekSelect($("#bulk-week"), targetWeekId);
@@ -840,6 +1038,21 @@
     const category = $("#bulk-category").value.trim() || null;
     const priority = $("#bulk-priority").value;
     const pinFirst = $("#bulk-pin-first").checked;
+    const imageFile = $("#bulk-image").files?.[0] || null;
+    const imageAlt = $("#bulk-image-alt").value.trim() || null;
+
+    let uploadedPath = null;
+
+    if (imageFile) {
+      try {
+        setMessage(el.bulkMessage, "Đang tải ảnh chung lên...");
+        uploadedPath = await uploadAnnouncementImage(imageFile);
+      } catch (error) {
+        console.error(error);
+        setMessage(el.bulkMessage, error?.message || "Không tải được ảnh.");
+        return;
+      }
+    }
 
     const payload = items.map((item, index) => ({
       week_id: targetWeek.id,
@@ -849,6 +1062,8 @@
       event_date: extractDate(item.content, fallbackDate),
       valid_from: validFrom,
       valid_until: validUntil,
+      image_path: uploadedPath,
+      image_alt: uploadedPath ? (imageAlt || item.title) : null,
       priority,
       is_pinned: pinFirst && index === 0,
       updated_at: new Date().toISOString()
@@ -857,12 +1072,15 @@
     setMessage(el.bulkMessage, `Đang tạo ${payload.length} thông báo cho Tuần ${targetWeek.week_number}...`);
 
     const { error } = await client.from("announcements").insert(payload);
+
     if (error) {
       console.error(error);
-      setMessage(el.bulkMessage, "Không tạo được danh sách. Hãy chạy migration-v2-2.sql.");
+      if (uploadedPath) await removeStorageImage(uploadedPath);
+      setMessage(el.bulkMessage, "Không tạo được danh sách. Hãy chạy migration-v2-4.sql.");
       return;
     }
 
+    clearImagePreview($("#bulk-image-preview"));
     el.bulkDialog.close();
     await loadData();
     showToast(`Đã tạo ${payload.length} thông báo tại Tuần ${targetWeek.week_number}.`);
@@ -1011,7 +1229,8 @@
     const week = state.weeks.find(w => w.id === id);
     if (!week) return;
 
-    const itemCount = state.announcements.filter(item => item.week_id === id).length;
+    const weekItems = state.announcements.filter(item => item.week_id === id);
+    const itemCount = weekItems.length;
     const detail = itemCount
       ? `\n\nTuần này đang có ${itemCount} thông báo. Khi xóa tuần, các thông báo thuộc tuần cũng sẽ bị xóa.`
       : "";
@@ -1022,6 +1241,11 @@
 
     if (!ok) return;
 
+    const removedIds = weekItems.map(item => item.id);
+    const imagePaths = [...new Set(
+      weekItems.map(item => item.image_path).filter(Boolean)
+    )];
+
     const { error } = await client.from("weeks").delete().eq("id", id);
 
     if (error) {
@@ -1030,8 +1254,26 @@
       return;
     }
 
+    for (const path of imagePaths) {
+      await cleanupImageIfUnused(path, removedIds);
+    }
+
     await loadData();
     showToast(`Đã xóa Tuần ${week.week_number}.`);
+  }
+
+  function openImageViewer(id) {
+    const item = state.announcements.find(x => x.id === id);
+    if (!item?.image_path) return;
+
+    const url = getImagePublicUrl(item.image_path);
+    if (!url) return;
+
+    $("#image-dialog-title").textContent = item.title;
+    $("#image-dialog-image").src = url;
+    $("#image-dialog-image").alt = item.image_alt || item.title;
+    $("#image-dialog-caption").textContent = item.image_alt || item.title;
+    $("#image-dialog").showModal();
   }
 
   async function copyAnnouncement(id) {
@@ -1044,6 +1286,7 @@
       `Ngày: ${formatDate(item.event_date)}`,
       week ? `Tuần: ${week.week_number}` : "",
       item.category ? `Chuyên mục: ${item.category}` : "",
+      item.image_path ? `Ảnh: ${getImagePublicUrl(item.image_path)}` : "",
       "",
       item.content
     ].filter(Boolean).join("\n");
@@ -1122,6 +1365,7 @@
     const { action, id } = button.dataset;
 
     if (action === "copy-announcement") copyAnnouncement(id);
+    if (action === "open-image") openImageViewer(id);
     if (action === "delete-announcement") deleteAnnouncement(id);
     if (action === "delete-week") deleteWeek(id);
     if (action === "open-archive" || action === "view-week") openArchive(id);
@@ -1182,6 +1426,22 @@
 
     $("#bulk-preview-button").addEventListener("click", previewBulk);
     $("#school-year-preview-button").addEventListener("click", generateSchoolYearPreview);
+
+    $("#announcement-image").addEventListener("change", () => {
+      previewSelectedFile(
+        $("#announcement-image"),
+        $("#announcement-image-preview"),
+        $("#announcement-image-alt")
+      );
+    });
+
+    $("#bulk-image").addEventListener("change", () => {
+      previewSelectedFile(
+        $("#bulk-image"),
+        $("#bulk-image-preview"),
+        $("#bulk-image-alt")
+      );
+    });
 
     $("#announcement-week").addEventListener("change", () => {
       applyWeekDefaults("announcement");
