@@ -1399,3 +1399,42 @@ select:focus {
 #bulk-week {
   min-height: 46px;
 }
+/* Sửa phần tiêu đề hero bị cắt / đè chữ */
+.hero-copy {
+  padding-top: clamp(44px, 6vw, 72px);
+  overflow: hidden;
+}
+
+.hero-copy::before {
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-copy > * {
+  position: relative;
+  z-index: 1;
+}
+
+h1 {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 4.6vw, 3.8rem);
+  line-height: 1.16;
+  letter-spacing: -0.03em;
+}
+
+.hero-description {
+  margin-top: 8px;
+  line-height: 1.65;
+}
+
+/* Màn hình nhỏ */
+@media (max-width: 560px) {
+  .hero-copy {
+    padding-top: 38px;
+  }
+
+  h1 {
+    font-size: clamp(1.7rem, 8vw, 2.4rem);
+    line-height: 1.2;
+  }
+}
