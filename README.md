@@ -1,3 +1,114 @@
+BẢNG THÔNG BÁO THEO TUẦN — V2.4
+
+V2.4 có gì mới?
+
+Đăng 1 thông báo có thể chọn ảnh JPG / PNG / WEBP.
+
+Giới hạn phía app: 5 MB.
+
+Ảnh được lưu ở Supabase Storage, không nhét trực tiếp vào database.
+
+Database chỉ lưu:
+
+image_path
+
+image_alt
+
+Có ảnh xem trước trước khi lưu.
+
+Khi sửa thông báo:
+
+giữ ảnh cũ;
+
+thay ảnh mới;
+
+hoặc chọn xóa ảnh hiện tại.
+
+Người xem bấm ảnh để mở lớn.
+
+loading="lazy" giúp ảnh dưới trang không tải quá sớm.
+
+Nhập nhanh có thể gắn một ảnh chung cho tất cả mục trong lần nhập đó.
+
+Bước 1 — Tạo bucket Supabase Storage
+
+Vào:
+
+Supabase -> Storage -> New bucket
+
+Đặt:
+
+Bucket name: announcement-images
+
+Public bucket: BẬT
+
+File size limit: 5 MB
+
+Allowed MIME types:
+
+image/jpeg
+
+image/png
+
+image/webp
+
+Tên bucket phải đúng chính xác:
+
+announcement-images
+
+Bước 2 — Chạy SQL
+
+Supabase -> SQL Editor -> New query
+
+Chạy toàn bộ:
+
+migration-v2-4.sql
+
+File này:
+
+thêm image_path, image_alt vào announcements;
+
+tạo policy cho tài khoản authenticated upload / đọc metadata / xóa ảnh trong bucket.
+
+Bước 3 — Cập nhật GitHub
+
+Thay 3 file:
+
+index.html
+
+styles.css
+
+app.js
+
+Giữ nguyên:
+
+config.js
+
+Sau deploy, trang phải hiện nhãn V2.4.
+
+Cách dùng
+
+Đăng thông báo
+
+Admin -> Đăng thông báo -> chọn ảnh.
+
+Có thể nhập mô tả ảnh để hỗ trợ accessibility.
+
+Sửa thông báo
+
+Nếu đã có ảnh:
+
+không chọn gì: giữ ảnh cũ;
+
+chọn ảnh mới: thay ảnh;
+
+đánh dấu "Xóa ảnh hiện tại khi lưu": bỏ ảnh.
+
+Nhập nhanh
+
+Có ô "Ảnh chung cho danh sách".
+
+Nếu chọn một ảnh, tất cả thông báo được tạo trong lần nhập nhanh đó sẽ dùng cùng ảnh.
 # BẢNG THÔNG BÁO THEO TUẦN — V2 UPDATE
 
 Bản này dành cho website V1 của bạn đã kết nối Supabase.
