@@ -1358,3 +1358,31 @@ select:focus {
     flex: 1 1 auto;
   }
 }
+
+
+/* =========================
+   V2.2 — tuần đích + hiệu lực thông báo
+   ========================= */
+
+.validity-chip {
+  background: color-mix(in srgb, var(--green, #16a574) 11%, var(--surface-solid));
+  color: var(--success);
+}
+
+.mini-view {
+  width: auto;
+  min-width: 48px;
+  padding-inline: 9px;
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+#announcement-week,
+#bulk-week {
+  font-weight: 700;
+}
+
+.field-hint {
+  line-height: 1.45;
+}
