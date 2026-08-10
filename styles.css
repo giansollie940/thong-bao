@@ -1608,3 +1608,219 @@ select:focus {
     font-size: 0.68rem;
   }
 }
+
+
+/* =========================
+   V2.5 — Fresh UI
+   Xanh ngọc + cam san hô
+   ========================= */
+
+:root {
+  --bg: #f7fbfb;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-solid: #ffffff;
+  --surface-soft: #edf9f7;
+
+  --text: #18333a;
+  --muted: #667b80;
+  --line: #dfeceb;
+
+  --brand: #13a8a8;
+  --brand-strong: #0d8585;
+  --brand-soft: #e2f8f6;
+  --accent: #ff8a5b;
+  --danger: #c94a57;
+  --success: #21a36d;
+
+  --shadow: 0 18px 50px rgba(35, 90, 93, 0.12);
+  --shadow-soft: 0 8px 24px rgba(35, 90, 93, 0.08);
+}
+
+html[data-theme="dark"] {
+  --bg: #0e1719;
+  --surface: rgba(20, 34, 37, 0.9);
+  --surface-solid: #152428;
+  --surface-soft: #1d3538;
+
+  --text: #eefcfb;
+  --muted: #a7c3c1;
+  --line: #2b4749;
+
+  --brand: #5edbd4;
+  --brand-strong: #80ebe5;
+  --brand-soft: #203f46;
+  --accent: #ffab7f;
+  --danger: #ff818d;
+  --success: #65d7a4;
+
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 5%, rgba(19, 168, 168, 0.14), transparent 30rem),
+    radial-gradient(circle at 90% 30%, rgba(255, 138, 91, 0.12), transparent 26rem),
+    var(--bg);
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, var(--brand), #28c7b8 58%, #ff9a6b);
+}
+
+.version-badge {
+  background: linear-gradient(135deg, var(--brand), #29c5b9 55%, var(--accent));
+  box-shadow: 0 4px 12px rgba(19, 168, 168, 0.18);
+}
+
+.hero-copy {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(19, 168, 168, 0.10),
+      rgba(255, 138, 91, 0.07),
+      rgba(55, 196, 181, 0.06)
+    ),
+    var(--surface);
+}
+
+.search-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(19, 168, 168, 0.08), rgba(255, 138, 91, 0.05)),
+    var(--surface);
+}
+
+.search-panel::after {
+  content: "";
+  position: absolute;
+  top: -54px;
+  right: -54px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: rgba(19, 168, 168, 0.09);
+  pointer-events: none;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, var(--brand), #24c7b8);
+  box-shadow: 0 8px 18px rgba(19, 168, 168, 0.22);
+}
+
+.button-primary:hover {
+  background: linear-gradient(135deg, var(--brand-strong), #18aa9e);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(19, 168, 168, 0.24);
+}
+
+.week-hero {
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.16), transparent 44%),
+    linear-gradient(135deg, #119da4 0%, #32b9c4 48%, #ff9a67 100%);
+}
+
+.week-hero::before {
+  content: "";
+  position: absolute;
+  top: -90px;
+  right: 18%;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.week-hero::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  bottom: -120px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.10);
+  pointer-events: none;
+}
+
+.hero-copy,
+.search-panel,
+.announcement-card,
+.year-week-card,
+.archive-card {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.hero-copy:hover,
+.search-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(35, 90, 93, 0.11);
+}
+
+.announcement-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--brand) 24%, var(--line));
+  box-shadow: 0 18px 38px rgba(35, 90, 93, 0.14);
+}
+
+.announcement-card::after {
+  transition:
+    transform 260ms ease,
+    opacity 260ms ease;
+}
+
+.announcement-card:hover::after {
+  transform: scale(1.14);
+  opacity: 0.21;
+}
+
+.year-week-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--line));
+  box-shadow: 0 14px 28px rgba(35, 90, 93, 0.12);
+}
+
+.year-week-card.upcoming {
+  background:
+    linear-gradient(180deg, rgba(19, 168, 168, 0.08), transparent 72%),
+    var(--surface);
+}
+
+.button-secondary:hover,
+.icon-button:hover {
+  border-color: color-mix(in srgb, var(--brand) 26%, var(--line));
+  box-shadow: 0 8px 18px rgba(35, 90, 93, 0.08);
+}
+
+.priority-chip {
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface-solid));
+  color: color-mix(in srgb, #8b431f 78%, var(--text));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy,
+  .search-panel,
+  .announcement-card,
+  .announcement-card::after,
+  .year-week-card,
+  .archive-card,
+  .button,
+  .icon-button {
+    transition: none !important;
+  }
+
+  .hero-copy:hover,
+  .search-panel:hover,
+  .announcement-card:hover,
+  .year-week-card:hover,
+  .button-primary:hover,
+  .button-secondary:hover,
+  .icon-button:hover {
+    transform: none !important;
+  }
+}
