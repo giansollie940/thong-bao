@@ -887,16 +887,23 @@
     const color = String(category?.color || "").toLowerCase();
 
     const warmRemap = {
-      "#2f80ed": "#fb8500",
-      "#8b5cf6": "#d99a00",
-      "#f07a3e": "#ff6b6b",
-      "#e8a312": "#ffb703",
-      "#20a779": "#2fbf8f",
-      "#df4d62": "#e74f4f",
-      "#59728d": "#8a6a55"
+      "#2f80ed": "#c2410c",
+      "#8b5cf6": "#a16207",
+      "#f07a3e": "#be123c",
+      "#e8a312": "#b45309",
+      "#20a779": "#3f7d58",
+      "#df4d62": "#b91c1c",
+      "#59728d": "#7c5c46",
+      "#fb8500": "#c2410c",
+      "#d99a00": "#a16207",
+      "#ff6b6b": "#be123c",
+      "#ffb703": "#b45309",
+      "#2fbf8f": "#3f7d58",
+      "#e74f4f": "#b91c1c",
+      "#8a6a55": "#7c5c46"
     };
 
-    return warmRemap[color] || color || "#8a6a55";
+    return warmRemap[color] || color || "#7c5c46";
   }
 
   function categoryStyle(category) {
@@ -960,7 +967,7 @@
     $("#category-id").value = category?.id || "";
     $("#category-name").value = category?.name || "";
     $("#category-icon").value = category?.icon || "📌";
-    $("#category-color").value = category?.color || "#fb8500";
+    $("#category-color").value = category?.color || "#c2410c";
     $("#category-order").value = category?.sort_order ?? 100;
     $("#category-keywords").value = Array.isArray(category?.keywords)
       ? category.keywords.join(", ")
@@ -1044,7 +1051,7 @@
       name,
       slug: slugify(name),
       icon: $("#category-icon").value.trim() || "📌",
-      color: $("#category-color").value || "#fb8500",
+      color: $("#category-color").value || "#c2410c",
       keywords,
       sort_order: Number($("#category-order").value) || 100,
       active: $("#category-active").checked,
