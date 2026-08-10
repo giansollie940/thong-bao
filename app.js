@@ -764,7 +764,7 @@
       slug: "study",
       name: "Học tập",
       icon: "📘",
-      color: "#f97316",
+      color: "#fb8500",
       keywords: ["học tập", "bài tập", "kiểm tra", "ôn tập", "thi", "môn học", "nộp bài"],
       sort_order: 10,
       active: true
@@ -773,7 +773,7 @@
       slug: "rules",
       name: "Nội quy",
       icon: "🛡️",
-      color: "#e99a12",
+      color: "#d99a00",
       keywords: ["nội quy", "quy định", "cam kết", "kỷ luật", "đồng phục", "nề nếp"],
       sort_order: 20,
       active: true
@@ -782,7 +782,7 @@
       slug: "activity",
       name: "Hoạt động",
       icon: "🎉",
-      color: "#fb7185",
+      color: "#ff6b6b",
       keywords: ["hoạt động", "ngoại khóa", "sự kiện", "văn nghệ", "thể thao", "trải nghiệm"],
       sort_order: 30,
       active: true
@@ -791,7 +791,7 @@
       slug: "youth",
       name: "Đoàn–Đội",
       icon: "🌟",
-      color: "#eab308",
+      color: "#ffb703",
       keywords: ["đoàn", "đội", "liên đội", "chi đoàn", "đoàn trường"],
       sort_order: 40,
       active: true
@@ -800,7 +800,7 @@
       slug: "canteen",
       name: "Căn tin",
       icon: "🍱",
-      color: "#16a36f",
+      color: "#2fbf8f",
       keywords: ["căn tin", "ăn uống", "thực phẩm", "mua bán"],
       sort_order: 50,
       active: true
@@ -809,7 +809,7 @@
       slug: "urgent",
       name: "Cần lưu ý",
       icon: "🚨",
-      color: "#ef4444",
+      color: "#e74f4f",
       keywords: ["khẩn cấp", "gấp", "đặc biệt", "cần lưu ý", "lưu ý"],
       sort_order: 60,
       active: true
@@ -818,7 +818,7 @@
       slug: "general",
       name: "Thông báo chung",
       icon: "📌",
-      color: "#9a6a45",
+      color: "#8a6a55",
       keywords: [],
       sort_order: 999,
       active: true
@@ -887,16 +887,16 @@
     const color = String(category?.color || "").toLowerCase();
 
     const warmRemap = {
-      "#2f80ed": "#f97316",
-      "#8b5cf6": "#e99a12",
-      "#f07a3e": "#fb7185",
-      "#e8a312": "#eab308",
-      "#20a779": "#16a36f",
-      "#df4d62": "#ef4444",
-      "#59728d": "#9a6a45"
+      "#2f80ed": "#fb8500",
+      "#8b5cf6": "#d99a00",
+      "#f07a3e": "#ff6b6b",
+      "#e8a312": "#ffb703",
+      "#20a779": "#2fbf8f",
+      "#df4d62": "#e74f4f",
+      "#59728d": "#8a6a55"
     };
 
-    return warmRemap[color] || color || "#9a6a45";
+    return warmRemap[color] || color || "#8a6a55";
   }
 
   function categoryStyle(category) {
@@ -960,7 +960,7 @@
     $("#category-id").value = category?.id || "";
     $("#category-name").value = category?.name || "";
     $("#category-icon").value = category?.icon || "📌";
-    $("#category-color").value = category?.color || "#f97316";
+    $("#category-color").value = category?.color || "#fb8500";
     $("#category-order").value = category?.sort_order ?? 100;
     $("#category-keywords").value = Array.isArray(category?.keywords)
       ? category.keywords.join(", ")
@@ -1044,7 +1044,7 @@
       name,
       slug: slugify(name),
       icon: $("#category-icon").value.trim() || "📌",
-      color: $("#category-color").value || "#f97316",
+      color: $("#category-color").value || "#fb8500",
       keywords,
       sort_order: Number($("#category-order").value) || 100,
       active: $("#category-active").checked,
