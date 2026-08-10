@@ -5087,3 +5087,615 @@ html[data-theme="dark"] .sidebar-action:hover {
     transform: none;
   }
 }
+
+
+/* =========================================================
+   V3.5 — Mint Garden Polish
+   Lung linh vừa đủ + hệ nút lệnh rõ cấp bậc
+   ========================================================= */
+
+:root {
+  --glow-mint: rgba(91, 189, 154, 0.22);
+  --glow-sky: rgba(110, 168, 255, 0.18);
+  --glow-sun: rgba(245, 176, 66, 0.16);
+}
+
+/* ---------- Ambient polish ---------- */
+
+.app-workspace {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-workspace::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  top: 90px;
+  right: 2vw;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(169, 212, 255, 0.13),
+    rgba(143, 216, 189, 0.06) 44%,
+    transparent 72%
+  );
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.dashboard-welcome {
+  box-shadow:
+    0 12px 28px rgba(70, 102, 93, 0.07),
+    inset 0 1px 0 rgba(255,255,255,.92);
+}
+
+.dashboard-welcome::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 18px;
+  right: 88px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    28px 18px 0 -2px rgba(255,255,255,.92),
+    54px -4px 0 -3px rgba(255,255,255,.82),
+    16px 48px 0 -3px rgba(91,189,154,.25);
+  opacity: .88;
+  pointer-events: none;
+}
+
+/* Hero có ánh sáng + sao nhỏ tĩnh */
+.week-hero {
+  isolation: isolate;
+  box-shadow:
+    0 18px 40px rgba(67, 122, 104, .18),
+    0 0 0 1px rgba(255,255,255,.20) inset;
+}
+
+.week-hero::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 16% 24%, rgba(255,255,255,.26) 0 2px, transparent 3px),
+    radial-gradient(circle at 24% 68%, rgba(255,255,255,.20) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 69% 17%, rgba(255,255,255,.28) 0 2px, transparent 3px),
+    linear-gradient(118deg, rgba(255,255,255,.12), transparent 34%);
+  opacity: .9;
+  pointer-events: none;
+}
+
+.week-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  right: 10%;
+  top: 18%;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.18), transparent 68%);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.week-hero-content {
+  z-index: 1;
+}
+
+.week-number {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 12px 30px rgba(42,103,84,.14),
+    0 0 28px rgba(255,255,255,.07);
+}
+
+/* Cards nổi nhẹ, không "nhảy" quá mức */
+.announcement-card {
+  transition:
+    transform 160ms ease,
+    box-shadow 180ms ease,
+    border-color 160ms ease;
+}
+
+.announcement-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--category-color, var(--brand)) 28%, var(--line));
+  box-shadow:
+    0 18px 34px rgba(67,101,91,.11),
+    0 0 26px color-mix(in srgb, var(--category-color, var(--brand)) 7%, transparent);
+}
+
+.announcement-card::after {
+  opacity: .09;
+  filter: blur(2px);
+}
+
+/* Category tiles sparkle very lightly */
+.category-filter {
+  position: relative;
+  overflow: hidden;
+}
+
+.category-filter::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  right: -18px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--category-color, var(--brand)) 11%, transparent);
+  pointer-events: none;
+}
+
+.category-filter.active {
+  border-color: color-mix(in srgb, var(--category-color, var(--brand)) 34%, var(--line));
+  box-shadow:
+    0 10px 24px rgba(70,102,93,.09),
+    0 0 0 3px color-mix(in srgb, var(--category-color, var(--brand)) 6%, transparent);
+}
+
+/* ---------- Command hierarchy ---------- */
+
+.admin-toolbar {
+  align-items: stretch;
+  gap: 18px;
+  padding: 17px 18px;
+  border-color: color-mix(in srgb, var(--brand) 16%, var(--line));
+  background:
+    radial-gradient(circle at 100% 0%, rgba(169,212,255,.13), transparent 17rem),
+    linear-gradient(115deg, #ffffff, #f3faf7);
+  box-shadow:
+    0 12px 28px rgba(70,102,93,.075),
+    inset 0 1px 0 rgba(255,255,255,.96);
+}
+
+.admin-toolbar-copy {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 190px;
+}
+
+.admin-toolbar-copy .admin-dot {
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow:
+    0 0 0 5px rgba(91,189,154,.12),
+    0 0 20px rgba(91,189,154,.20);
+}
+
+.admin-toolbar-copy strong,
+.admin-toolbar-copy span {
+  display: block;
+}
+
+.admin-toolbar-copy strong {
+  margin-bottom: 2px;
+}
+
+.admin-toolbar-copy span {
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.toolbar-groups {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.toolbar-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 17px;
+}
+
+.toolbar-group-label {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  color: var(--muted);
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.toolbar-divider {
+  width: 1px;
+  min-height: 58px;
+  align-self: center;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--brand) 16%, var(--line)) 22% 78%,
+    transparent
+  );
+}
+
+/* Base command button */
+.command-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 8px 13px 8px 9px;
+  text-align: left;
+}
+
+.command-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.19);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.command-copy strong,
+.command-copy small {
+  display: block;
+  white-space: nowrap;
+}
+
+.command-copy strong {
+  font-size: .88rem;
+}
+
+.command-copy small {
+  margin-top: 2px;
+  font-size: .67rem;
+  font-weight: 700;
+  opacity: .78;
+}
+
+/* Primary button: only the main create action gets this emphasis */
+.button-primary {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--brand-strong) 46%, transparent);
+  background: linear-gradient(135deg, #57b996, #3fa67f);
+  color: #fff;
+  box-shadow:
+    0 9px 20px rgba(63,166,127,.22),
+    inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.button-primary::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -72%;
+  width: 54%;
+  height: 200%;
+  transform: rotate(18deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.24),
+    transparent
+  );
+  transition: left 420ms ease;
+  pointer-events: none;
+}
+
+.button-primary:hover::after {
+  left: 125%;
+}
+
+.button-primary:hover {
+  background: linear-gradient(135deg, #4eb18d, #379974);
+  transform: translateY(-1px);
+}
+
+/* Quick input: important but secondary */
+.button-accent {
+  position: relative;
+  border: 1px solid #cfe1fb;
+  background:
+    linear-gradient(135deg, #edf6ff, #eaf8f2);
+  color: #356b87;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+.button-accent .command-icon {
+  background: linear-gradient(135deg, #dceeff, #dcf5e9);
+  color: #397f6b;
+}
+
+.button-accent:hover {
+  border-color: #bcd7f6;
+  background: linear-gradient(135deg, #e4f2ff, #e2f5ec);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(85,128,147,.09);
+}
+
+/* Management commands are intentionally quiet */
+.button-soft {
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.88);
+  color: #53666d;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+.button-soft:hover {
+  border-color: color-mix(in srgb, var(--brand) 24%, var(--line));
+  background: var(--brand-soft);
+  color: #34785f;
+  transform: translateY(-1px);
+}
+
+.compact-command {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: .78rem;
+  font-weight: 850;
+}
+
+/* Search: concise, visually separate from publishing */
+.search-submit-button {
+  min-width: 88px;
+  gap: 6px;
+}
+
+/* ---------- Card action buttons ---------- */
+
+.card-actions,
+.week-admin-actions {
+  gap: 7px;
+}
+
+.card-command {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.button-ghost {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #60727a;
+}
+
+.button-ghost:hover {
+  border-color: var(--line);
+  background: #f4f8f7;
+  color: #2f6f5a;
+}
+
+.button-danger {
+  border-color: rgba(239,106,115,.24);
+  background: rgba(239,106,115,.07);
+  color: #c84f5a;
+}
+
+.button-danger:hover {
+  border-color: rgba(239,106,115,.34);
+  background: rgba(239,106,115,.12);
+  color: #b93f4a;
+}
+
+.button-glass,
+.button-glass-danger {
+  border: 1px solid rgba(255,255,255,.24);
+  background: rgba(255,255,255,.13);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.button-glass:hover {
+  background: rgba(255,255,255,.21);
+}
+
+.button-glass-danger {
+  border-color: rgba(255,216,220,.28);
+  background: rgba(156,47,58,.20);
+}
+
+.button-glass-danger:hover {
+  background: rgba(156,47,58,.30);
+}
+
+/* ---------- Sidebar controls ---------- */
+
+.sidebar-action {
+  position: relative;
+}
+
+.sidebar-action-icon {
+  border-radius: 9px;
+  background: #eef7f3;
+}
+
+.sidebar-action:hover .sidebar-action-icon {
+  background: #dff2e9;
+  color: #287a5f;
+}
+
+.sidebar-link,
+.sidebar-action {
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.sidebar-link:hover,
+.sidebar-action:hover {
+  transform: translateX(2px);
+}
+
+/* ---------- Focus and tactile feedback ---------- */
+
+.button:focus-visible,
+.sidebar-link:focus-visible,
+.sidebar-action:focus-visible,
+.category-filter:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 26%, transparent);
+  outline-offset: 3px;
+}
+
+.button:active,
+.category-filter:active,
+.sidebar-action:active {
+  transform: translateY(1px) scale(.99);
+}
+
+/* ---------- Dark mode ---------- */
+
+html[data-theme="dark"] .admin-toolbar {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(141,189,255,.10), transparent 17rem),
+    linear-gradient(115deg, #20303a, #243940);
+}
+
+html[data-theme="dark"] .button-accent {
+  border-color: #365667;
+  background: linear-gradient(135deg, #294252, #29493f);
+  color: #c9e8f5;
+}
+
+html[data-theme="dark"] .button-accent .command-icon {
+  background: #315364;
+  color: #d9f2ff;
+}
+
+html[data-theme="dark"] .button-soft {
+  border-color: #344750;
+  background: #253740;
+  color: #c3d0d7;
+}
+
+html[data-theme="dark"] .button-soft:hover,
+html[data-theme="dark"] .button-ghost:hover {
+  background: #29463d;
+  color: #9fe8cc;
+}
+
+html[data-theme="dark"] .button-ghost {
+  color: #b8c8d0;
+}
+
+html[data-theme="dark"] .sidebar-action-icon {
+  background: #294039;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1180px) {
+  .admin-toolbar {
+    display: grid;
+  }
+
+  .toolbar-groups {
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .toolbar-groups {
+    flex-wrap: wrap;
+  }
+
+  .toolbar-divider {
+    display: none;
+  }
+
+  .toolbar-group-primary,
+  .toolbar-group-manage {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 620px) {
+  .admin-toolbar {
+    padding: 14px;
+  }
+
+  .toolbar-groups {
+    gap: 12px;
+  }
+
+  .toolbar-group-primary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .command-button {
+    min-width: 0;
+  }
+
+  .command-copy small {
+    display: none;
+  }
+
+  .toolbar-group-manage {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .compact-command {
+    justify-content: center;
+    padding-inline: 7px;
+  }
+}
+
+@media (max-width: 440px) {
+  .toolbar-group-primary {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-group-manage {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button-primary::after {
+    display: none;
+  }
+
+  .button,
+  .sidebar-link,
+  .sidebar-action,
+  .announcement-card,
+  .category-filter {
+    transition: none !important;
+  }
+
+  .sidebar-link:hover,
+  .sidebar-action:hover,
+  .button:hover,
+  .announcement-card:hover {
+    transform: none !important;
+  }
+}

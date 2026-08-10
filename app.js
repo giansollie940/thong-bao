@@ -1190,8 +1190,12 @@
     const week = state.weeks.find(w => w.id === item.week_id);
     const category = categoryInfo(item);
     const adminButtons = isAdmin()
-      ? `<button class="button button-secondary button-small" data-action="edit-announcement" data-id="${escapeHtml(item.id)}">Sửa</button>
-         <button class="button button-danger button-small" data-action="delete-announcement" data-id="${escapeHtml(item.id)}">Xóa</button>`
+      ? `<button class="button button-ghost button-small card-command" data-action="edit-announcement" data-id="${escapeHtml(item.id)}">
+           <span aria-hidden="true">✎</span><span>Sửa</span>
+         </button>
+         <button class="button button-danger button-small card-command" data-action="delete-announcement" data-id="${escapeHtml(item.id)}">
+           <span aria-hidden="true">⌫</span><span>Xóa</span>
+         </button>`
       : "";
 
     return `
@@ -1238,7 +1242,7 @@
           </div>
 
           <div class="card-actions">
-            <button class="button button-secondary button-small" data-action="copy-announcement" data-id="${escapeHtml(item.id)}">📋 Sao chép</button>
+            <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
             ${adminButtons}
           </div>
         </div>
@@ -1289,8 +1293,12 @@
           ${week.school_year ? `<span class="week-school-year">🎓 ${escapeHtml(week.school_year)}</span>` : ""}
           <span class="week-school-year">📣 ${getItems(week.id).length} thông báo</span>
           ${isAdmin() ? `<div class="week-admin-actions">
-            <button class="button button-secondary button-small" data-action="edit-week" data-id="${week.id}">✏️ Sửa tuần</button>
-            <button class="button button-danger button-small" data-action="delete-week" data-id="${week.id}">🗑️ Xóa tuần</button>
+            <button class="button button-glass button-small card-command" data-action="edit-week" data-id="${week.id}">
+              <span aria-hidden="true">✎</span><span>Sửa tuần</span>
+            </button>
+            <button class="button button-glass-danger button-small card-command" data-action="delete-week" data-id="${week.id}">
+              <span aria-hidden="true">⌫</span><span>Xóa tuần</span>
+            </button>
           </div>` : ""}
         </div>
       </div>`;
