@@ -1,64 +1,32 @@
-# V3.0 — WARM SCHOOL UI + FORMATTING TOOLBAR
+# V3.1 — MANGO MINT UI
 
-## 1. Giao diện tông ấm
+## Bảng màu
+- Mango: `#FFB703`
+- Orange: `#FB8500`
+- Coral: `#FF6B6B`
+- Mint: `#6EE7B7`
+- Cream: `#FFFDF4`
+- Text: `#493528`
 
-Bản này giảm gần như toàn bộ cảm giác xanh/tím.
+## Cách phối
+- 70% nền kem / trắng
+- 20% mango + orange
+- 10% coral + mint
 
-Bảng màu chính:
-- Cam tươi: `#F97316`
-- Cam đào: `#FB923C`
-- Vàng nắng: `#FBBF24`
-- Coral / hồng ấm: `#FB7185`
-- Xanh lá tươi: `#34D399`
-- Nền kem: `#FFFAF2`
-- Chữ nâu đậm: `#4A2D24`
+Màu đậm chỉ tập trung ở hero, nút chính, badge, trạng thái và mép card.
+Các vùng đọc nội dung vẫn chủ yếu là trắng/kem.
 
-Các màu chuyên mục mặc định cũ cũng được tự đổi sang tông ấm ở giao diện, **không cần sửa database**.
+## Giữ nguyên
+- thanh định dạng nội dung V3.0;
+- chuyên mục động;
+- tự phân loại;
+- ảnh đính kèm;
+- Supabase;
+- logic tuần;
+- dark mode.
 
-## 2. Thanh định dạng nội dung
-
-Trong form **Đăng thông báo / Sửa thông báo**, phía trên ô Nội dung có toolbar:
-
-- **B** — in đậm
-- *I* — in nghiêng
-- **T** — tiêu đề nhỏ
-- **•** — danh sách chấm
-- **1.** — danh sách số
-- **❝** — trích dẫn / ghi chú
-- **🔗** — liên kết
-- **</>** — mã / ký hiệu ngắn
-- **👁 Xem trước** — xem nội dung sau khi định dạng
-
-Cách dùng:
-1. Bôi đen đoạn chữ.
-2. Bấm nút định dạng.
-3. Có thể bấm `👁 Xem trước` trước khi lưu.
-
-App lưu nội dung dạng Markdown nhẹ, nên dữ liệu vẫn chỉ là text và tương thích với Supabase hiện tại.
-
-## 3. Cú pháp được hỗ trợ
-
-```text
-**chữ đậm**
-*chữ nghiêng*
-### Tiêu đề nhỏ
-
-- Danh sách chấm
-- Mục thứ hai
-
-1. Bước một
-2. Bước hai
-
-> Ghi chú quan trọng
-
-[Tên liên kết](https://example.com)
-
-`ký hiệu`
-```
-
-## 4. Cập nhật
-
-**Không cần chạy SQL mới.**
+## Cập nhật
+Không cần SQL mới.
 
 Trên GitHub thay:
 - `index.html`
@@ -67,11 +35,8 @@ Trên GitHub thay:
 
 Giữ nguyên:
 - `config.js`
-- database Supabase hiện tại
 
-Nếu đã chạy `migration-v2-8.sql` thì không chạy lại.
-
-Sau deploy, cạnh tên app phải hiện `V3.0`.
+Sau deploy phải thấy `V3.1`.
 
 # V2.9 — HAPPY SCHOOL UI
 
