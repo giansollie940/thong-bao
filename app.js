@@ -738,6 +738,11 @@
     el.adminToolbar.classList.toggle("hidden", !isAdmin());
     el.loginButton.classList.toggle("hidden", isAdmin());
     el.logoutButton.classList.toggle("hidden", !isAdmin());
+
+    const modeLabel = $("#sidebar-mode-label");
+    if (modeLabel) {
+      modeLabel.textContent = isAdmin() ? "Admin" : "Public";
+    }
   }
 
   function renderConnection() {
@@ -764,7 +769,7 @@
       slug: "study",
       name: "Học tập",
       icon: "📘",
-      color: "#fb8500",
+      color: "#4f8fe8",
       keywords: ["học tập", "bài tập", "kiểm tra", "ôn tập", "thi", "môn học", "nộp bài"],
       sort_order: 10,
       active: true
@@ -773,7 +778,7 @@
       slug: "rules",
       name: "Nội quy",
       icon: "🛡️",
-      color: "#d99a00",
+      color: "#7e72d8",
       keywords: ["nội quy", "quy định", "cam kết", "kỷ luật", "đồng phục", "nề nếp"],
       sort_order: 20,
       active: true
@@ -782,7 +787,7 @@
       slug: "activity",
       name: "Hoạt động",
       icon: "🎉",
-      color: "#ff6b6b",
+      color: "#2fae9a",
       keywords: ["hoạt động", "ngoại khóa", "sự kiện", "văn nghệ", "thể thao", "trải nghiệm"],
       sort_order: 30,
       active: true
@@ -791,7 +796,7 @@
       slug: "youth",
       name: "Đoàn–Đội",
       icon: "🌟",
-      color: "#ffb703",
+      color: "#e3a83b",
       keywords: ["đoàn", "đội", "liên đội", "chi đoàn", "đoàn trường"],
       sort_order: 40,
       active: true
@@ -800,7 +805,7 @@
       slug: "canteen",
       name: "Căn tin",
       icon: "🍱",
-      color: "#2fbf8f",
+      color: "#58b985",
       keywords: ["căn tin", "ăn uống", "thực phẩm", "mua bán"],
       sort_order: 50,
       active: true
@@ -809,7 +814,7 @@
       slug: "urgent",
       name: "Cần lưu ý",
       icon: "🚨",
-      color: "#e74f4f",
+      color: "#e56b73",
       keywords: ["khẩn cấp", "gấp", "đặc biệt", "cần lưu ý", "lưu ý"],
       sort_order: 60,
       active: true
@@ -818,7 +823,7 @@
       slug: "general",
       name: "Thông báo chung",
       icon: "📌",
-      color: "#8a6a55",
+      color: "#6f8795",
       keywords: [],
       sort_order: 999,
       active: true
@@ -886,24 +891,33 @@
   function categoryDisplayColor(category) {
     const color = String(category?.color || "").toLowerCase();
 
-    const warmRemap = {
-      "#2f80ed": "#c2410c",
-      "#8b5cf6": "#a16207",
-      "#f07a3e": "#be123c",
-      "#e8a312": "#b45309",
-      "#20a779": "#3f7d58",
-      "#df4d62": "#b91c1c",
-      "#59728d": "#7c5c46",
-      "#fb8500": "#c2410c",
-      "#d99a00": "#a16207",
-      "#ff6b6b": "#be123c",
-      "#ffb703": "#b45309",
-      "#2fbf8f": "#3f7d58",
-      "#e74f4f": "#b91c1c",
-      "#8a6a55": "#7c5c46"
+    const coolRemap = {
+      "#2f80ed": "#4f8fe8",
+      "#8b5cf6": "#7e72d8",
+      "#f07a3e": "#2fae9a",
+      "#e8a312": "#e3a83b",
+      "#20a779": "#58b985",
+      "#df4d62": "#e56b73",
+      "#59728d": "#6f8795",
+
+      "#fb8500": "#4f8fe8",
+      "#d99a00": "#7e72d8",
+      "#ff6b6b": "#2fae9a",
+      "#ffb703": "#e3a83b",
+      "#2fbf8f": "#58b985",
+      "#e74f4f": "#e56b73",
+      "#8a6a55": "#6f8795",
+
+      "#c2410c": "#4f8fe8",
+      "#a16207": "#7e72d8",
+      "#be123c": "#2fae9a",
+      "#b45309": "#e3a83b",
+      "#3f7d58": "#58b985",
+      "#b91c1c": "#e56b73",
+      "#7c5c46": "#6f8795"
     };
 
-    return warmRemap[color] || color || "#7c5c46";
+    return coolRemap[color] || color || "#6f8795";
   }
 
   function categoryStyle(category) {
@@ -967,7 +981,7 @@
     $("#category-id").value = category?.id || "";
     $("#category-name").value = category?.name || "";
     $("#category-icon").value = category?.icon || "📌";
-    $("#category-color").value = category?.color || "#c2410c";
+    $("#category-color").value = category?.color || "#4f8fe8";
     $("#category-order").value = category?.sort_order ?? 100;
     $("#category-keywords").value = Array.isArray(category?.keywords)
       ? category.keywords.join(", ")
@@ -1051,7 +1065,7 @@
       name,
       slug: slugify(name),
       icon: $("#category-icon").value.trim() || "📌",
-      color: $("#category-color").value || "#c2410c",
+      color: $("#category-color").value || "#4f8fe8",
       keywords,
       sort_order: Number($("#category-order").value) || 100,
       active: $("#category-active").checked,

@@ -6,46 +6,96 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.3.0">
+  <link rel="stylesheet" href="styles.css?v=3.4.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
 
-  <header class="site-header">
-    <div class="shell header-inner">
-      <a class="brand" href="#" aria-label="Trang chủ bảng thông báo">
-        <span class="brand-mark" aria-hidden="true">✦</span>
+  <div class="app-shell">
+    <aside class="app-sidebar" aria-label="Thanh điều hướng">
+      <a class="sidebar-brand" href="#main-content" aria-label="Bảng thông báo theo tuần">
+        <span class="sidebar-logo" aria-hidden="true">🌿</span>
         <span>
-          <strong>Bảng thông báo <span class="version-badge">V3.3</span></strong>
-          <small>Theo tuần · nhập nhanh · lịch năm học</small>
+          <strong>Thông báo</strong>
+          <small>Theo tuần</small>
         </span>
       </a>
 
-      <nav class="top-actions" aria-label="Điều hướng chính">
-        <button class="icon-button" id="theme-toggle" type="button" aria-label="Đổi giao diện sáng tối" title="Đổi giao diện">
-          <span aria-hidden="true">☼</span>
-        </button>
-        <button class="button button-secondary" id="login-button" type="button">
-          Quản trị
-        </button>
-        <button class="button button-secondary hidden" id="logout-button" type="button">
-          Đăng xuất
-        </button>
+      <nav class="sidebar-nav" aria-label="Điều hướng dashboard">
+        <a class="sidebar-link active" href="#main-content">
+          <span aria-hidden="true">⌂</span>
+          <span>Trang chủ</span>
+        </a>
+        <a class="sidebar-link" href="#current-section">
+          <span aria-hidden="true">▣</span>
+          <span>Thông báo</span>
+        </a>
+        <a class="sidebar-link" href="#year-section">
+          <span aria-hidden="true">▦</span>
+          <span>Lịch năm học</span>
+        </a>
+        <a class="sidebar-link" href="#category-dashboard">
+          <span aria-hidden="true">⌘</span>
+          <span>Chuyên mục</span>
+        </a>
+        <a class="sidebar-link" href="#archive-section">
+          <span aria-hidden="true">◫</span>
+          <span>Lưu trữ</span>
+        </a>
       </nav>
-    </div>
-  </header>
 
-  <main id="main-content" class="shell main-layout">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <p class="eyebrow">THÔNG TIN MỚI NHẤT</p>
+      <div class="sidebar-status" aria-live="polite">
+        <span class="sidebar-status-icon" aria-hidden="true">◉</span>
+        <div>
+          <small>Bạn đang ở chế độ</small>
+          <strong id="sidebar-mode-label">Public</strong>
+        </div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <button class="sidebar-action" id="theme-toggle" type="button" aria-label="Đổi giao diện sáng tối">
+          <span aria-hidden="true">☼</span>
+          <span>Chế độ tối</span>
+        </button>
+
+        <button class="sidebar-action" id="login-button" type="button">
+          <span aria-hidden="true">♙</span>
+          <span>Quản trị</span>
+        </button>
+
+        <button class="sidebar-action hidden" id="logout-button" type="button">
+          <span aria-hidden="true">↪</span>
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="app-workspace">
+      <header class="app-topbar">
+        <div>
+          <p class="topbar-kicker">BẢNG THÔNG BÁO THEO TUẦN</p>
+          <strong>Xin chào! <span aria-hidden="true">👋</span></strong>
+        </div>
+
+        <div class="topbar-meta">
+          <span class="version-badge">V3.4</span>
+          <span class="topbar-dot" aria-hidden="true"></span>
+          <span>Đang cập nhật</span>
+        </div>
+      </header>
+
+
+  <main id="main-content" class="dashboard-main">
+    <section class="dashboard-intro" aria-labelledby="hero-title">
+      <div class="dashboard-welcome">
+        <p class="eyebrow">TỔNG QUAN HÔM NAY</p>
         <h1 id="hero-title">Mọi thông báo quan trọng, gọn trong từng tuần.</h1>
         <p class="hero-description">
-          Xem nhanh tuần hiện tại, sao chép nội dung cần thiết và tìm lại thông báo cũ bất cứ lúc nào.
+          Theo dõi tuần hiện tại, lọc theo chuyên mục và tìm lại thông báo cũ thật nhanh.
         </p>
       </div>
 
-      <form class="search-panel" id="search-form" role="search">
+      <form class="search-panel compact-search" id="search-form" role="search">
         <label for="search-input">Tìm thông báo</label>
         <div class="search-row">
           <input
@@ -53,11 +103,11 @@
             name="q"
             type="search"
             autocomplete="off"
-            placeholder="Ví dụ: lịch họp, học tập, thứ Hai..."
+            placeholder="Tìm tiêu đề, nội dung, ngày..."
           >
           <button class="button button-primary" type="submit">Tìm</button>
         </div>
-        <p class="field-hint">Tìm theo tiêu đề, nội dung, tuần, ngày hoặc chuyên mục.</p>
+        <p class="field-hint">Tìm trong toàn bộ tuần và chuyên mục.</p>
       </form>
     </section>
 
@@ -78,7 +128,7 @@
       </div>
     </section>
 
-    <section class="current-section" aria-labelledby="current-heading">
+    <section class="current-section" id="current-section" aria-labelledby="current-heading">
       <div class="section-heading">
         <div>
           <p class="eyebrow">ĐANG HIỂN THỊ</p>
@@ -93,10 +143,17 @@
 
       <nav class="category-dashboard" id="category-dashboard" aria-label="Lọc thông báo theo chuyên mục"></nav>
 
+      <div class="dashboard-subheading">
+        <div>
+          <p class="eyebrow">MỚI NHẤT</p>
+          <h3>Thông báo trong tuần</h3>
+        </div>
+      </div>
+
       <div class="announcement-list" id="current-announcements" aria-live="polite"></div>
     </section>
 
-    <section class="year-section" aria-labelledby="year-heading">
+    <section class="year-section" id="year-section" aria-labelledby="year-heading">
       <div class="section-heading">
         <div>
           <p class="eyebrow">LỊCH NĂM HỌC</p>
@@ -121,7 +178,7 @@
       <div class="announcement-list" id="search-results"></div>
     </section>
 
-    <section class="archive-section" aria-labelledby="archive-heading">
+    <section class="archive-section" id="archive-section" aria-labelledby="archive-heading">
       <div class="section-heading">
         <div>
           <p class="eyebrow">LƯU TRỮ</p>
@@ -142,6 +199,8 @@
       <button class="text-button" id="scroll-top-button" type="button">Về đầu trang ↑</button>
     </div>
   </footer>
+    </div>
+  </div>
 
   <dialog id="login-dialog" class="modal">
     <form class="modal-card" id="login-form">
@@ -619,6 +678,6 @@ Ví dụ:
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=3.3.0"></script>
+  <script src="app.js?v=3.4.0"></script>
 </body>
 </html>

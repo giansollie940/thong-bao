@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 520" role="img" aria-labelledby="title desc">
+  <title id="title">Khuôn viên trường học phong cách Mint Garden</title>
+  <desc id="desc">Bầu trời xanh mint, mây, đồi cây và tòa nhà trường học tối giản.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#5bbd9a"/>
+      <stop offset="0.58" stop-color="#82d8b7"/>
+      <stop offset="1" stop-color="#b9ddff"/>
+    </linearGradient>
+    <linearGradient id="hill" x1="0" x2="1">
+      <stop offset="0" stop-color="#48a989"/>
+      <stop offset="1" stop-color="#76c7a8"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="520" rx="36" fill="url(#sky)"/>
+  <circle cx="1185" cy="92" r="58" fill="#fff2b5" opacity=".78"/>
+
+  <g fill="#fff" opacity=".7">
+    <ellipse cx="930" cy="110" rx="52" ry="22"/>
+    <ellipse cx="974" cy="104" rx="38" ry="28"/>
+    <ellipse cx="1015" cy="114" rx="48" ry="20"/>
+    <ellipse cx="1210" cy="180" rx="42" ry="17"/>
+    <ellipse cx="1244" cy="174" rx="32" ry="24"/>
+    <ellipse cx="1280" cy="182" rx="40" ry="17"/>
+  </g>
+
+  <path d="M710 390 C820 280 915 330 1010 255 C1110 175 1210 255 1400 220 L1400 520 L650 520 Z" fill="#a7d9c5" opacity=".68"/>
+  <path d="M540 438 C730 335 825 420 965 330 C1115 235 1240 350 1400 310 L1400 520 L500 520 Z" fill="url(#hill)" opacity=".92"/>
+  <path d="M760 470 C910 385 1050 435 1180 355 C1265 300 1330 332 1400 320 L1400 520 L720 520 Z" fill="#3f947a" opacity=".42"/>
+
+  <!-- School building -->
+  <g transform="translate(955 252)">
+    <rect x="0" y="70" width="230" height="120" rx="12" fill="#fff" opacity=".94"/>
+    <rect x="24" y="30" width="182" height="56" rx="10" fill="#f6fbff" opacity=".96"/>
+    <path d="M12 72 L115 5 L218 72 Z" fill="#fff6c9" opacity=".96"/>
+    <rect x="100" y="116" width="34" height="74" rx="6" fill="#64b597"/>
+    <g fill="#9ecdf8">
+      <rect x="28" y="104" width="34" height="28" rx="5"/>
+      <rect x="70" y="104" width="34" height="28" rx="5"/>
+      <rect x="146" y="104" width="34" height="28" rx="5"/>
+      <rect x="188" y="104" width="22" height="28" rx="5"/>
+    </g>
+  </g>
+
+  <!-- Garden leaves -->
+  <g transform="translate(1210 292)" fill="#2f8b70">
+    <ellipse cx="0" cy="60" rx="15" ry="48" transform="rotate(-28)"/>
+    <ellipse cx="28" cy="35" rx="14" ry="43" transform="rotate(25 28 35)"/>
+    <ellipse cx="54" cy="70" rx="15" ry="50" transform="rotate(36 54 70)"/>
+    <ellipse cx="82" cy="48" rx="13" ry="40" transform="rotate(-24 82 48)"/>
+  </g>
+
+  <g transform="translate(1330 330)" fill="#58ae8e" opacity=".9">
+    <ellipse cx="0" cy="42" rx="14" ry="42" transform="rotate(-30)"/>
+    <ellipse cx="28" cy="24" rx="13" ry="36" transform="rotate(28 28 24)"/>
+    <ellipse cx="48" cy="58" rx="14" ry="42" transform="rotate(34 48 58)"/>
+  </g>
+
+  <!-- Soft light -->
+  <circle cx="620" cy="55" r="140" fill="#fff" opacity=".08" filter="url(#soft)"/>
+</svg>

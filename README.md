@@ -4,7 +4,7 @@
 
 Web được xây dựng theo hướng **nhẹ, dễ dùng, chạy trực tiếp trên trình duyệt**, giao diện responsive và lưu dữ liệu bằng **Supabase**.
 
-> Phiên bản giao diện hiện tại: **V3.2 — Sunlit Campus**
+> Phiên bản giao diện hiện tại: **V3.4 — Mint Garden App Shell**
 
 ---
 
@@ -715,7 +715,7 @@ nên dễ học, dễ chỉnh sửa và dễ triển khai.
 # 📌 Phiên bản hiện tại
 
 ```text
-V3.2 — Sunlit Campus
+V3.4 — Mint Garden App Shell
 ```
 
 Bao gồm:
