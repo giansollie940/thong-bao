@@ -18,8 +18,10 @@
     user: null,
     weeks: [],
     announcements: [],
+    categories: [],
     currentWeek: null,
     currentWeekState: "none",
+    categoryFilter: "all",
     schoolYearPreview: []
   };
 
@@ -28,6 +30,11 @@
   const el = {
     currentWeekCard: $("#current-week-card"),
     currentAnnouncements: $("#current-announcements"),
+    categoryDashboard: $("#category-dashboard"),
+    categoryDialog: $("#categories-dialog"),
+    categoryForm: $("#category-form"),
+    categoryManagerList: $("#category-manager-list"),
+    categoryMessage: $("#category-message"),
     archiveGrid: $("#archive-grid"),
     archiveCount: $("#archive-count"),
     yearStrip: $("#year-strip"),
@@ -488,19 +495,422 @@
       "<strong>Chế độ xem thử:</strong> chưa có cấu hình Supabase trong <code>config.js</code>.";
   }
 
+  function normalizeText(value = "") {
+    return String(value)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+
+  const DEFAULT_CATEGORIES = [
+    {
+      slug: "study",
+      name: "Học tập",
+      icon: "📘",
+      color: "#2f80ed",
+      keywords: ["học tập", "bài tập", "kiểm tra", "ôn tập", "thi", "môn học", "nộp bài"],
+      sort_order: 10,
+      active: true
+    },
+    {
+      slug: "rules",
+      name: "Nội quy",
+      icon: "🛡️",
+      color: "#8b5cf6",
+      keywords: ["nội quy", "quy định", "cam kết", "kỷ luật", "đồng phục", "nề nếp"],
+      sort_order: 20,
+      active: true
+    },
+    {
+      slug: "activity",
+      name: "Hoạt động",
+      icon: "🎉",
+      color: "#f07a3e",
+      keywords: ["hoạt động", "ngoại khóa", "sự kiện", "văn nghệ", "thể thao", "trải nghiệm"],
+      sort_order: 30,
+      active: true
+    },
+    {
+      slug: "youth",
+      name: "Đoàn–Đội",
+      icon: "🌟",
+      color: "#e8a312",
+      keywords: ["đoàn", "đội", "liên đội", "chi đoàn", "đoàn trường"],
+      sort_order: 40,
+      active: true
+    },
+    {
+      slug: "canteen",
+      name: "Căn tin",
+      icon: "🍱",
+      color: "#20a779",
+      keywords: ["căn tin", "ăn uống", "thực phẩm", "mua bán"],
+      sort_order: 50,
+      active: true
+    },
+    {
+      slug: "urgent",
+      name: "Cần lưu ý",
+      icon: "🚨",
+      color: "#df4d62",
+      keywords: ["khẩn cấp", "gấp", "đặc biệt", "cần lưu ý", "lưu ý"],
+      sort_order: 60,
+      active: true
+    },
+    {
+      slug: "general",
+      name: "Thông báo chung",
+      icon: "📌",
+      color: "#59728d",
+      keywords: [],
+      sort_order: 999,
+      active: true
+    }
+  ];
+
+  function slugify(value = "") {
+    return normalizeText(value)
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || `category-${Date.now()}`;
+  }
+
+  function activeCategories() {
+    const source = state.categories.length ? state.categories : DEFAULT_CATEGORIES;
+
+    return [...source]
+      .filter(category => category.active !== false)
+      .sort((a, b) => (a.sort_order ?? 100) - (b.sort_order ?? 100));
+  }
+
+  function categoryById(id) {
+    return state.categories.find(category => category.id === id) || null;
+  }
+
+  function categoryInfo(item) {
+    if (item.category_id) {
+      const saved = categoryById(item.category_id);
+      if (saved) {
+        return { key: saved.slug, ...saved };
+      }
+    }
+
+    const source = normalizeText(
+      `${item.category || ""} ${item.title || ""} ${item.content || ""}`
+    );
+
+    const categories = activeCategories();
+    const general =
+      categories.find(category => category.slug === "general") ||
+      DEFAULT_CATEGORIES.find(category => category.slug === "general");
+
+    for (const category of categories) {
+      if (category.slug === "general") continue;
+
+      const keywords = Array.isArray(category.keywords)
+        ? category.keywords
+        : String(category.keywords || "")
+            .split(",")
+            .map(value => value.trim())
+            .filter(Boolean);
+
+      if (
+        keywords.some(keyword =>
+          source.includes(normalizeText(keyword))
+        )
+      ) {
+        return { key: category.slug, ...category };
+      }
+    }
+
+    return { key: general.slug, ...general };
+  }
+
+  function categoryStyle(category) {
+    const color = category?.color || "#59728d";
+    return `--category-color:${escapeHtml(color)};`;
+  }
+
+  function fillCategorySelect(select, selected = "auto") {
+    if (!select) return;
+
+    const options = activeCategories()
+      .map(category => `
+        <option value="${escapeHtml(category.id || category.slug)}">
+          ${escapeHtml(category.icon || "📌")} ${escapeHtml(category.name)}
+        </option>
+      `)
+      .join("");
+
+    select.innerHTML = `
+      <option value="auto">✨ Tự động phân loại</option>
+      ${options}
+    `;
+
+    select.value = selected || "auto";
+    if (select.value !== (selected || "auto")) {
+      select.value = "auto";
+    }
+  }
+
+  function categorySelectionToPayload(value, itemForAuto = null) {
+    if (!value || value === "auto") {
+      if (!itemForAuto) {
+        return { category_id: null, category: null };
+      }
+
+      const guessed = categoryInfo(itemForAuto);
+      const dbCategory = state.categories.find(
+        category => category.slug === guessed.slug
+      );
+
+      return {
+        category_id: dbCategory?.id || null,
+        category: guessed.name || null
+      };
+    }
+
+    const category = state.categories.find(
+      item => item.id === value || item.slug === value
+    );
+
+    return {
+      category_id: category?.id || null,
+      category: category?.name || null
+    };
+  }
+
+  function resetCategoryForm(category = null) {
+    if (!el.categoryForm) return;
+
+    el.categoryForm.reset();
+    $("#category-id").value = category?.id || "";
+    $("#category-name").value = category?.name || "";
+    $("#category-icon").value = category?.icon || "📌";
+    $("#category-color").value = category?.color || "#2f80ed";
+    $("#category-order").value = category?.sort_order ?? 100;
+    $("#category-keywords").value = Array.isArray(category?.keywords)
+      ? category.keywords.join(", ")
+      : (category?.keywords || "");
+    $("#category-active").checked = category ? category.active !== false : true;
+    setMessage(el.categoryMessage, "");
+  }
+
+  function renderCategoryManager() {
+    if (!el.categoryManagerList) return;
+
+    const categories = [...state.categories]
+      .sort((a, b) => (a.sort_order ?? 100) - (b.sort_order ?? 100));
+
+    el.categoryManagerList.innerHTML = categories.length
+      ? categories.map(category => `
+          <article
+            class="category-manager-item ${category.active === false ? "inactive" : ""}"
+            style="${categoryStyle(category)}"
+          >
+            <div class="category-manager-icon" aria-hidden="true">
+              ${escapeHtml(category.icon || "📌")}
+            </div>
+
+            <div class="category-manager-info">
+              <strong>${escapeHtml(category.name)}</strong>
+              <small>
+                ${escapeHtml((category.keywords || []).join(", ") || "Chưa có từ khóa")}
+              </small>
+            </div>
+
+            <div class="category-manager-actions">
+              <button
+                class="mini-action"
+                type="button"
+                data-action="edit-category"
+                data-id="${escapeHtml(category.id)}"
+                aria-label="Sửa ${escapeHtml(category.name)}"
+              >✏️</button>
+
+              <button
+                class="mini-action mini-danger"
+                type="button"
+                data-action="delete-category"
+                data-id="${escapeHtml(category.id)}"
+                aria-label="Xóa ${escapeHtml(category.name)}"
+              >🗑️</button>
+            </div>
+          </article>
+        `).join("")
+      : '<div class="empty-state">Chưa có chuyên mục. Hãy chạy migration-v2-8.sql.</div>';
+  }
+
+  function openCategoriesDialog() {
+    if (!isAdmin()) return;
+
+    renderCategoryManager();
+    resetCategoryForm();
+    el.categoryDialog.showModal();
+  }
+
+  async function saveCategory(event) {
+    event.preventDefault();
+
+    if (!client || !isAdmin()) return;
+
+    const id = $("#category-id").value;
+    const name = $("#category-name").value.trim();
+
+    if (!name) {
+      setMessage(el.categoryMessage, "Hãy nhập tên chuyên mục.");
+      return;
+    }
+
+    const keywords = $("#category-keywords").value
+      .split(",")
+      .map(value => value.trim())
+      .filter(Boolean);
+
+    const payload = {
+      name,
+      slug: slugify(name),
+      icon: $("#category-icon").value.trim() || "📌",
+      color: $("#category-color").value || "#2f80ed",
+      keywords,
+      sort_order: Number($("#category-order").value) || 100,
+      active: $("#category-active").checked,
+      updated_at: new Date().toISOString()
+    };
+
+    setMessage(el.categoryMessage, "Đang lưu...");
+
+    const request = id
+      ? client.from("categories").update(payload).eq("id", id)
+      : client.from("categories").insert(payload);
+
+    const { error } = await request;
+
+    if (error) {
+      console.error(error);
+      setMessage(
+        el.categoryMessage,
+        "Không lưu được chuyên mục. Có thể tên/slug đã tồn tại."
+      );
+      return;
+    }
+
+    await loadData();
+    renderCategoryManager();
+    resetCategoryForm();
+    showToast(id ? "Đã cập nhật chuyên mục." : "Đã thêm chuyên mục.");
+  }
+
+  async function deleteCategory(id) {
+    if (!client || !isAdmin()) return;
+
+    const category = state.categories.find(item => item.id === id);
+    if (!category) return;
+
+    const ok = confirm(
+      `Xóa chuyên mục "${category.name}"? Các thông báo cũ sẽ chuyển về phân loại tự động/chung.`
+    );
+
+    if (!ok) return;
+
+    const { error } = await client
+      .from("categories")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      showToast("Không xóa được chuyên mục.");
+      return;
+    }
+
+    await loadData();
+    renderCategoryManager();
+    resetCategoryForm();
+    showToast("Đã xóa chuyên mục.");
+  }
+
+  function renderCategoryDashboard(items) {
+    if (!el.categoryDashboard) return;
+
+    if (!items.length) {
+      el.categoryDashboard.innerHTML = "";
+      el.categoryDashboard.classList.add("hidden");
+      state.categoryFilter = "all";
+      return;
+    }
+
+    const counts = new Map();
+
+    items.forEach(item => {
+      const info = categoryInfo(item);
+      counts.set(info.key, (counts.get(info.key) || 0) + 1);
+    });
+
+    if (
+      state.categoryFilter !== "all" &&
+      !counts.has(state.categoryFilter)
+    ) {
+      state.categoryFilter = "all";
+    }
+
+    const categoryButtons = activeCategories()
+      .filter(category => counts.has(category.slug))
+      .map(category => `
+        <button
+          class="category-filter ${state.categoryFilter === category.slug ? "active" : ""}"
+          style="${categoryStyle(category)}"
+          type="button"
+          data-action="filter-category"
+          data-category="${escapeHtml(category.slug)}"
+          aria-pressed="${state.categoryFilter === category.slug}"
+        >
+          <span class="category-filter-icon" aria-hidden="true">
+            ${escapeHtml(category.icon || "📌")}
+          </span>
+          <span>${escapeHtml(category.name)}</span>
+          <strong>${counts.get(category.slug)}</strong>
+        </button>
+      `)
+      .join("");
+
+    el.categoryDashboard.classList.remove("hidden");
+    el.categoryDashboard.innerHTML = `
+      <button
+        class="category-filter category-all ${state.categoryFilter === "all" ? "active" : ""}"
+        type="button"
+        data-action="filter-category"
+        data-category="all"
+        aria-pressed="${state.categoryFilter === "all"}"
+      >
+        <span class="category-filter-icon" aria-hidden="true">✨</span>
+        <span>Tất cả</span>
+        <strong>${items.length}</strong>
+      </button>
+
+      ${categoryButtons}
+    `;
+  }
+
   function announcementCard(item, showWeek = false) {
     const week = state.weeks.find(w => w.id === item.week_id);
+    const category = categoryInfo(item);
     const adminButtons = isAdmin()
       ? `<button class="button button-secondary button-small" data-action="edit-announcement" data-id="${escapeHtml(item.id)}">Sửa</button>
          <button class="button button-danger button-small" data-action="delete-announcement" data-id="${escapeHtml(item.id)}">Xóa</button>`
       : "";
 
     return `
-      <article class="announcement-card tone-${tone(item.title + item.id)} ${item.priority === "important" ? "important" : ""}">
+      <article class="announcement-card tone-${tone(item.title + item.id)} ${item.priority === "important" ? "important" : ""}" style="${categoryStyle(category)}">
         <div class="announcement-inner">
           <div class="announcement-title-row">
             ${item.is_pinned ? '<span class="pin" aria-label="Đã ghim">📌</span>' : ""}
             <h3>${escapeHtml(item.title)}</h3>
+            <span class="category-chip" style="${categoryStyle(category)}">
+              <span aria-hidden="true">${escapeHtml(category.icon || "📌")}</span>
+              ${escapeHtml(category.name)}
+            </span>
             ${item.priority === "important" ? '<span class="priority-chip">Quan trọng</span>' : ""}
           </div>
 
@@ -521,7 +931,11 @@
 
           <div class="announcement-meta">
             <span class="meta-chip">📅 ${escapeHtml(formatDate(item.event_date))}</span>
-            ${item.category ? `<span class="meta-chip">${escapeHtml(item.category)}</span>` : ""}
+            ${
+              item.category && normalizeText(item.category) !== normalizeText(category.name)
+                ? `<span class="meta-chip">🏷️ ${escapeHtml(item.category)}</span>`
+                : ""
+            }
             ${showWeek && week ? `<span class="meta-chip">Đăng tại Tuần ${escapeHtml(week.week_number)}</span>` : ""}
             ${
               item.valid_from || item.valid_until
@@ -556,6 +970,10 @@
     if (!week) {
       el.currentWeekCard.innerHTML = '<div class="loading-card">Chưa có lịch tuần.</div>';
       el.currentAnnouncements.innerHTML = '<div class="empty-state">Chưa có thông báo.</div>';
+      if (el.categoryDashboard) {
+        el.categoryDashboard.innerHTML = "";
+        el.categoryDashboard.classList.add("hidden");
+      }
       return;
     }
 
@@ -585,9 +1003,15 @@
       </div>`;
 
     const items = getItems(week.id);
-    el.currentAnnouncements.innerHTML = items.length
-      ? items.map(announcementCard).join("")
-      : '<div class="empty-state">Tuần này chưa có thông báo.</div>';
+    renderCategoryDashboard(items);
+
+    const visibleItems = state.categoryFilter === "all"
+      ? items
+      : items.filter(item => categoryInfo(item).key === state.categoryFilter);
+
+    el.currentAnnouncements.innerHTML = visibleItems.length
+      ? visibleItems.map(announcementCard).join("")
+      : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>';
   }
 
   function renderYearStrip() {
@@ -676,22 +1100,29 @@
     if (!client) {
       state.weeks = demoData.weeks;
       state.announcements = demoData.announcements;
+      state.categories = DEFAULT_CATEGORIES;
     } else {
-      const [{ data: weeks, error: weekError }, { data: items, error: itemError }] = await Promise.all([
+      const [
+        { data: weeks, error: weekError },
+        { data: items, error: itemError },
+        { data: categories, error: categoryError }
+      ] = await Promise.all([
         client.from("weeks").select("*").order("start_date", { ascending: true }),
-        client.from("announcements").select("*").order("created_at", { ascending: false })
+        client.from("announcements").select("*").order("created_at", { ascending: false }),
+        client.from("categories").select("*").order("sort_order", { ascending: true })
       ]);
 
-      if (weekError || itemError) {
-        console.error(weekError || itemError);
+      if (weekError || itemError || categoryError) {
+        console.error(weekError || itemError || categoryError);
         el.connectionBanner.className = "status-banner warning";
         el.connectionBanner.textContent =
-          "Không tải được dữ liệu. Hãy kiểm tra config.js và chạy migration-v2.sql.";
+          "Không tải được dữ liệu. Hãy kiểm tra config.js và chạy migration-v2-8.sql.";
         return;
       }
 
       state.weeks = weeks || [];
       state.announcements = items || [];
+      state.categories = categories || [];
     }
 
     [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek();
@@ -765,6 +1196,10 @@
       item?.valid_from || targetWeek?.start_date || todayIso();
     $("#announcement-valid-until").value =
       item?.valid_until || targetWeek?.end_date || todayIso();
+    fillCategorySelect(
+      $("#announcement-category-select"),
+      item?.category_id || "auto"
+    );
     $("#announcement-category").value = item?.category || "";
     $("#announcement-priority").value = item?.priority || "normal";
     $("#announcement-pinned").checked = Boolean(item?.is_pinned);
@@ -848,7 +1283,14 @@
       week_id: targetWeek.id,
       title,
       content: $("#announcement-content").value.trim(),
-      category: $("#announcement-category").value.trim() || null,
+      ...categorySelectionToPayload(
+        $("#announcement-category-select").value,
+        {
+          title,
+          content: $("#announcement-content").value.trim(),
+          category: $("#announcement-category").value.trim()
+        }
+      ),
       event_date: $("#announcement-date").value,
       valid_from: validFrom,
       valid_until: validUntil,
@@ -1003,6 +1445,7 @@
 
     const targetWeekId = state.currentWeek?.id || sortedWeeks()[0]?.id || "";
     fillWeekSelect($("#bulk-week"), targetWeekId);
+    fillCategorySelect($("#bulk-category-select"), "auto");
     applyWeekDefaults("bulk");
 
     el.bulkDialog.showModal();
@@ -1041,7 +1484,7 @@
     }
 
     const fallbackDate = $("#bulk-date").value;
-    const category = $("#bulk-category").value.trim() || null;
+    const categorySelection = $("#bulk-category-select").value;
     const priority = $("#bulk-priority").value;
     const pinFirst = $("#bulk-pin-first").checked;
     const imageFile = $("#bulk-image").files?.[0] || null;
@@ -1064,7 +1507,14 @@
       week_id: targetWeek.id,
       title: item.title,
       content: item.content,
-      category,
+      ...categorySelectionToPayload(
+        categorySelection,
+        {
+          title: item.title,
+          content: item.content,
+          category: ""
+        }
+      ),
       event_date: extractDate(item.content, fallbackDate),
       valid_from: validFrom,
       valid_until: validUntil,
@@ -1370,6 +1820,23 @@
 
     const { action, id } = button.dataset;
 
+    if (action === "filter-category") {
+      state.categoryFilter = button.dataset.category || "all";
+      renderCurrent();
+      return;
+    }
+
+    if (action === "edit-category") {
+      const category = state.categories.find(item => item.id === id);
+      if (category) resetCategoryForm(category);
+      return;
+    }
+
+    if (action === "delete-category") {
+      deleteCategory(id);
+      return;
+    }
+
     if (action === "copy-announcement") copyAnnouncement(id);
     if (action === "open-image") openImageViewer(id);
     if (action === "delete-announcement") deleteAnnouncement(id);
@@ -1423,12 +1890,16 @@
     $("#new-announcement-button").addEventListener("click", () => openAnnouncementForm());
     $("#new-week-button").addEventListener("click", () => openWeekForm());
     $("#quick-input-button").addEventListener("click", openBulkDialog);
+    $("#categories-button").addEventListener("click", openCategoriesDialog);
     $("#school-year-button").addEventListener("click", openSchoolYear);
 
     el.announcementForm.addEventListener("submit", saveAnnouncement);
     el.weekForm.addEventListener("submit", saveWeek);
     el.bulkForm.addEventListener("submit", saveBulk);
+    el.categoryForm.addEventListener("submit", saveCategory);
     el.schoolYearForm.addEventListener("submit", saveSchoolYear);
+
+    $("#category-reset-button").addEventListener("click", () => resetCategoryForm());
 
     $("#bulk-preview-button").addEventListener("click", previewBulk);
     $("#school-year-preview-button").addEventListener("click", generateSchoolYearPreview);

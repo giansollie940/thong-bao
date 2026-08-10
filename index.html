@@ -6,7 +6,7 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=2.5.0">
+  <link rel="stylesheet" href="styles.css?v=2.8.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
@@ -16,7 +16,7 @@
       <a class="brand" href="#" aria-label="Trang chủ bảng thông báo">
         <span class="brand-mark" aria-hidden="true">✦</span>
         <span>
-          <strong>Bảng thông báo <span class="version-badge">V2.5</span></strong>
+          <strong>Bảng thông báo <span class="version-badge">V2.8</span></strong>
           <small>Theo tuần · nhập nhanh · lịch năm học</small>
         </span>
       </a>
@@ -73,6 +73,7 @@
         <button class="button button-secondary" id="school-year-button" type="button">📅 Tạo tuần năm học</button>
         <button class="button button-secondary" id="new-week-button" type="button">+ Tạo 1 tuần</button>
         <button class="button button-secondary" id="quick-input-button" type="button">⚡ Nhập nhanh</button>
+        <button class="button button-secondary" id="categories-button" type="button">🏷️ Chuyên mục</button>
         <button class="button button-primary" id="new-announcement-button" type="button">+ Đăng thông báo</button>
       </div>
     </section>
@@ -89,6 +90,8 @@
       <article class="week-hero" id="current-week-card" aria-live="polite">
         <div class="loading-card">Đang tải tuần hiện tại...</div>
       </article>
+
+      <nav class="category-dashboard" id="category-dashboard" aria-label="Lọc thông báo theo chuyên mục"></nav>
 
       <div class="announcement-list" id="current-announcements" aria-live="polite"></div>
     </section>
@@ -191,8 +194,15 @@
         </div>
 
         <div class="field">
-          <label for="announcement-category">Chuyên mục</label>
-          <input id="announcement-category" type="text" maxlength="60" placeholder="Học tập, công việc...">
+          <label for="announcement-category-select">Chuyên mục</label>
+          <select id="announcement-category-select">
+            <option value="auto">✨ Tự động phân loại</option>
+          </select>
+        </div>
+
+        <div class="field hidden" id="announcement-custom-category-field">
+          <label for="announcement-category">Tên chuyên mục tùy chỉnh</label>
+          <input id="announcement-category" type="text" maxlength="60" placeholder="Nhập tên chuyên mục...">
         </div>
 
         <div class="field">
@@ -337,8 +347,11 @@
         </div>
 
         <div class="field">
-          <label for="bulk-category">Chuyên mục chung</label>
-          <input id="bulk-category" type="text" maxlength="60" placeholder="Ví dụ: Nội quy">
+          <label for="bulk-category-select">Phân loại chuyên mục</label>
+          <select id="bulk-category-select">
+            <option value="auto">✨ Tự động phân loại từng mục</option>
+          </select>
+          <p class="field-hint">Chọn một chuyên mục nếu muốn gán chung cho toàn bộ danh sách.</p>
         </div>
 
         <div class="field">
@@ -488,6 +501,73 @@
   </dialog>
 
 
+
+  <dialog id="categories-dialog" class="modal">
+    <form id="category-form" class="modal-card modal-card-wide">
+      <input type="hidden" id="category-id">
+
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">QUẢN LÝ</p>
+          <h2>Chuyên mục thông báo</h2>
+        </div>
+        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
+      </div>
+
+      <div class="category-manager-layout">
+        <section aria-labelledby="category-list-heading">
+          <strong id="category-list-heading">Chuyên mục hiện có</strong>
+          <p class="field-hint">Có thể sửa, ẩn hoặc xóa chuyên mục không còn dùng.</p>
+          <div id="category-manager-list" class="category-manager-list"></div>
+        </section>
+
+        <section class="category-editor" aria-labelledby="category-editor-heading">
+          <strong id="category-editor-heading">Thêm / sửa chuyên mục</strong>
+
+          <div class="form-grid category-editor-grid">
+            <div class="field">
+              <label for="category-name">Tên chuyên mục</label>
+              <input id="category-name" type="text" maxlength="60" required placeholder="Ví dụ: Phụ huynh">
+            </div>
+
+            <div class="field">
+              <label for="category-icon">Icon</label>
+              <input id="category-icon" type="text" maxlength="8" value="📌" placeholder="📌">
+            </div>
+
+            <div class="field">
+              <label for="category-color">Màu</label>
+              <input id="category-color" type="color" value="#2f80ed">
+            </div>
+
+            <div class="field">
+              <label for="category-order">Thứ tự</label>
+              <input id="category-order" type="number" min="0" max="999" value="100">
+            </div>
+
+            <div class="field field-span-2">
+              <label for="category-keywords">Từ khóa tự phân loại</label>
+              <input id="category-keywords" type="text" maxlength="300" placeholder="phụ huynh, cha mẹ học sinh, họp phụ huynh">
+              <p class="field-hint">Ngăn cách bằng dấu phẩy. App dùng tiêu đề + nội dung để tự nhận diện.</p>
+            </div>
+
+            <div class="field checkbox-field">
+              <input id="category-active" type="checkbox" checked>
+              <label for="category-active">Đang sử dụng</label>
+            </div>
+          </div>
+
+          <p class="form-message" id="category-message" aria-live="polite"></p>
+
+          <div class="modal-actions category-editor-actions">
+            <button class="button button-secondary" id="category-reset-button" type="button">Tạo mới</button>
+            <button class="button button-primary" type="submit">Lưu chuyên mục</button>
+          </div>
+        </section>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="image-dialog" class="modal image-modal">
     <article class="modal-card image-viewer-card">
       <div class="modal-heading image-viewer-heading">
@@ -508,6 +588,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=2.5.0"></script>
+  <script src="app.js?v=2.8.0"></script>
 </body>
 </html>
