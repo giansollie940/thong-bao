@@ -6,7 +6,7 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.5.0">
+  <link rel="stylesheet" href="styles.css?v=3.6.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
@@ -24,25 +24,59 @@
       <nav class="sidebar-nav" aria-label="Điều hướng dashboard">
         <a class="sidebar-link active" href="#main-content">
           <span aria-hidden="true">⌂</span>
-          <span>Trang chủ</span>
-        </a>
-        <a class="sidebar-link" href="#current-section">
-          <span aria-hidden="true">▣</span>
-          <span>Thông báo</span>
+          <span>Tổng quan</span>
         </a>
         <a class="sidebar-link" href="#year-section">
           <span aria-hidden="true">▦</span>
           <span>Lịch năm học</span>
-        </a>
-        <a class="sidebar-link" href="#category-dashboard">
-          <span aria-hidden="true">⌘</span>
-          <span>Chuyên mục</span>
         </a>
         <a class="sidebar-link" href="#archive-section">
           <span aria-hidden="true">◫</span>
           <span>Lưu trữ</span>
         </a>
       </nav>
+
+      <section class="sidebar-admin hidden" id="admin-toolbar" aria-label="Công cụ quản trị">
+        <div class="sidebar-section-heading">
+          <span>QUẢN TRỊ</span>
+          <small>Nội dung & thiết lập</small>
+        </div>
+
+        <div class="sidebar-admin-actions">
+          <button class="sidebar-command sidebar-command-primary" id="new-announcement-button" type="button">
+            <span class="sidebar-command-icon" aria-hidden="true">＋</span>
+            <span>
+              <strong>Đăng thông báo</strong>
+              <small>Tạo một mục mới</small>
+            </span>
+          </button>
+
+          <button class="sidebar-command sidebar-command-accent" id="quick-input-button" type="button">
+            <span class="sidebar-command-icon" aria-hidden="true">⚡</span>
+            <span>
+              <strong>Nhập nhanh</strong>
+              <small>Tạo nhiều mục</small>
+            </span>
+          </button>
+
+          <div class="sidebar-admin-mini">
+            <button class="sidebar-mini-command" id="categories-button" type="button">
+              <span aria-hidden="true">⌘</span>
+              <span>Chuyên mục</span>
+            </button>
+
+            <button class="sidebar-mini-command" id="new-week-button" type="button">
+              <span aria-hidden="true">＋</span>
+              <span>1 tuần</span>
+            </button>
+
+            <button class="sidebar-mini-command" id="school-year-button" type="button">
+              <span aria-hidden="true">▦</span>
+              <span>Năm học</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
       <div class="sidebar-status" aria-live="polite">
         <span class="sidebar-status-icon" aria-hidden="true">◉</span>
@@ -72,105 +106,38 @@
 
     <div class="app-workspace">
       <header class="app-topbar">
-        <div>
-          <p class="topbar-kicker">BẢNG THÔNG BÁO THEO TUẦN</p>
+        <div class="topbar-greeting">
           <strong>Xin chào! <span aria-hidden="true">👋</span></strong>
+          <small>Theo dõi thông báo mới nhất của tuần.</small>
         </div>
 
-        <div class="topbar-meta">
-          <span class="version-badge">V3.5</span>
-          <span class="topbar-dot" aria-hidden="true"></span>
-          <span>Đang cập nhật</span>
-        </div>
-      </header>
-
-
-  <main id="main-content" class="dashboard-main">
-    <section class="dashboard-intro" aria-labelledby="hero-title">
-      <div class="dashboard-welcome">
-        <p class="eyebrow">TỔNG QUAN HÔM NAY</p>
-        <h1 id="hero-title">Các thông báo quan trọng trong từng tuần.</h1>
-        <p class="hero-description">
-          Theo dõi thông tin, lọc theo chuyên mục và tìm lại thông báo cũ thật nhanh.
-        </p>
-      </div>
-
-      <form class="search-panel compact-search" id="search-form" role="search">
-        <label for="search-input">Tìm thông báo</label>
-        <div class="search-row">
+        <form class="topbar-search" id="search-form" role="search">
+          <label class="sr-only" for="search-input">Tìm thông báo</label>
+          <span class="topbar-search-icon" aria-hidden="true">⌕</span>
           <input
             id="search-input"
             name="q"
             type="search"
             autocomplete="off"
-            placeholder="Tìm tiêu đề, nội dung, ngày..."
+            placeholder="Tìm thông báo..."
           >
-          <button class="button button-primary search-submit-button" type="submit"><span aria-hidden="true">⌕</span><span>Tìm</span></button>
-        </div>
-        <p class="field-hint">Tìm trong toàn bộ tuần và chuyên mục.</p>
-      </form>
-    </section>
+          <button class="topbar-search-button" type="submit">Tìm</button>
+        </form>
+      </header>
+
+
+  <main id="main-content" class="dashboard-main">
+
 
     <aside class="status-banner hidden" id="connection-banner" aria-live="polite"></aside>
 
-    <section class="admin-toolbar hidden" id="admin-toolbar" aria-label="Công cụ quản trị">
-      <div class="admin-toolbar-copy">
-        <span class="admin-dot" aria-hidden="true"></span>
-        <div>
-          <strong>Trung tâm quản trị</strong>
-          <span>Đăng nội dung nhanh hoặc mở các công cụ thiết lập.</span>
-        </div>
-      </div>
 
-      <div class="toolbar-groups">
-        <div class="toolbar-group toolbar-group-primary" aria-label="Đăng nội dung">
-          <span class="toolbar-group-label">Nội dung</span>
-
-          <button class="button button-primary command-button" id="new-announcement-button" type="button">
-            <span class="command-icon" aria-hidden="true">＋</span>
-            <span class="command-copy">
-              <strong>Đăng thông báo</strong>
-              <small>Tạo một thông báo mới</small>
-            </span>
-          </button>
-
-          <button class="button button-accent command-button" id="quick-input-button" type="button">
-            <span class="command-icon" aria-hidden="true">⚡</span>
-            <span class="command-copy">
-              <strong>Nhập nhanh</strong>
-              <small>Tạo nhiều mục cùng lúc</small>
-            </span>
-          </button>
-        </div>
-
-        <div class="toolbar-divider" aria-hidden="true"></div>
-
-        <div class="toolbar-group toolbar-group-manage" aria-label="Quản lý cấu hình">
-          <span class="toolbar-group-label">Quản lý</span>
-
-          <button class="button button-soft compact-command" id="new-week-button" type="button">
-            <span aria-hidden="true">＋</span>
-            <span>1 tuần</span>
-          </button>
-
-          <button class="button button-soft compact-command" id="school-year-button" type="button">
-            <span aria-hidden="true">▦</span>
-            <span>Năm học</span>
-          </button>
-
-          <button class="button button-soft compact-command" id="categories-button" type="button">
-            <span aria-hidden="true">⌘</span>
-            <span>Chuyên mục</span>
-          </button>
-        </div>
-      </div>
-    </section>
 
     <section class="current-section" id="current-section" aria-labelledby="current-heading">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">ĐANG HIỂN THỊ</p>
-          <h2 id="current-heading">Tuần nổi bật</h2>
+          <p class="eyebrow">TỔNG QUAN</p>
+          <h2 id="current-heading">Tuần hiện tại</h2>
         </div>
         <span class="live-badge" id="week-state-badge"><span aria-hidden="true"></span> Đang hoạt động</span>
       </div>
@@ -716,6 +683,6 @@ Ví dụ:
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=3.5.0"></script>
+  <script src="app.js?v=3.6.0"></script>
 </body>
 </html>
