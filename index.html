@@ -6,7 +6,7 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=2.9.0">
+  <link rel="stylesheet" href="styles.css?v=3.0.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
@@ -16,7 +16,7 @@
       <a class="brand" href="#" aria-label="Trang chủ bảng thông báo">
         <span class="brand-mark" aria-hidden="true">✦</span>
         <span>
-          <strong>Bảng thông báo <span class="version-badge">V2.9</span></strong>
+          <strong>Bảng thông báo <span class="version-badge">V3.0</span></strong>
           <small>Theo tuần · nhập nhanh · lịch năm học</small>
         </span>
       </a>
@@ -229,8 +229,39 @@
         </div>
 
         <div class="field field-span-2">
-          <label for="announcement-content">Nội dung</label>
-          <textarea id="announcement-content" rows="8" required placeholder="Nhập nội dung thông báo..."></textarea>
+          <div class="editor-label-row">
+            <label for="announcement-content">Nội dung</label>
+            <span class="editor-help">Chọn đoạn chữ rồi bấm nút định dạng</span>
+          </div>
+
+          <div class="format-toolbar" id="announcement-format-toolbar" role="toolbar" aria-label="Định dạng nội dung thông báo">
+            <button class="format-button" type="button" data-format="bold" title="In đậm" aria-label="In đậm"><strong>B</strong></button>
+            <button class="format-button" type="button" data-format="italic" title="In nghiêng" aria-label="In nghiêng"><em>I</em></button>
+            <button class="format-button format-button-wide" type="button" data-format="heading" title="Tiêu đề nhỏ" aria-label="Tiêu đề nhỏ">T</button>
+            <span class="format-separator" aria-hidden="true"></span>
+            <button class="format-button" type="button" data-format="bullet" title="Danh sách chấm" aria-label="Danh sách chấm">•</button>
+            <button class="format-button" type="button" data-format="numbered" title="Danh sách số" aria-label="Danh sách số">1.</button>
+            <button class="format-button" type="button" data-format="quote" title="Trích dẫn / ghi chú" aria-label="Trích dẫn">❝</button>
+            <span class="format-separator" aria-hidden="true"></span>
+            <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">🔗</button>
+            <button class="format-button" type="button" data-format="code" title="Định dạng mã / ký hiệu" aria-label="Định dạng mã">&lt;/&gt;</button>
+            <button class="format-preview-button" id="announcement-preview-button" type="button" aria-expanded="false">👁 Xem trước</button>
+          </div>
+
+          <textarea id="announcement-content" rows="10" required
+            placeholder="Nhập nội dung thông báo...
+
+Ví dụ:
+**Nội dung quan trọng**
+- Mục thứ nhất
+- Mục thứ hai
+1. Bước một
+2. Bước hai"></textarea>
+
+          <div class="content-preview hidden" id="announcement-content-preview" aria-live="polite"></div>
+          <p class="field-hint editor-syntax-hint">
+            Hỗ trợ đậm, nghiêng, tiêu đề nhỏ, danh sách, trích dẫn, liên kết và mã ngắn.
+          </p>
         </div>
 
         <div class="field field-span-2">
@@ -588,6 +619,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=2.9.0"></script>
+  <script src="app.js?v=3.0.0"></script>
 </body>
 </html>

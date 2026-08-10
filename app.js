@@ -288,38 +288,294 @@
     return (total % 5) + 1;
   }
 
+  function safeLinkUrl(value = "") {
+    const url = String(value).trim();
+
+    if (/^https?:\/\//i.test(url) || /^mailto:/i.test(url)) {
+      return url;
+    }
+
+    return "";
+  }
+
   function inlineMarkdown(text = "") {
-    return escapeHtml(text)
+    const links = [];
+
+    let source = String(text).replace(
+      /\[([^\]]+)\]\(([^)\s]+)\)/g,
+      (_match, label, url) => {
+        const safeUrl = safeLinkUrl(url);
+
+        if (!safeUrl) {
+          return `${label} (${url})`;
+        }
+
+        const token = `@@WEEKLY_LINK_${links.length}@@`;
+
+        links.push(
+          `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`
+        );
+
+        return token;
+      }
+    );
+
+    let html = escapeHtml(source)
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.+?)\*/g, "<em>$1</em>")
       .replace(/`(.+?)`/g, "<code>$1</code>");
+
+    html = html.replace(
+      /@@WEEKLY_LINK_(\d+)@@/g,
+      (_match, index) => links[Number(index)] || ""
+    );
+
+    return html;
   }
 
   function richContent(raw = "") {
     const lines = String(raw).replace(/\r\n/g, "\n").split("\n");
     const out = [];
     let list = [];
+    let listType = "";
 
-    const flush = () => {
+    const flushList = () => {
       if (!list.length) return;
-      out.push(`<ul>${list.map(x => `<li>${inlineMarkdown(x)}</li>`).join("")}</ul>`);
+
+      const tag = listType === "ol" ? "ol" : "ul";
+      out.push(
+        `<${tag}>${list.map(item => `<li>${inlineMarkdown(item)}</li>`).join("")}</${tag}>`
+      );
+
       list = [];
+      listType = "";
     };
 
     for (const rawLine of lines) {
       const line = rawLine.trim();
+
       if (!line) {
-        flush();
-      } else if (/^-\s+/.test(line)) {
-        list.push(line.replace(/^-\s+/, ""));
-      } else {
-        flush();
-        out.push(`<p>${inlineMarkdown(line)}</p>`);
+        flushList();
+        continue;
       }
+
+      if (/^#{2,4}\s+/.test(line)) {
+        flushList();
+        out.push(
+          `<h4 class="content-subheading">${inlineMarkdown(line.replace(/^#{2,4}\s+/, ""))}</h4>`
+        );
+        continue;
+      }
+
+      if (/^>\s+/.test(line)) {
+        flushList();
+        out.push(
+          `<blockquote>${inlineMarkdown(line.replace(/^>\s+/, ""))}</blockquote>`
+        );
+        continue;
+      }
+
+      if (/^---+$/.test(line)) {
+        flushList();
+        out.push("<hr>");
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        if (listType && listType !== "ul") flushList();
+        listType = "ul";
+        list.push(line.replace(/^-\s+/, ""));
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        if (listType && listType !== "ol") flushList();
+        listType = "ol";
+        list.push(line.replace(/^\d+\.\s+/, ""));
+        continue;
+      }
+
+      flushList();
+      out.push(`<p>${inlineMarkdown(line)}</p>`);
     }
 
-    flush();
+    flushList();
     return out.join("");
+  }
+
+  function replaceTextareaSelection(textarea, replacement, selectionStart = null, selectionEnd = null) {
+    const start = selectionStart ?? textarea.selectionStart;
+    const end = selectionEnd ?? textarea.selectionEnd;
+
+    textarea.setRangeText(replacement, start, end, "end");
+    textarea.focus();
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  function selectedTextareaLines(textarea) {
+    const value = textarea.value;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const nextBreak = value.indexOf("\n", end);
+    const lineEnd = nextBreak === -1 ? value.length : nextBreak;
+
+    return {
+      start: lineStart,
+      end: lineEnd,
+      text: value.slice(lineStart, lineEnd)
+    };
+  }
+
+  function wrapTextareaSelection(textarea, before, after, placeholder) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.slice(start, end) || placeholder;
+    const replacement = `${before}${selected}${after}`;
+
+    textarea.setRangeText(replacement, start, end, "select");
+
+    if (start === end) {
+      textarea.setSelectionRange(
+        start + before.length,
+        start + before.length + selected.length
+      );
+    }
+
+    textarea.focus();
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  function prefixTextareaLines(textarea, formatter) {
+    const selection = selectedTextareaLines(textarea);
+    const lines = selection.text.split("\n");
+
+    const replacement = lines
+      .map((line, index) => formatter(line, index))
+      .join("\n");
+
+    replaceTextareaSelection(
+      textarea,
+      replacement,
+      selection.start,
+      selection.end
+    );
+  }
+
+  function applyAnnouncementFormat(format) {
+    const textarea = $("#announcement-content");
+    if (!textarea) return;
+
+    if (format === "bold") {
+      wrapTextareaSelection(textarea, "**", "**", "nội dung đậm");
+      return;
+    }
+
+    if (format === "italic") {
+      wrapTextareaSelection(textarea, "*", "*", "nội dung nghiêng");
+      return;
+    }
+
+    if (format === "code") {
+      wrapTextareaSelection(textarea, "`", "`", "ký hiệu");
+      return;
+    }
+
+    if (format === "heading") {
+      prefixTextareaLines(
+        textarea,
+        line => line.trim() ? `### ${line.replace(/^#{2,4}\s+/, "")}` : line
+      );
+      return;
+    }
+
+    if (format === "bullet") {
+      prefixTextareaLines(
+        textarea,
+        line => line.trim() ? `- ${line.replace(/^(-|\d+\.)\s+/, "")}` : line
+      );
+      return;
+    }
+
+    if (format === "numbered") {
+      prefixTextareaLines(
+        textarea,
+        (line, index) => line.trim()
+          ? `${index + 1}. ${line.replace(/^(-|\d+\.)\s+/, "")}`
+          : line
+      );
+      return;
+    }
+
+    if (format === "quote") {
+      prefixTextareaLines(
+        textarea,
+        line => line.trim() ? `> ${line.replace(/^>\s+/, "")}` : line
+      );
+      return;
+    }
+
+    if (format === "link") {
+      const selected = textarea.value.slice(
+        textarea.selectionStart,
+        textarea.selectionEnd
+      ) || "tên liên kết";
+
+      const url = window.prompt(
+        "Nhập địa chỉ liên kết (https://...):",
+        "https://"
+      );
+
+      if (!url) return;
+
+      if (!safeLinkUrl(url)) {
+        showToast("Liên kết chỉ hỗ trợ http://, https:// hoặc mailto:.");
+        return;
+      }
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      textarea.setRangeText(
+        `[${selected}](${url.trim()})`,
+        start,
+        end,
+        "end"
+      );
+
+      textarea.focus();
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+
+  function updateAnnouncementPreview() {
+    const preview = $("#announcement-content-preview");
+    const textarea = $("#announcement-content");
+
+    if (!preview || !textarea || preview.classList.contains("hidden")) {
+      return;
+    }
+
+    const value = textarea.value.trim();
+
+    preview.innerHTML = value
+      ? richContent(value)
+      : '<p class="muted">Chưa có nội dung để xem trước.</p>';
+  }
+
+  function toggleAnnouncementPreview() {
+    const preview = $("#announcement-content-preview");
+    const button = $("#announcement-preview-button");
+
+    if (!preview || !button) return;
+
+    const opening = preview.classList.contains("hidden");
+    preview.classList.toggle("hidden", !opening);
+    button.setAttribute("aria-expanded", String(opening));
+    button.textContent = opening ? "✕ Đóng xem trước" : "👁 Xem trước";
+
+    if (opening) updateAnnouncementPreview();
   }
 
   function parseQuickInput(raw = "") {
@@ -508,7 +764,7 @@
       slug: "study",
       name: "Học tập",
       icon: "📘",
-      color: "#2f80ed",
+      color: "#f97316",
       keywords: ["học tập", "bài tập", "kiểm tra", "ôn tập", "thi", "môn học", "nộp bài"],
       sort_order: 10,
       active: true
@@ -517,7 +773,7 @@
       slug: "rules",
       name: "Nội quy",
       icon: "🛡️",
-      color: "#8b5cf6",
+      color: "#e99a12",
       keywords: ["nội quy", "quy định", "cam kết", "kỷ luật", "đồng phục", "nề nếp"],
       sort_order: 20,
       active: true
@@ -526,7 +782,7 @@
       slug: "activity",
       name: "Hoạt động",
       icon: "🎉",
-      color: "#f07a3e",
+      color: "#fb7185",
       keywords: ["hoạt động", "ngoại khóa", "sự kiện", "văn nghệ", "thể thao", "trải nghiệm"],
       sort_order: 30,
       active: true
@@ -535,7 +791,7 @@
       slug: "youth",
       name: "Đoàn–Đội",
       icon: "🌟",
-      color: "#e8a312",
+      color: "#eab308",
       keywords: ["đoàn", "đội", "liên đội", "chi đoàn", "đoàn trường"],
       sort_order: 40,
       active: true
@@ -544,7 +800,7 @@
       slug: "canteen",
       name: "Căn tin",
       icon: "🍱",
-      color: "#20a779",
+      color: "#16a36f",
       keywords: ["căn tin", "ăn uống", "thực phẩm", "mua bán"],
       sort_order: 50,
       active: true
@@ -553,7 +809,7 @@
       slug: "urgent",
       name: "Cần lưu ý",
       icon: "🚨",
-      color: "#df4d62",
+      color: "#ef4444",
       keywords: ["khẩn cấp", "gấp", "đặc biệt", "cần lưu ý", "lưu ý"],
       sort_order: 60,
       active: true
@@ -562,7 +818,7 @@
       slug: "general",
       name: "Thông báo chung",
       icon: "📌",
-      color: "#59728d",
+      color: "#9a6a45",
       keywords: [],
       sort_order: 999,
       active: true
@@ -627,8 +883,24 @@
     return { key: general.slug, ...general };
   }
 
+  function categoryDisplayColor(category) {
+    const color = String(category?.color || "").toLowerCase();
+
+    const warmRemap = {
+      "#2f80ed": "#f97316",
+      "#8b5cf6": "#e99a12",
+      "#f07a3e": "#fb7185",
+      "#e8a312": "#eab308",
+      "#20a779": "#16a36f",
+      "#df4d62": "#ef4444",
+      "#59728d": "#9a6a45"
+    };
+
+    return warmRemap[color] || color || "#9a6a45";
+  }
+
   function categoryStyle(category) {
-    const color = category?.color || "#59728d";
+    const color = categoryDisplayColor(category);
     return `--category-color:${escapeHtml(color)};`;
   }
 
@@ -688,7 +960,7 @@
     $("#category-id").value = category?.id || "";
     $("#category-name").value = category?.name || "";
     $("#category-icon").value = category?.icon || "📌";
-    $("#category-color").value = category?.color || "#2f80ed";
+    $("#category-color").value = category?.color || "#f97316";
     $("#category-order").value = category?.sort_order ?? 100;
     $("#category-keywords").value = Array.isArray(category?.keywords)
       ? category.keywords.join(", ")
@@ -772,7 +1044,7 @@
       name,
       slug: slugify(name),
       icon: $("#category-icon").value.trim() || "📌",
-      color: $("#category-color").value || "#2f80ed",
+      color: $("#category-color").value || "#f97316",
       keywords,
       sort_order: Number($("#category-order").value) || 100,
       active: $("#category-active").checked,
@@ -1182,6 +1454,17 @@
 
     el.announcementForm.reset();
     setMessage(el.announcementMessage, "");
+
+    const editorPreview = $("#announcement-content-preview");
+    const editorPreviewButton = $("#announcement-preview-button");
+    if (editorPreview) {
+      editorPreview.classList.add("hidden");
+      editorPreview.innerHTML = "";
+    }
+    if (editorPreviewButton) {
+      editorPreviewButton.setAttribute("aria-expanded", "false");
+      editorPreviewButton.textContent = "👁 Xem trước";
+    }
 
     const targetWeekId = item?.week_id || state.currentWeek?.id || sortedWeeks()[0]?.id || "";
     fillWeekSelect($("#announcement-week"), targetWeekId);
@@ -1903,6 +2186,15 @@
 
     $("#bulk-preview-button").addEventListener("click", previewBulk);
     $("#school-year-preview-button").addEventListener("click", generateSchoolYearPreview);
+
+    $("#announcement-format-toolbar").addEventListener("click", event => {
+      const button = event.target.closest("[data-format]");
+      if (!button) return;
+      applyAnnouncementFormat(button.dataset.format);
+    });
+
+    $("#announcement-preview-button").addEventListener("click", toggleAnnouncementPreview);
+    $("#announcement-content").addEventListener("input", updateAnnouncementPreview);
 
     $("#announcement-image").addEventListener("change", () => {
       previewSelectedFile(
