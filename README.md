@@ -85,4 +85,4 @@ Khuyến nghị:
 
 ---
 
-Phiên bản hiện tại: **V3.8.2**
+Phiên bản hiện tại: **V3.8.3**
