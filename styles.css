@@ -6621,3 +6621,128 @@ html[data-theme="dark"] .pet-restore {
     --pet-tail-rotate: 0deg !important;
   }
 }
+
+
+/* =========================================================
+   V3.7.1 — Minty top-corner + learning quotes
+   ========================================================= */
+
+.pet-companion {
+  top: clamp(82px, 9vh, 104px);
+  right: clamp(12px, 2vw, 28px);
+  bottom: auto;
+}
+
+/* Bong bóng ở bên trái Minty, đủ rộng cho danh ngôn */
+.pet-speech {
+  top: 6px;
+  right: 88px;
+  min-width: 180px;
+  width: max-content;
+  max-width: min(310px, calc(100vw - 190px));
+  padding: 10px 13px;
+  border-radius: 16px 16px 4px 16px;
+  font-size: .78rem;
+  line-height: 1.42;
+}
+
+.pet-speech.is-quote {
+  padding: 12px 14px 11px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.97), rgba(242,253,248,.95));
+  color: #285d4d;
+  box-shadow:
+    0 12px 28px rgba(44, 104, 85, .14),
+    inset 0 1px 0 rgba(255,255,255,.86);
+}
+
+.pet-speech.is-quote::before {
+  content: "✦ Góc học tập";
+  display: block;
+  margin-bottom: 5px;
+  color: #3e9d7e;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.pet-speech .pet-quote-text {
+  display: block;
+  font-weight: 760;
+}
+
+.pet-speech .pet-quote-author {
+  display: block;
+  margin-top: 6px;
+  color: #638177;
+  font-size: .70rem;
+  font-weight: 800;
+}
+
+html[data-theme="dark"] .pet-speech.is-quote {
+  background:
+    linear-gradient(145deg, rgba(28,50,45,.97), rgba(24,43,39,.95));
+  color: #e5fff6;
+}
+
+html[data-theme="dark"] .pet-speech .pet-quote-author {
+  color: #acd7c8;
+}
+
+.pet-restore {
+  top: 92px;
+  right: 16px;
+  bottom: auto;
+}
+
+@media (max-width: 820px) {
+  .pet-companion {
+    top: 78px;
+    right: 8px;
+    bottom: auto;
+  }
+
+  .pet-speech {
+    top: 0;
+    right: 72px;
+    min-width: 160px;
+    max-width: min(260px, calc(100vw - 155px));
+    font-size: .74rem;
+  }
+
+  .pet-restore {
+    top: 82px;
+    right: 10px;
+    bottom: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .pet-companion {
+    top: 72px;
+  }
+
+  /* Mobile nhỏ: vẫn cho danh ngôn hiện, nhưng gọn hơn */
+  .pet-speech {
+    display: block;
+    right: 62px;
+    min-width: 0;
+    width: 205px;
+    max-width: calc(100vw - 118px);
+    padding: 9px 10px;
+    font-size: .69rem;
+  }
+
+  .pet-speech:not(.is-quote) {
+    display: none;
+  }
+
+  .pet-speech.is-quote::before {
+    font-size: .60rem;
+  }
+
+  .pet-speech .pet-quote-author {
+    font-size: .64rem;
+  }
+}
