@@ -147,13 +147,13 @@
     }, duration);
   }
 
-  function showQuote() {
+  function showQuote({ reschedule = true } = {}) {
     if (
       pet.hidden ||
       document.hidden ||
       !STUDY_QUOTES.length
     ) {
-      scheduleNextQuote();
+      if (reschedule) scheduleNextQuote();
       return;
     }
 
@@ -199,7 +199,9 @@
       speech.classList.remove("is-visible", "is-quote");
     }, QUOTE_VISIBLE_MS);
 
-    scheduleNextQuote();
+    if (reschedule) {
+      scheduleNextQuote();
+    }
   }
 
   function scheduleFirstQuote() {
@@ -299,7 +301,11 @@
     }, 560);
   }
 
-  character.addEventListener("click", sayHello);
+  character.addEventListener("click", () => {
+    window.clearTimeout(quoteTimer);
+    showQuote({ reschedule: false });
+    scheduleNextQuote();
+  });
 
   hideButton.addEventListener("click", (event) => {
     event.stopPropagation();

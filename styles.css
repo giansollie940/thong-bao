@@ -6954,3 +6954,214 @@ html[data-theme="dark"] .school-year-toolbar {
 html[data-theme="dark"] .pet-quote-source {
   color: #91dbc3;
 }
+
+
+/* =========================================================
+   V3.8.2 — Artistic Quote Bubble
+   Organic paper/cloud shape instead of rounded rectangle
+   ========================================================= */
+
+.pet-speech.is-quote {
+  position: absolute;
+  isolation: isolate;
+  overflow: visible;
+  padding: 19px 21px 17px 23px;
+  border: 1px solid rgba(77, 166, 137, .18);
+
+  /* Hình dáng hữu cơ, cố ý không đều như card UI */
+  border-radius:
+    38px 52px 44px 58px /
+    30px 38px 48px 42px;
+
+  background:
+    radial-gradient(circle at 12% 16%, rgba(255,255,255,.98) 0 8%, transparent 9%),
+    radial-gradient(circle at 88% 18%, rgba(203,244,229,.44) 0 9%, transparent 10%),
+    radial-gradient(circle at 72% 86%, rgba(169,212,255,.18) 0 12%, transparent 13%),
+    linear-gradient(145deg, #ffffff 0%, #f5fff9 48%, #eafaf3 100%);
+
+  color: #285d4d;
+
+  box-shadow:
+    0 18px 34px rgba(38, 105, 84, .14),
+    0 3px 0 rgba(255,255,255,.75) inset,
+    0 0 0 5px rgba(112, 208, 174, .035);
+
+  transform-origin: 88% 82%;
+}
+
+/* Bỏ nhãn chữ "Góc học tập" cũ, thay bằng huy hiệu nhỏ nghệ thuật */
+.pet-speech.is-quote::before {
+  content: "✦";
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 50%;
+  background:
+    linear-gradient(145deg, #91dfc4, #59bd9b);
+  color: #ffffff;
+  box-shadow:
+    0 7px 15px rgba(48, 125, 99, .18),
+    inset 0 1px 0 rgba(255,255,255,.6);
+  font-size: .78rem;
+  line-height: 1;
+  text-transform: none;
+}
+
+/* Đuôi bong bóng kiểu cánh lá, trỏ về phía Minty */
+.pet-speech.is-quote::after {
+  content: "";
+  position: absolute;
+  right: -18px;
+  bottom: 18px;
+  width: 32px;
+  height: 24px;
+  border-right: 1px solid rgba(77, 166, 137, .16);
+  border-bottom: 1px solid rgba(77, 166, 137, .16);
+  border-radius: 5px 70% 8px 70%;
+  background: #effcf5;
+  transform: rotate(-28deg) skewX(-8deg);
+  box-shadow: 6px 7px 14px rgba(38,105,84,.06);
+  z-index: -1;
+}
+
+.pet-speech.is-quote .pet-quote-text {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding-left: 16px;
+  color: #234f43;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .88rem;
+  font-weight: 700;
+  line-height: 1.52;
+  letter-spacing: .005em;
+}
+
+/* Dấu ngoặc kép lớn như một phần trang trí */
+.pet-speech.is-quote .pet-quote-text::before {
+  content: "“";
+  position: absolute;
+  left: -5px;
+  top: -14px;
+  color: rgba(80, 185, 150, .55);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.65rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.pet-speech.is-quote .pet-quote-author {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-top: 9px;
+  padding-left: 16px;
+  color: #568173;
+  font-size: .70rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
+.pet-speech.is-quote .pet-quote-author::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  margin: 0 7px 3px 0;
+  background: currentColor;
+  opacity: .5;
+}
+
+.pet-speech.is-quote .pet-quote-source {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 0 16px;
+  color: #3a8e74;
+}
+
+/* Nhẹ nhàng "nở" ra khi câu nói xuất hiện */
+.pet-speech.is-quote.is-visible {
+  animation: petQuoteBloom 360ms cubic-bezier(.18,.8,.24,1.08) both;
+}
+
+@keyframes petQuoteBloom {
+  0% {
+    opacity: 0;
+    transform: translate(8px, 8px) scale(.86) rotate(1.8deg);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(-2px, -1px) scale(1.018) rotate(-.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+}
+
+/* Dark mode vẫn giữ cảm giác giấy hữu cơ */
+html[data-theme="dark"] .pet-speech.is-quote {
+  border-color: rgba(129, 213, 184, .18);
+  background:
+    radial-gradient(circle at 15% 14%, rgba(135,220,190,.10) 0 9%, transparent 10%),
+    radial-gradient(circle at 84% 82%, rgba(130,175,255,.08) 0 12%, transparent 13%),
+    linear-gradient(145deg, #203b34 0%, #1b332e 54%, #172c28 100%);
+  color: #e8fff6;
+  box-shadow:
+    0 18px 34px rgba(5, 22, 18, .28),
+    0 2px 0 rgba(255,255,255,.035) inset,
+    0 0 0 5px rgba(112,208,174,.025);
+}
+
+html[data-theme="dark"] .pet-speech.is-quote::after {
+  border-color: rgba(129,213,184,.12);
+  background: #1b332e;
+}
+
+html[data-theme="dark"] .pet-speech.is-quote .pet-quote-text {
+  color: #e9fff7;
+}
+
+html[data-theme="dark"] .pet-speech.is-quote .pet-quote-author {
+  color: #a8d8c8;
+}
+
+@media (max-width: 520px) {
+  .pet-speech.is-quote {
+    padding: 16px 16px 14px 18px;
+    border-radius:
+      30px 42px 34px 44px /
+      26px 32px 38px 34px;
+  }
+
+  .pet-speech.is-quote .pet-quote-text {
+    padding-left: 12px;
+    font-size: .78rem;
+  }
+
+  .pet-speech.is-quote .pet-quote-author,
+  .pet-speech.is-quote .pet-quote-source {
+    margin-left: 12px;
+    padding-left: 0;
+  }
+
+  .pet-speech.is-quote::before {
+    top: -10px;
+    left: 14px;
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-speech.is-quote.is-visible {
+    animation: none !important;
+  }
+}
