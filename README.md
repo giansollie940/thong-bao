@@ -742,3 +742,43 @@ Bao gồm:
 Tạo một bảng thông báo trường học:
 
 > **dễ đăng — dễ đọc — dễ quản lý — đẹp trên mọi thiết bị.**
+> # V3.7 — Minty Pet Companion
+
+Bổ sung thú cưng nổi “Minty” cho Bảng thông báo theo tuần.
+
+## Tính năng
+
+- Mascot luôn đi theo viewport khi cuộn trang.
+- Khi cuộn lên/xuống, mascot nhích theo hướng cuộn và có động tác chân nhẹ.
+- Mắt nhìn theo vị trí chuột.
+- Đầu nghiêng và đuôi phản ứng nhẹ theo hướng chuột.
+- Nhấn vào mascot để chào / nhảy.
+- Có nút Ẩn thú cưng và nút 🐾 để hiện lại.
+- Trạng thái ẩn/hiện được nhớ bằng localStorage.
+- Hỗ trợ `prefers-reduced-motion`.
+- Mobile tự giảm kích thước và không phụ thuộc hover.
+- Không thay đổi Supabase, RLS, database hay Storage.
+
+## File mới
+
+- `pet-companion.js`
+
+## File thay đổi
+
+- `index.html`
+- `styles.css`
+
+## Cập nhật GitHub
+
+Upload/replace:
+
+- `index.html`
+- `styles.css`
+- `pet-companion.js`
+
+Nếu repo hiện tại chưa có asset Mint Garden thì giữ:
+- `mint-garden-hero.svg`
+- `mint-garden-pattern.svg`
+
+`app.js` không cần thay nếu bản GitHub của bạn đã là V3.6.
+
