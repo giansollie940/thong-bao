@@ -6746,3 +6746,183 @@ html[data-theme="dark"] .pet-speech .pet-quote-author {
     font-size: .64rem;
   }
 }
+
+
+/* =========================================================
+   V3.8 — Multi-Year School Manager
+   ========================================================= */
+
+.school-year-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: -2px 0 14px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--brand) 11%, var(--line));
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.92), rgba(241,250,246,.86));
+  box-shadow: 0 7px 18px rgba(67,101,91,.045);
+}
+
+.school-year-filter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.school-year-filter select {
+  width: auto;
+  min-width: 170px;
+  min-height: 38px;
+  margin: 0;
+  padding: 7px 34px 7px 11px;
+  border-color: color-mix(in srgb, var(--brand) 15%, var(--line));
+  border-radius: 11px;
+  background-color: var(--surface-solid);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.school-year-filter select:hover {
+  border-color: color-mix(in srgb, var(--brand) 34%, var(--line));
+}
+
+.school-year-filter select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 20%, transparent);
+  outline-offset: 2px;
+}
+
+.school-year-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 650;
+  text-align: right;
+}
+
+.year-week-school-year {
+  color: color-mix(in srgb, var(--brand) 66%, var(--muted));
+  font-weight: 800;
+}
+
+.archive-year-kicker {
+  margin-bottom: 3px;
+  color: color-mix(in srgb, var(--brand) 72%, var(--muted));
+  font-size: .67rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+html[data-theme="dark"] .school-year-toolbar {
+  border-color: rgba(130, 220, 188, .12);
+  background:
+    linear-gradient(135deg, rgba(32,49,55,.94), rgba(29,48,44,.88));
+}
+
+@media (max-width: 680px) {
+  .school-year-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .school-year-filter {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .school-year-filter select {
+    width: min(210px, 60vw);
+    min-width: 0;
+  }
+
+  .school-year-summary {
+    text-align: left;
+  }
+}
+
+/* =========================================================
+   V3.8 — Minty subtle leg motion
+   ========================================================= */
+
+.pet-foot {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.pet-foot-left {
+  animation: petFootIdleLeft 3.6s ease-in-out infinite;
+}
+
+.pet-foot-right {
+  animation: petFootIdleRight 3.6s ease-in-out infinite;
+}
+
+.pet-companion.is-scrolling .pet-foot-left {
+  animation: petFootWalkLeft .34s ease-in-out infinite alternate;
+}
+
+.pet-companion.is-scrolling .pet-foot-right {
+  animation: petFootWalkRight .34s ease-in-out infinite alternate;
+}
+
+.pet-companion.is-happy .pet-foot-left {
+  animation: petFootHappyLeft .52s ease-in-out;
+}
+
+.pet-companion.is-happy .pet-foot-right {
+  animation: petFootHappyRight .52s ease-in-out;
+}
+
+@keyframes petFootIdleLeft {
+  0%, 78%, 100% { transform: translateY(0) rotate(0deg); }
+  86% { transform: translateY(-1.8px) rotate(-2deg); }
+  93% { transform: translateY(0) rotate(1deg); }
+}
+
+@keyframes petFootIdleRight {
+  0%, 84%, 100% { transform: translateY(0) rotate(0deg); }
+  90% { transform: translateY(-1.6px) rotate(2deg); }
+  96% { transform: translateY(0) rotate(-1deg); }
+}
+
+@keyframes petFootWalkLeft {
+  from { transform: translateY(0) rotate(1deg); }
+  to { transform: translateY(-3px) rotate(-4deg); }
+}
+
+@keyframes petFootWalkRight {
+  from { transform: translateY(-3px) rotate(4deg); }
+  to { transform: translateY(0) rotate(-1deg); }
+}
+
+@keyframes petFootHappyLeft {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  40% { transform: translateY(-4px) rotate(-5deg); }
+}
+
+@keyframes petFootHappyRight {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  55% { transform: translateY(-4px) rotate(5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-foot-left,
+  .pet-foot-right,
+  .pet-companion.is-scrolling .pet-foot-left,
+  .pet-companion.is-scrolling .pet-foot-right,
+  .pet-companion.is-happy .pet-foot-left,
+  .pet-companion.is-happy .pet-foot-right {
+    animation: none !important;
+    transform: none !important;
+  }
+}

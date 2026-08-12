@@ -22,7 +22,9 @@
     currentWeek: null,
     currentWeekState: "none",
     categoryFilter: "all",
-    schoolYearPreview: []
+    schoolYearPreview: [],
+    yearFilter: "",
+    archiveYearFilter: ""
   };
 
   const $ = selector => document.querySelector(selector);
@@ -37,8 +39,12 @@
     categoryMessage: $("#category-message"),
     archiveGrid: $("#archive-grid"),
     archiveCount: $("#archive-count"),
+    archiveYearFilter: $("#archive-year-filter"),
+    archiveYearSummary: $("#archive-year-summary"),
     yearStrip: $("#year-strip"),
     yearCount: $("#year-count"),
+    yearFilter: $("#year-filter"),
+    yearSummary: $("#year-summary"),
     weekStateBadge: $("#week-state-badge"),
     adminToolbar: $("#admin-toolbar"),
     loginButton: $("#login-button"),
@@ -247,15 +253,171 @@
     return [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
   }
 
+  function schoolYearKey(week) {
+    const value = String(week?.school_year || "").trim();
+    return value || "__legacy__";
+  }
+
+  function schoolYearLabel(key) {
+    return key === "__legacy__" ? "Chưa phân loại" : key;
+  }
+
+  function getSchoolYearGroups() {
+    const groups = new Map();
+
+    sortedWeeks().forEach(week => {
+      const key = schoolYearKey(week);
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          label: schoolYearLabel(key),
+          weeks: [],
+          start_date: week.start_date,
+          end_date: week.end_date
+        });
+      }
+
+      const group = groups.get(key);
+      group.weeks.push(week);
+
+      if (week.start_date < group.start_date) group.start_date = week.start_date;
+      if (week.end_date > group.end_date) group.end_date = week.end_date;
+    });
+
+    return [...groups.values()].sort((a, b) =>
+      b.start_date.localeCompare(a.start_date)
+    );
+  }
+
+  function defaultSchoolYearKey(groups = getSchoolYearGroups()) {
+    if (!groups.length) return "all";
+
+    const today = todayIso();
+
+    // Ưu tiên năm học thật sự chứa ngày hôm nay.
+    const active = groups.find(group =>
+      group.start_date <= today && group.end_date >= today
+    );
+    if (active) return active.key;
+
+    // Nếu trang đang giới thiệu một tuần sắp tới/gần nhất thì ưu tiên năm của tuần đó.
+    if (state.currentWeek) {
+      const featuredKey = schoolYearKey(state.currentWeek);
+      if (groups.some(group => group.key === featuredKey)) return featuredKey;
+    }
+
+    // Chưa tới năm học nào: lấy năm gần nhất sắp bắt đầu.
+    const upcoming = [...groups]
+      .filter(group => group.start_date > today)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date))[0];
+    if (upcoming) return upcoming.key;
+
+    // Đã qua tất cả: lấy năm học mới nhất.
+    return groups[0].key;
+  }
+
+  function defaultArchiveYearKey(groups = getSchoolYearGroups()) {
+    if (!groups.length) return "all";
+
+    const today = todayIso();
+    const currentDefault = defaultSchoolYearKey(groups);
+    const currentGroup = groups.find(group => group.key === currentDefault);
+
+    if (currentGroup?.weeks.some(week => week.end_date < today)) {
+      return currentDefault;
+    }
+
+    const latestWithPastWeeks = groups.find(group =>
+      group.weeks.some(week => week.end_date < today)
+    );
+
+    return latestWithPastWeeks?.key || currentDefault;
+  }
+
+  function normalizeYearFilter(value, groups, fallback) {
+    if (value === "all") return "all";
+    if (groups.some(group => group.key === value)) return value;
+    return fallback;
+  }
+
+  function renderSchoolYearSelectors() {
+    const groups = getSchoolYearGroups();
+
+    if (!groups.length) {
+      if (el.yearFilter) {
+        el.yearFilter.innerHTML = '<option value="all">Tất cả năm học</option>';
+        el.yearFilter.value = "all";
+        el.yearFilter.disabled = true;
+      }
+
+      if (el.archiveYearFilter) {
+        el.archiveYearFilter.innerHTML = '<option value="all">Tất cả năm học</option>';
+        el.archiveYearFilter.value = "all";
+        el.archiveYearFilter.disabled = true;
+      }
+
+      state.yearFilter = "all";
+      state.archiveYearFilter = "all";
+      return;
+    }
+
+    const options = [
+      '<option value="all">Tất cả năm học</option>',
+      ...groups.map(group =>
+        `<option value="${escapeHtml(group.key)}">${escapeHtml(group.label)}</option>`
+      )
+    ].join("");
+
+    const yearDefault = defaultSchoolYearKey(groups);
+    const archiveDefault = defaultArchiveYearKey(groups);
+
+    state.yearFilter = normalizeYearFilter(
+      state.yearFilter,
+      groups,
+      yearDefault
+    );
+
+    state.archiveYearFilter = normalizeYearFilter(
+      state.archiveYearFilter,
+      groups,
+      archiveDefault
+    );
+
+    if (el.yearFilter) {
+      el.yearFilter.innerHTML = options;
+      el.yearFilter.disabled = false;
+      el.yearFilter.value = state.yearFilter;
+    }
+
+    if (el.archiveYearFilter) {
+      el.archiveYearFilter.innerHTML = options;
+      el.archiveYearFilter.disabled = false;
+      el.archiveYearFilter.value = state.archiveYearFilter;
+    }
+  }
+
+  function weeksForYearFilter(filterValue) {
+    if (!filterValue || filterValue === "all") return [...state.weeks];
+    return state.weeks.filter(week => schoolYearKey(week) === filterValue);
+  }
+
   function fillWeekSelect(select, selectedId = "") {
     if (!select) return;
 
+    const groups = [...getSchoolYearGroups()].reverse();
+
+    select.innerHTML = groups.map(group => `
+      <optgroup label="${escapeHtml(group.label)}">
+        ${group.weeks.map(week =>
+          `<option value="${escapeHtml(week.id)}">${escapeHtml(
+            `Tuần ${week.week_number} · ${formatDate(week.start_date)} – ${formatDate(week.end_date)}`
+          )}</option>`
+        ).join("")}
+      </optgroup>
+    `).join("");
+
     const weeks = sortedWeeks();
-    select.innerHTML = weeks.map(week =>
-      `<option value="${escapeHtml(week.id)}">${escapeHtml(
-        `Tuần ${week.week_number} · ${formatDate(week.start_date)} – ${formatDate(week.end_date)}`
-      )}</option>`
-    ).join("");
 
     if (selectedId && weeks.some(w => w.id === selectedId)) {
       select.value = selectedId;
@@ -1316,17 +1478,50 @@
   }
 
   function renderYearStrip() {
-    const weeks = [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
-    el.yearCount.textContent = `${weeks.length} tuần`;
+    const groups = getSchoolYearGroups();
+    const selected = state.yearFilter || defaultSchoolYearKey(groups);
+    const weeks = weeksForYearFilter(selected)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
+
+    const selectedGroup = groups.find(group => group.key === selected);
+
+    el.yearCount.textContent =
+      selected === "all"
+        ? `${weeks.length} tuần · ${groups.length} năm học`
+        : `${weeks.length} tuần`;
+
+    if (el.yearSummary) {
+      if (selected === "all") {
+        el.yearSummary.textContent = groups.length
+          ? `Đang xem toàn bộ ${groups.length} năm học đã lưu.`
+          : "Chưa có lịch năm học.";
+      } else if (selectedGroup) {
+        const stateText =
+          selectedGroup.start_date <= todayIso() && selectedGroup.end_date >= todayIso()
+            ? "Đang diễn ra"
+            : selectedGroup.start_date > todayIso()
+              ? "Sắp tới"
+              : "Đã kết thúc";
+
+        el.yearSummary.textContent =
+          `${stateText} · ${formatDate(selectedGroup.start_date)} → ${formatDate(selectedGroup.end_date)}`;
+      } else {
+        el.yearSummary.textContent = "";
+      }
+    }
 
     if (!weeks.length) {
-      el.yearStrip.innerHTML = '<div class="empty-state">Chưa có lịch năm học.</div>';
+      el.yearStrip.innerHTML =
+        '<div class="empty-state">Năm học này chưa có tuần nào được thiết lập.</div>';
       return;
     }
 
     el.yearStrip.innerHTML = weeks.map(week => {
       const s = weekState(week);
-      const label = s === "current" ? "● Hiện tại" : s === "upcoming" ? "Sắp tới" : "✓ Đã qua";
+      const label =
+        s === "current" ? "● Hiện tại" :
+        s === "upcoming" ? "Sắp tới" :
+        "✓ Đã qua";
       const announcementCount = getItems(week.id).length;
 
       return `
@@ -1336,7 +1531,7 @@
             <span class="week-count-badge">${announcementCount} thông báo</span>
           </div>
           <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
-          ${week.school_year ? `<small>${escapeHtml(week.school_year)}</small>` : ""}
+          ${week.school_year ? `<small class="year-week-school-year">${escapeHtml(week.school_year)}</small>` : ""}
           <span class="year-week-state">${label}</span>
           <div class="year-week-actions">
             <button class="mini-action mini-view" data-action="view-week" data-id="${week.id}" aria-label="Xem Tuần ${escapeHtml(week.week_number)}">Xem</button>
@@ -1351,23 +1546,51 @@
 
   function renderArchives() {
     const today = todayIso();
-    const weeks = state.weeks
-      .filter(w => w.end_date < today)
+    const groups = getSchoolYearGroups();
+    const selected = state.archiveYearFilter || defaultArchiveYearKey(groups);
+
+    const allPastWeeks = state.weeks
+      .filter(week => week.end_date < today)
       .sort((a, b) => b.start_date.localeCompare(a.start_date));
 
-    el.archiveCount.textContent = `${weeks.length} tuần đã qua`;
+    const weeks = selected === "all"
+      ? allPastWeeks
+      : allPastWeeks.filter(week => schoolYearKey(week) === selected);
+
+    const selectedGroup = groups.find(group => group.key === selected);
+
+    el.archiveCount.textContent =
+      selected === "all"
+        ? `${weeks.length} tuần đã qua`
+        : `${weeks.length} tuần đã qua`;
+
+    if (el.archiveYearSummary) {
+      if (selected === "all") {
+        const yearsWithArchive = new Set(allPastWeeks.map(schoolYearKey)).size;
+        el.archiveYearSummary.textContent =
+          `${yearsWithArchive} năm học có dữ liệu lưu trữ.`;
+      } else if (selectedGroup) {
+        el.archiveYearSummary.textContent =
+          `${schoolYearLabel(selected)} · dữ liệu được giữ nguyên, không tự xóa cuối năm.`;
+      } else {
+        el.archiveYearSummary.textContent = "";
+      }
+    }
 
     if (!weeks.length) {
-      el.archiveGrid.innerHTML = '<div class="empty-state">Chưa có tuần cũ.</div>';
+      el.archiveGrid.innerHTML =
+        '<div class="empty-state">Năm học này chưa có tuần nào đã kết thúc.</div>';
       return;
     }
 
     el.archiveGrid.innerHTML = weeks.map(week => {
       const items = getItems(week.id);
+
       return `
         <article class="archive-card">
           <div style="padding:20px 20px 0" class="archive-summary-head">
             <div>
+              <div class="archive-year-kicker">${escapeHtml(schoolYearLabel(schoolYearKey(week)))}</div>
               <h3 class="archive-week-name">Tuần ${escapeHtml(week.week_number)}</h3>
               <span class="archive-date">${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
             </div>
@@ -1375,7 +1598,9 @@
           </div>
           <div style="padding:0 20px">
             <p class="archive-summary-text">${escapeHtml(week.summary || "Tuần đã qua.")}</p>
-            ${items.length ? `<ul class="archive-peek">${items.slice(0,3).map(x => `<li>${escapeHtml(x.title)}</li>`).join("")}</ul>` : '<p class="muted">Không có thông báo.</p>'}
+            ${items.length
+              ? `<ul class="archive-peek">${items.slice(0,3).map(x => `<li>${escapeHtml(x.title)}</li>`).join("")}</ul>`
+              : '<p class="muted">Không có thông báo.</p>'}
           </div>
           <div class="archive-card-footer">
             <button class="text-button" data-action="open-archive" data-id="${week.id}">Xem lại →</button>
@@ -1392,6 +1617,7 @@
     renderAdmin();
     renderConnection();
     renderCurrent();
+    renderSchoolYearSelectors();
     renderYearStrip();
     renderArchives();
   }
@@ -1986,6 +2212,8 @@
     }
 
     const schoolYear = preview[0].school_year;
+    state.yearFilter = schoolYear;
+    state.archiveYearFilter = schoolYear;
     el.schoolYearDialog.close();
     await loadData();
     showToast(`Đã tạo ${preview.length} tuần cho năm học ${schoolYear}.`);
@@ -2204,6 +2432,16 @@
     $("#quick-input-button").addEventListener("click", openBulkDialog);
     $("#categories-button").addEventListener("click", openCategoriesDialog);
     $("#school-year-button").addEventListener("click", openSchoolYear);
+
+    el.yearFilter?.addEventListener("change", () => {
+      state.yearFilter = el.yearFilter.value;
+      renderYearStrip();
+    });
+
+    el.archiveYearFilter?.addEventListener("change", () => {
+      state.archiveYearFilter = el.archiveYearFilter.value;
+      renderArchives();
+    });
 
     el.announcementForm.addEventListener("submit", saveAnnouncement);
     el.weekForm.addEventListener("submit", saveWeek);

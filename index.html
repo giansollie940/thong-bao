@@ -6,7 +6,7 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.7.1">
+  <link rel="stylesheet" href="styles.css?v=3.8.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
@@ -167,6 +167,16 @@
         <span class="muted" id="year-count"></span>
       </div>
 
+      <div class="school-year-toolbar" aria-label="Chọn năm học để xem lịch">
+        <label class="school-year-filter" for="year-filter">
+          <span>Năm học</span>
+          <select id="year-filter">
+            <option value="all">Tất cả năm học</option>
+          </select>
+        </label>
+        <p class="school-year-summary" id="year-summary" aria-live="polite"></p>
+      </div>
+
       <div class="year-strip" id="year-strip" aria-live="polite">
         <div class="loading-card">Đang tải lịch năm học...</div>
       </div>
@@ -190,6 +200,16 @@
           <h2 id="archive-heading">Các tuần trước</h2>
         </div>
         <span class="muted" id="archive-count"></span>
+      </div>
+
+      <div class="school-year-toolbar archive-year-toolbar" aria-label="Chọn năm học trong lưu trữ">
+        <label class="school-year-filter" for="archive-year-filter">
+          <span>Năm học lưu trữ</span>
+          <select id="archive-year-filter">
+            <option value="all">Tất cả năm học</option>
+          </select>
+        </label>
+        <p class="school-year-summary" id="archive-year-summary" aria-live="polite"></p>
       </div>
 
       <div class="archive-grid" id="archive-grid">
@@ -739,10 +759,14 @@ Ví dụ:
         <g class="pet-body" filter="url(#petSoftShadow)">
           <ellipse cx="80" cy="116" rx="42" ry="43" fill="url(#petBodyMint)"/>
           <ellipse cx="80" cy="124" rx="25" ry="28" fill="url(#petBellyMint)" opacity=".94"/>
-          <ellipse cx="53" cy="143" rx="18" ry="11" fill="#72D2B0"/>
-          <ellipse cx="107" cy="143" rx="18" ry="11" fill="#72D2B0"/>
-          <ellipse cx="53" cy="146" rx="11" ry="5" fill="#DDF7EE"/>
-          <ellipse cx="107" cy="146" rx="11" ry="5" fill="#DDF7EE"/>
+          <g class="pet-foot pet-foot-left">
+            <ellipse cx="53" cy="143" rx="18" ry="11" fill="#72D2B0"/>
+            <ellipse cx="53" cy="146" rx="11" ry="5" fill="#DDF7EE"/>
+          </g>
+          <g class="pet-foot pet-foot-right">
+            <ellipse cx="107" cy="143" rx="18" ry="11" fill="#72D2B0"/>
+            <ellipse cx="107" cy="146" rx="11" ry="5" fill="#DDF7EE"/>
+          </g>
         </g>
 
         <g class="pet-head" filter="url(#petSoftShadow)">
@@ -811,7 +835,7 @@ Ví dụ:
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=3.7.1"></script>
-  <script src="pet-companion.js?v=3.7.1"></script>
+  <script src="app.js?v=3.8.0"></script>
+  <script src="pet-companion.js?v=3.8.0"></script>
 </body>
 </html>
