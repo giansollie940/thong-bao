@@ -6,7 +6,7 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.6.1">
+  <link rel="stylesheet" href="styles.css?v=3.7.0">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
@@ -679,10 +679,139 @@ Ví dụ:
     </article>
   </dialog>
 
+
+  <!-- V3.7: Thú cưng đồng hành Minty -->
+  <aside class="pet-companion" id="pet-companion" aria-label="Thú cưng đồng hành">
+    <button
+      class="pet-hide"
+      id="pet-hide"
+      type="button"
+      aria-label="Ẩn thú cưng"
+      title="Ẩn thú cưng"
+    >×</button>
+
+    <div class="pet-speech" id="pet-speech" role="status" aria-live="polite">
+      Chào bạn! 🌿
+    </div>
+
+    <button
+      class="pet-character"
+      id="pet-character"
+      type="button"
+      aria-label="Minty, thú cưng đồng hành. Nhấn để chào."
+      title="Minty đang theo dõi con trỏ của bạn"
+    >
+      <svg class="pet-svg" viewBox="0 0 160 170" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="petBodyMint" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#BDF2DF"/>
+            <stop offset="1" stop-color="#6FD0AE"/>
+          </linearGradient>
+          <linearGradient id="petBellyMint" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F8FFFC"/>
+            <stop offset="1" stop-color="#DDF7EE"/>
+          </linearGradient>
+          <filter id="petSoftShadow" x="-30%" y="-30%" width="160%" height="170%">
+            <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#246D58" flood-opacity=".18"/>
+          </filter>
+        </defs>
+
+        <ellipse cx="82" cy="156" rx="47" ry="8" fill="#276C59" opacity=".12"/>
+
+        <g class="pet-tail">
+          <path
+            d="M116 114 C147 96 153 119 141 128 C132 136 123 128 130 122"
+            fill="none"
+            stroke="#63C7A5"
+            stroke-width="15"
+            stroke-linecap="round"
+          />
+          <path
+            d="M116 113 C143 98 148 116 140 122"
+            fill="none"
+            stroke="#A9E9D3"
+            stroke-width="5"
+            stroke-linecap="round"
+            opacity=".75"
+          />
+        </g>
+
+        <g class="pet-body" filter="url(#petSoftShadow)">
+          <ellipse cx="80" cy="116" rx="42" ry="43" fill="url(#petBodyMint)"/>
+          <ellipse cx="80" cy="124" rx="25" ry="28" fill="url(#petBellyMint)" opacity=".94"/>
+          <ellipse cx="53" cy="143" rx="18" ry="11" fill="#72D2B0"/>
+          <ellipse cx="107" cy="143" rx="18" ry="11" fill="#72D2B0"/>
+          <ellipse cx="53" cy="146" rx="11" ry="5" fill="#DDF7EE"/>
+          <ellipse cx="107" cy="146" rx="11" ry="5" fill="#DDF7EE"/>
+        </g>
+
+        <g class="pet-head" filter="url(#petSoftShadow)">
+          <path d="M47 49 L50 13 L72 42 Z" fill="#75D4B3"/>
+          <path d="M113 49 L110 13 L88 42 Z" fill="#75D4B3"/>
+          <path d="M52 40 L53 22 L64 42 Z" fill="#F5B9C7" opacity=".92"/>
+          <path d="M108 40 L107 22 L96 42 Z" fill="#F5B9C7" opacity=".92"/>
+
+          <ellipse cx="80" cy="65" rx="43" ry="39" fill="url(#petBodyMint)"/>
+          <path
+            d="M51 54 C60 45 69 42 80 42 C92 42 102 46 110 55"
+            fill="none"
+            stroke="#DDF8EE"
+            stroke-width="5"
+            stroke-linecap="round"
+            opacity=".75"
+          />
+
+          <g class="pet-eye pet-eye-left">
+            <ellipse cx="64" cy="66" rx="10" ry="12" fill="#FFFFFF"/>
+            <circle class="pet-pupil" cx="64" cy="68" r="4.7" fill="#24483F"/>
+            <circle class="pet-eye-glint" cx="62.5" cy="66" r="1.4" fill="#FFFFFF"/>
+          </g>
+          <g class="pet-eye pet-eye-right">
+            <ellipse cx="96" cy="66" rx="10" ry="12" fill="#FFFFFF"/>
+            <circle class="pet-pupil" cx="96" cy="68" r="4.7" fill="#24483F"/>
+            <circle class="pet-eye-glint" cx="94.5" cy="66" r="1.4" fill="#FFFFFF"/>
+          </g>
+
+          <path d="M76 82 Q80 86 84 82 Q80 90 76 82 Z" fill="#E9849A"/>
+          <path d="M80 86 C76 92 70 91 68 88" fill="none" stroke="#315B50" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M80 86 C84 92 90 91 92 88" fill="none" stroke="#315B50" stroke-width="2.4" stroke-linecap="round"/>
+
+          <g class="pet-whiskers" fill="none" stroke="#396B5D" stroke-width="2" stroke-linecap="round" opacity=".75">
+            <path d="M49 83 L30 78"/>
+            <path d="M49 89 L29 91"/>
+            <path d="M111 83 L130 78"/>
+            <path d="M111 89 L131 91"/>
+          </g>
+
+          <path class="pet-blush" d="M45 78 Q51 74 57 78" fill="none" stroke="#F0A6B7" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+          <path class="pet-blush" d="M103 78 Q109 74 115 78" fill="none" stroke="#F0A6B7" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+        </g>
+
+        <g class="pet-paw" opacity=".96">
+          <circle cx="80" cy="115" r="12" fill="#EAFBF5"/>
+          <circle cx="72" cy="108" r="4" fill="#72D2B0"/>
+          <circle cx="80" cy="105" r="4" fill="#72D2B0"/>
+          <circle cx="88" cy="108" r="4" fill="#72D2B0"/>
+          <ellipse cx="80" cy="117" rx="7" ry="6" fill="#72D2B0"/>
+        </g>
+      </svg>
+    </button>
+  </aside>
+
+  <button
+    class="pet-restore"
+    id="pet-restore"
+    type="button"
+    aria-label="Hiện lại thú cưng"
+    title="Hiện lại Minty"
+    hidden
+  >🐾</button>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=3.6.0"></script>
+  <script src="app.js?v=3.7.0"></script>
+  <script src="pet-companion.js?v=3.7.0"></script>
 </body>
 </html>

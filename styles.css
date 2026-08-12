@@ -6322,3 +6322,302 @@ html[data-theme="dark"] .week-hero::before {
       transparent 90%
     );
 }
+
+
+/* =========================================================
+   V3.7 — Minty Pet Companion
+   Fixed mascot + eye tracking + scroll reaction
+   ========================================================= */
+
+.pet-companion {
+  --pet-eye-x: 0px;
+  --pet-eye-y: 0px;
+  --pet-head-rotate: 0deg;
+  --pet-body-x: 0px;
+  --pet-scroll-y: 0px;
+  --pet-tail-rotate: 0deg;
+
+  position: fixed;
+  right: clamp(12px, 2vw, 28px);
+  bottom: clamp(16px, 3vh, 34px);
+  z-index: 90;
+  width: 132px;
+  height: 154px;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 22px rgba(38, 105, 84, .10));
+}
+
+.pet-character {
+  position: absolute;
+  inset: auto 0 0 auto;
+  width: 126px;
+  height: 138px;
+  padding: 0;
+  border: 0;
+  border-radius: 42% 42% 38% 38%;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  transform:
+    translate3d(var(--pet-body-x), var(--pet-scroll-y), 0);
+  transform-origin: 50% 90%;
+  transition:
+    transform 160ms cubic-bezier(.2, .8, .2, 1),
+    filter 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pet-character:hover {
+  filter: brightness(1.03);
+}
+
+.pet-character:focus-visible,
+.pet-hide:focus-visible,
+.pet-restore:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 36%, white);
+  outline-offset: 4px;
+}
+
+.pet-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pet-head {
+  transform-box: fill-box;
+  transform-origin: 50% 72%;
+  transform: rotate(var(--pet-head-rotate));
+  transition: transform 90ms linear;
+}
+
+.pet-tail {
+  transform-box: fill-box;
+  transform-origin: 20% 70%;
+  transform: rotate(var(--pet-tail-rotate));
+  transition: transform 120ms ease-out;
+}
+
+.pet-pupil {
+  transform: translate(var(--pet-eye-x), var(--pet-eye-y));
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 45ms linear;
+}
+
+.pet-eye-glint {
+  pointer-events: none;
+}
+
+.pet-hide {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(73, 145, 122, .16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .88);
+  color: #557169;
+  box-shadow: 0 6px 16px rgba(48, 98, 83, .10);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(3px) scale(.92);
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease, background 150ms ease;
+}
+
+.pet-companion:hover .pet-hide,
+.pet-companion:focus-within .pet-hide {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.pet-hide:hover {
+  background: #ffffff;
+  color: #c34f62;
+}
+
+.pet-speech {
+  position: absolute;
+  right: 78px;
+  top: 2px;
+  z-index: 3;
+  min-width: 116px;
+  max-width: 180px;
+  padding: 8px 11px;
+  border: 1px solid rgba(75, 156, 130, .18);
+  border-radius: 14px 14px 4px 14px;
+  background: rgba(255, 255, 255, .92);
+  color: #335d51;
+  box-shadow: 0 9px 22px rgba(49, 100, 84, .10);
+  backdrop-filter: blur(10px);
+  font-size: .76rem;
+  font-weight: 750;
+  line-height: 1.25;
+  opacity: 0;
+  transform: translateY(5px) scale(.96);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.pet-speech.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.pet-restore {
+  position: fixed;
+  right: 16px;
+  bottom: 20px;
+  z-index: 90;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(82, 169, 141, .22);
+  border-radius: 16px;
+  background: rgba(241, 253, 248, .94);
+  box-shadow: 0 10px 24px rgba(44, 104, 85, .13);
+  cursor: pointer;
+  font-size: 1.15rem;
+  backdrop-filter: blur(10px);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.pet-restore:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(44, 104, 85, .16);
+}
+
+.pet-companion.is-happy .pet-character {
+  animation: petHello 520ms cubic-bezier(.2,.8,.2,1);
+}
+
+.pet-companion.is-happy .pet-tail {
+  animation: petTailHello 520ms ease-in-out;
+}
+
+.pet-companion.is-scrolling .pet-paw {
+  animation: petPawStep 300ms ease-in-out;
+}
+
+@keyframes petHello {
+  0%, 100% {
+    transform:
+      translate3d(var(--pet-body-x), var(--pet-scroll-y), 0)
+      rotate(0deg);
+  }
+  28% {
+    transform:
+      translate3d(var(--pet-body-x), calc(var(--pet-scroll-y) - 10px), 0)
+      rotate(-3deg);
+  }
+  58% {
+    transform:
+      translate3d(var(--pet-body-x), calc(var(--pet-scroll-y) - 3px), 0)
+      rotate(3deg);
+  }
+}
+
+@keyframes petTailHello {
+  0%, 100% { transform: rotate(var(--pet-tail-rotate)); }
+  25% { transform: rotate(17deg); }
+  55% { transform: rotate(-12deg); }
+  80% { transform: rotate(12deg); }
+}
+
+@keyframes petPawStep {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+html[data-theme="dark"] .pet-speech,
+html[data-theme="dark"] .pet-hide {
+  border-color: rgba(129, 213, 184, .18);
+  background: rgba(27, 48, 44, .92);
+  color: #dff7ef;
+}
+
+html[data-theme="dark"] .pet-restore {
+  border-color: rgba(129, 213, 184, .18);
+  background: rgba(27, 48, 44, .94);
+}
+
+@media (max-width: 820px) {
+  .pet-companion {
+    right: 8px;
+    bottom: 10px;
+    width: 108px;
+    height: 128px;
+  }
+
+  .pet-character {
+    width: 104px;
+    height: 116px;
+  }
+
+  .pet-speech {
+    right: 68px;
+    top: -5px;
+    min-width: 104px;
+    max-width: 150px;
+    font-size: .72rem;
+  }
+
+  .pet-hide {
+    opacity: .82;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .pet-companion {
+    width: 92px;
+    height: 108px;
+  }
+
+  .pet-character {
+    width: 90px;
+    height: 100px;
+  }
+
+  .pet-speech {
+    display: none;
+  }
+
+  .pet-hide {
+    top: -3px;
+    right: -2px;
+    width: 25px;
+    height: 25px;
+    font-size: .8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-character,
+  .pet-head,
+  .pet-tail,
+  .pet-pupil,
+  .pet-speech,
+  .pet-restore {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .pet-companion {
+    --pet-eye-x: 0px !important;
+    --pet-eye-y: 0px !important;
+    --pet-head-rotate: 0deg !important;
+    --pet-body-x: 0px !important;
+    --pet-scroll-y: 0px !important;
+    --pet-tail-rotate: 0deg !important;
+  }
+}
