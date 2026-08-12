@@ -6926,3 +6926,31 @@ html[data-theme="dark"] .school-year-toolbar {
     transform: none !important;
   }
 }
+
+
+/* V3.8.1 — Nguồn danh ngôn trong bong bóng Minty */
+.pet-quote-source {
+  display: inline-flex;
+  margin-top: 7px;
+  color: #3e8f75;
+  font-size: .64rem;
+  font-weight: 850;
+  text-decoration: none;
+  border-bottom: 1px dashed currentColor;
+  pointer-events: auto;
+}
+
+.pet-quote-source:hover {
+  color: #286f5b;
+  border-bottom-style: solid;
+}
+
+.pet-quote-source:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand) 32%, transparent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+html[data-theme="dark"] .pet-quote-source {
+  color: #91dbc3;
+}

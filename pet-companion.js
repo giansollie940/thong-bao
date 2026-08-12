@@ -17,35 +17,68 @@
    * Danh ngôn đã được chọn từ các nguồn đáng tin cậy.
    * Nội dung tiếng Việt là bản dịch ngắn gọn để phù hợp giao diện.
    */
+  /*
+   * Bộ câu ngắn dùng cục bộ để website không phải scrape nguồn bên ngoài.
+   * Nội dung được diễn ý ngắn gọn từ các mục “Học hỏi” trên Từ điển danh ngôn,
+   * tránh sao chép hàng loạt nguyên văn.
+   */
   const STUDY_QUOTES = [
     {
-      text: "Giáo dục là vũ khí mạnh mẽ nhất mà bạn có thể dùng để thay đổi thế giới.",
-      author: "Nelson Mandela"
+      text: "Học từ hôm qua, sống trọn hôm nay và luôn tiếp tục đặt câu hỏi.",
+      author: "Albert Einstein"
     },
     {
-      text: "Một đứa trẻ, một người thầy, một cuốn sách và một cây bút có thể thay đổi thế giới.",
-      author: "Malala Yousafzai"
+      text: "Hãy dành thời gian học khi người khác đang nghỉ và chuẩn bị khi người khác đang chơi.",
+      author: "William Arthur Ward"
     },
     {
-      text: "Học mà không suy nghĩ thì công sức uổng phí; suy nghĩ mà không học thì nguy hiểm.",
-      author: "Khổng Tử"
-    },
-    {
-      text: "Khi ta dạy người khác, chính ta cũng học.",
-      author: "Seneca"
-    },
-    {
-      text: "Đầu tư vào tri thức luôn mang lại lợi tức tốt nhất.",
+      text: "Tri thức là một khoản đầu tư có thể mang lại giá trị lâu dài.",
       author: "Benjamin Franklin"
+    },
+    {
+      text: "Trong việc học, tự học phải là phần cốt lõi.",
+      author: "Hồ Chí Minh"
+    },
+    {
+      text: "Hãy sống hết mình mỗi ngày và học như thể hành trình ấy không có điểm cuối.",
+      author: "Mahatma Gandhi"
+    },
+    {
+      text: "Biết học từ sai lầm của người khác giúp ta tránh phải tự trải qua mọi sai lầm.",
+      author: "Groucho Marx"
+    },
+    {
+      text: "Người thầy chân chính cũng luôn là một người học.",
+      author: "Elbert Hubbard"
+    },
+    {
+      text: "Học hỏi là hành trình mà trí óc không nên ngừng nghỉ.",
+      author: "Leonardo da Vinci"
+    },
+    {
+      text: "Mỗi bước học đọc giống như thắp thêm một tia lửa cho trí tuệ.",
+      author: "Victor Hugo"
+    },
+    {
+      text: "Tri thức đến từ học hỏi, còn kỹ năng lớn lên qua rèn luyện.",
+      author: "Thomas Szasz"
+    },
+    {
+      text: "Không biết chưa đáng ngại bằng việc không muốn học thêm.",
+      author: "Benjamin Franklin"
+    },
+    {
+      text: "Học chậm vẫn là học; điều quan trọng là đừng ngừng tiến về phía trước.",
+      author: "James Agee"
     }
   ];
 
-  // Lần đầu: 2–4 phút. Các lần sau: 4–7 phút.
-  const FIRST_QUOTE_MIN = 2 * 60 * 1000;
-  const FIRST_QUOTE_MAX = 4 * 60 * 1000;
-  const NEXT_QUOTE_MIN = 4 * 60 * 1000;
-  const NEXT_QUOTE_MAX = 7 * 60 * 1000;
-  const QUOTE_VISIBLE_MS = 11 * 1000;
+  const QUOTE_SOURCE_URL =
+    "https://www.tudiendanhngon.vn/danhngon/ds/strcats/180";
+
+  // Minty hiện một câu mỗi 60 giây khi tab đang hoạt động.
+  const QUOTE_INTERVAL_MS = 60 * 1000;
+  const QUOTE_VISIBLE_MS = 12 * 1000;
 
   let lastScrollY = window.scrollY;
   let scrollTimer = 0;
@@ -143,7 +176,14 @@
     author.className = "pet-quote-author";
     author.textContent = `— ${quote.author}`;
 
-    speech.append(text, author);
+    const source = document.createElement("a");
+    source.className = "pet-quote-source";
+    source.href = QUOTE_SOURCE_URL;
+    source.target = "_blank";
+    source.rel = "noopener noreferrer";
+    source.textContent = "Nguồn tham khảo";
+
+    speech.append(text, author, source);
 
     pet.classList.remove("is-happy");
     void pet.offsetWidth;
@@ -164,18 +204,12 @@
 
   function scheduleFirstQuote() {
     window.clearTimeout(quoteTimer);
-    quoteTimer = window.setTimeout(
-      showQuote,
-      randomBetween(FIRST_QUOTE_MIN, FIRST_QUOTE_MAX)
-    );
+    quoteTimer = window.setTimeout(showQuote, QUOTE_INTERVAL_MS);
   }
 
   function scheduleNextQuote() {
     window.clearTimeout(quoteTimer);
-    quoteTimer = window.setTimeout(
-      showQuote,
-      randomBetween(NEXT_QUOTE_MIN, NEXT_QUOTE_MAX)
-    );
+    quoteTimer = window.setTimeout(showQuote, QUOTE_INTERVAL_MS);
   }
 
   function renderPointerReaction() {
@@ -291,7 +325,7 @@
     }
 
     if (!pet.hidden) {
-      scheduleNextQuote();
+      scheduleFirstQuote();
     }
   });
 

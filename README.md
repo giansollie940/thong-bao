@@ -13,7 +13,7 @@
 - Nhập nhanh nhiều thông báo
 - Định dạng nội dung cơ bản
 - Giao diện responsive, hỗ trợ dark mode
-- Thú cưng Minty theo dõi chuột, chuyển động khi cuộn và thỉnh thoảng hiện danh ngôn học tập
+- Thú cưng Minty theo dõi chuột, chuyển động khi cuộn và hiện một lời nhắc học tập khoảng mỗi 60 giây
 - Admin có thể thêm, sửa, xóa tuần, thông báo và chuyên mục
 - Public chỉ xem nội dung
 
@@ -85,4 +85,4 @@ Khuyến nghị:
 
 ---
 
-Phiên bản hiện tại: **V3.8**
+Phiên bản hiện tại: **V3.8.1**
