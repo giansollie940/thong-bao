@@ -7400,3 +7400,56 @@ html[data-theme="dark"] .pet-speech.is-quote .pet-quote-author {
     margin-left: 11px;
   }
 }
+
+
+/* =========================================================
+   V3.9 — Edge quote loading state
+   ========================================================= */
+
+.pet-speech.is-loading {
+  min-width: 190px;
+}
+
+.pet-quote-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #46776a;
+  font-family:
+    Inter,
+    "Segoe UI",
+    "Noto Sans",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  font-size: .76rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.pet-quote-loading::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  border: 2px solid rgba(76, 175, 143, .20);
+  border-top-color: rgba(61, 155, 125, .78);
+  border-radius: 50%;
+  animation: petQuoteSpin .72s linear infinite;
+}
+
+@keyframes petQuoteSpin {
+  to { transform: rotate(360deg); }
+}
+
+html[data-theme="dark"] .pet-quote-loading {
+  color: #bde8d9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-quote-loading::before {
+    animation: none;
+    border-top-color: rgba(61, 155, 125, .78);
+  }
+}
