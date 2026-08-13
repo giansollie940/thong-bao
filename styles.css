@@ -7460,7 +7460,7 @@ html[data-theme="dark"] .pet-quote-loading {
    Chỉ cần đổi biến này để nâng / hạ Minty.
    ========================================================= */
 :root {
-  --pet-top-position: 180px;
+  --pet-top-position: 220px;
 }
 
 .pet-companion {
