@@ -7887,3 +7887,230 @@ html[data-theme="dark"] .pet-speech.is-quote .pet-quote-source {
     animation: none !important;
   }
 }
+
+
+/* =========================================================
+   V3.9.4 — Soft Comic Bubble
+   Bỏ viền đen; ngôi sao là nút đóng bong bóng
+   ========================================================= */
+
+/* Cho phép click vào control trong bubble, không xuyên xuống Minty */
+.pet-speech.is-visible {
+  pointer-events: auto;
+}
+
+/* Giao diện bubble mềm, sạch hơn */
+.pet-speech,
+.pet-speech.is-quote {
+  --bubble-line: rgba(71, 167, 137, .32);
+  --bubble-line-strong: rgba(54, 145, 117, .52);
+  --bubble-shadow: rgba(44, 107, 87, .14);
+
+  border: 1.5px solid var(--bubble-line) !important;
+
+  border-radius:
+    34px 48px 38px 46px /
+    30px 40px 35px 42px !important;
+
+  background:
+    radial-gradient(
+      circle at 13px 13px,
+      rgba(64, 151, 123, .055) 0 1px,
+      transparent 1.15px
+    ) 0 0 / 13px 13px,
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, .84),
+      rgba(239, 252, 247, .72)
+    ) !important;
+
+  box-shadow:
+    0 12px 30px var(--bubble-shadow),
+    0 2px 0 rgba(255,255,255,.58) inset !important;
+
+  -webkit-backdrop-filter: blur(13px) saturate(118%);
+  backdrop-filter: blur(13px) saturate(118%);
+}
+
+/* Bỏ ngôi sao pseudo cũ vì ngôi sao giờ là button thật */
+.pet-speech::before,
+.pet-speech.is-quote::before {
+  content: none !important;
+}
+
+/* Đuôi bong bóng mềm hơn, hướng về đầu Minty */
+.pet-speech::after,
+.pet-speech.is-quote::after {
+  content: "" !important;
+  position: absolute !important;
+  z-index: -1 !important;
+
+  top: 43px !important;
+  right: -27px !important;
+  bottom: auto !important;
+
+  width: 38px !important;
+  height: 27px !important;
+
+  border: 0 !important;
+  border-right: 1.5px solid var(--bubble-line) !important;
+  border-bottom: 1.5px solid var(--bubble-line) !important;
+
+  border-radius: 0 10px 12px 0 !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(245, 254, 250, .79),
+      rgba(228, 248, 240, .69)
+    ) !important;
+
+  clip-path: polygon(
+    0 18%,
+    100% 50%,
+    0 84%,
+    23% 50%
+  ) !important;
+
+  transform: rotate(1deg) !important;
+  filter: drop-shadow(4px 5px 7px rgba(44, 107, 87, .06)) !important;
+}
+
+/* Ngôi sao là nút đóng */
+.pet-speech-star-close {
+  position: absolute;
+  top: -13px;
+  left: 17px;
+  z-index: 20;
+
+  display: grid;
+  place-items: center;
+
+  width: 30px;
+  height: 30px;
+  padding: 0;
+
+  border: 1.5px solid rgba(43, 137, 109, .38);
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(116, 219, 184, .97),
+      rgba(64, 177, 141, .95)
+    );
+
+  color: #ffffff;
+  box-shadow:
+    0 6px 13px rgba(45, 125, 99, .18),
+    inset 0 1px 0 rgba(255,255,255,.48);
+
+  cursor: pointer;
+  pointer-events: auto;
+
+  font-family:
+    "Segoe UI Symbol",
+    "Noto Sans Symbols 2",
+    sans-serif;
+  font-size: .82rem;
+  font-weight: 900;
+  line-height: 1;
+
+  transition:
+    transform 130ms ease,
+    box-shadow 130ms ease,
+    filter 130ms ease;
+}
+
+.pet-speech-star-close:hover {
+  transform: rotate(12deg) scale(1.08);
+  filter: brightness(1.04);
+  box-shadow:
+    0 8px 16px rgba(45, 125, 99, .22),
+    inset 0 1px 0 rgba(255,255,255,.52);
+}
+
+.pet-speech-star-close:active {
+  transform: scale(.94);
+}
+
+.pet-speech-star-close:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  outline-offset: 3px;
+}
+
+/* X cũ không còn được tạo; nếu cache HTML/CSS cũ còn sót thì ẩn luôn */
+.pet-speech-close {
+  display: none !important;
+}
+
+/* Vì bỏ X ở góc phải, trả lại không gian cho nội dung */
+.pet-speech,
+.pet-speech.is-quote {
+  padding-right: 20px !important;
+}
+
+.pet-speech.is-quote .pet-quote-text {
+  padding-left: 16px !important;
+}
+
+.pet-speech.is-quote .pet-quote-author {
+  padding-left: 16px !important;
+}
+
+.pet-speech.is-quote .pet-quote-source {
+  margin-left: 16px !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .pet-speech,
+html[data-theme="dark"] .pet-speech.is-quote {
+  --bubble-line: rgba(142, 218, 193, .22);
+  --bubble-line-strong: rgba(142, 218, 193, .40);
+  --bubble-shadow: rgba(0, 0, 0, .25);
+
+  background:
+    radial-gradient(
+      circle at 13px 13px,
+      rgba(180, 235, 216, .045) 0 1px,
+      transparent 1.15px
+    ) 0 0 / 13px 13px,
+    linear-gradient(
+      145deg,
+      rgba(30, 53, 47, .84),
+      rgba(23, 44, 38, .76)
+    ) !important;
+}
+
+html[data-theme="dark"] .pet-speech::after,
+html[data-theme="dark"] .pet-speech.is-quote::after {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(31, 57, 50, .82),
+      rgba(24, 46, 40, .74)
+    ) !important;
+}
+
+@media (max-width: 520px) {
+  .pet-speech-star-close {
+    top: -11px;
+    left: 13px;
+    width: 27px;
+    height: 27px;
+    font-size: .74rem;
+  }
+
+  .pet-speech,
+  .pet-speech.is-quote {
+    padding-right: 14px !important;
+  }
+
+  .pet-speech::after,
+  .pet-speech.is-quote::after {
+    top: 35px !important;
+    right: -22px !important;
+    width: 32px !important;
+    height: 23px !important;
+  }
+}

@@ -322,14 +322,23 @@
 
   function createSpeechCloseButton() {
     const closeButton = document.createElement("button");
-    closeButton.className = "pet-speech-close";
+    closeButton.className = "pet-speech-star-close";
     closeButton.type = "button";
     closeButton.setAttribute("aria-label", "Đóng bong bóng lời nói");
     closeButton.title = "Đóng lời nói";
-    closeButton.textContent = "×";
+    closeButton.textContent = "✦";
+
+    const stopBubble = event => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    closeButton.addEventListener("pointerdown", stopBubble);
+    closeButton.addEventListener("mousedown", stopBubble);
+    closeButton.addEventListener("touchstart", stopBubble, { passive: false });
 
     closeButton.addEventListener("click", event => {
-      event.stopPropagation();
+      stopBubble(event);
       closeSpeechBubble();
     });
 
