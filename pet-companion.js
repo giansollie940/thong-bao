@@ -315,9 +315,37 @@
     speech.classList.remove("is-quote", "is-loading");
   }
 
+  function closeSpeechBubble() {
+    window.clearTimeout(speechTimer);
+    speech.classList.remove("is-visible", "is-quote", "is-loading");
+  }
+
+  function createSpeechCloseButton() {
+    const closeButton = document.createElement("button");
+    closeButton.className = "pet-speech-close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Đóng bong bóng lời nói");
+    closeButton.title = "Đóng lời nói";
+    closeButton.textContent = "×";
+
+    closeButton.addEventListener("click", event => {
+      event.stopPropagation();
+      closeSpeechBubble();
+    });
+
+    return closeButton;
+  }
+
   function showSpeech(message, duration = 1500) {
     clearSpeechClasses();
-    speech.textContent = message;
+    speech.replaceChildren();
+
+    const closeButton = createSpeechCloseButton();
+    const text = document.createElement("span");
+    text.className = "pet-speech-simple-text";
+    text.textContent = message;
+
+    speech.append(closeButton, text);
     speech.classList.add("is-visible");
 
     window.clearTimeout(speechTimer);
@@ -330,6 +358,8 @@
     speech.classList.remove("is-loading");
     speech.classList.add("is-quote", "is-visible");
     speech.replaceChildren();
+
+    const closeButton = createSpeechCloseButton();
 
     const text = document.createElement("span");
     text.className = "pet-quote-text";
@@ -347,7 +377,7 @@
     source.textContent = `Nguồn: ${quote.source_name || SOURCE_NAME}`;
     source.title = "Mở nguồn của danh ngôn";
 
-    speech.append(text, author, source);
+    speech.append(closeButton, text, author, source);
 
     pet.classList.remove("is-happy");
     void pet.offsetWidth;
