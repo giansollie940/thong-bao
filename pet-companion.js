@@ -16,46 +16,48 @@
     : "";
 
   const PET_HIDDEN_KEY = "weeklyBoardPetHidden";
-  const QUOTE_SEEN_KEY = "weeklyBoardQuoteSeenV3";
-  const OFFLINE_SEEN_KEY = "weeklyBoardOfflineQuoteSeenV1";
+  const QUOTE_LIBRARY_KEY = "weeklyBoardQuoteLibraryV1";
+  const QUOTE_SEEN_KEY = "weeklyBoardQuoteSeenV4";
+  const QUOTE_LIBRARY_UPDATED_KEY = "weeklyBoardQuoteLibraryUpdatedAtV1";
 
   const QUOTE_INTERVAL_MS = 60 * 1000;
   const QUOTE_VISIBLE_MS = 12 * 1000;
-  const QUOTE_REQUEST_TIMEOUT_MS = 8000;
-  const MAX_SEEN_IDS_SENT = 400;
+  const LIBRARY_SYNC_INTERVAL_MS = 30 * 60 * 1000;
+  const LIBRARY_REQUEST_TIMEOUT_MS = 9000;
+  const MAX_SEEN_IDS = 1000;
 
   const SOURCE_NAME = "Từ điển danh ngôn";
   const SOURCE_CATEGORY_URL =
     "https://www.tudiendanhngon.vn/danhngon/ds/strcats/180";
 
   /*
-   * Chỉ là lớp dự phòng cuối cùng khi Edge Function không thể truy cập.
-   * Nguồn chính của app là Edge Function + cache PostgreSQL.
+   * Thư viện khởi tạo để Minty luôn có câu ngay cả khi chưa đồng bộ online.
+   * Sau đó Edge Function sẽ cập nhật toàn bộ thư viện vào localStorage.
    */
-  const OFFLINE_QUOTES = [
+  const BUILTIN_LIBRARY = [
     {
-      id: "offline:01",
+      id: "builtin:01",
       text: "Trong cách học, tự học phải là phần cốt lõi.",
       author: "Hồ Chí Minh",
       source_name: SOURCE_NAME,
       source_url: SOURCE_CATEGORY_URL
     },
     {
-      id: "offline:02",
+      id: "builtin:02",
       text: "Không biết chưa đáng ngại bằng việc không muốn học thêm.",
       author: "Benjamin Franklin",
       source_name: SOURCE_NAME,
       source_url: SOURCE_CATEGORY_URL
     },
     {
-      id: "offline:03",
+      id: "builtin:03",
       text: "Học hỏi là hành trình mà trí óc không nên ngừng nghỉ.",
       author: "Leonardo da Vinci",
       source_name: SOURCE_NAME,
       source_url: SOURCE_CATEGORY_URL
     },
     {
-      id: "offline:04",
+      id: "builtin:04",
       text: "Người thầy chân chính cũng luôn là một người học.",
       author: "Elbert Hubbard",
       source_name: SOURCE_NAME,
@@ -71,68 +73,149 @@
   let speechTimer = 0;
   let helloTimer = 0;
   let quoteTimer = 0;
+  let librarySyncTimer = 0;
+  let librarySyncPromise = null;
   let rafId = 0;
   let pointerX = window.innerWidth / 2;
   let pointerY = window.innerHeight / 2;
-  let quoteLoading = false;
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-  function loadStringArray(key) {
+  function safeParseJson(value, fallback) {
     try {
-      const parsed = JSON.parse(localStorage.getItem(key) || "[]");
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter(value => typeof value === "string");
+      return JSON.parse(value);
+    } catch {
+      return fallback;
+    }
+  }
+
+  function normalizeQuote(raw) {
+    if (
+      !raw ||
+      typeof raw.id !== "string" ||
+      typeof raw.text !== "string" ||
+      !raw.text.trim()
+    ) {
+      return null;
+    }
+
+    return {
+      id: raw.id,
+      text: raw.text.trim(),
+      author: String(raw.author || "Khuyết danh").trim(),
+      source_name: String(raw.source_name || SOURCE_NAME).trim(),
+      source_url:
+        typeof raw.source_url === "string" &&
+        /^https?:\/\//i.test(raw.source_url)
+          ? raw.source_url
+          : SOURCE_CATEGORY_URL
+    };
+  }
+
+  function dedupeLibrary(quotes) {
+    const map = new Map();
+
+    for (const raw of quotes || []) {
+      const quote = normalizeQuote(raw);
+      if (!quote) continue;
+
+      if (!map.has(quote.id)) {
+        map.set(quote.id, quote);
+      }
+    }
+
+    return [...map.values()];
+  }
+
+  function loadQuoteLibrary() {
+    try {
+      const stored = safeParseJson(
+        localStorage.getItem(QUOTE_LIBRARY_KEY) || "[]",
+        []
+      );
+
+      const normalized = dedupeLibrary(stored);
+
+      if (normalized.length) {
+        return normalized;
+      }
+    } catch {}
+
+    return [...BUILTIN_LIBRARY];
+  }
+
+  function saveQuoteLibrary(quotes) {
+    const normalized = dedupeLibrary(quotes);
+
+    if (!normalized.length) return;
+
+    try {
+      localStorage.setItem(
+        QUOTE_LIBRARY_KEY,
+        JSON.stringify(normalized)
+      );
+
+      localStorage.setItem(
+        QUOTE_LIBRARY_UPDATED_KEY,
+        new Date().toISOString()
+      );
+    } catch {
+      // Nếu storage đầy/bị chặn, app vẫn dùng thư viện built-in.
+    }
+  }
+
+  function loadSeenIds() {
+    try {
+      const stored = safeParseJson(
+        localStorage.getItem(QUOTE_SEEN_KEY) || "[]",
+        []
+      );
+
+      return Array.isArray(stored)
+        ? stored.filter(value => typeof value === "string")
+        : [];
     } catch {
       return [];
     }
   }
 
-  function saveStringArray(key, values) {
+  function saveSeenIds(ids) {
     try {
-      localStorage.setItem(key, JSON.stringify(values));
-    } catch {
-      // Private mode/storage disabled: app vẫn hoạt động, chỉ mất lịch sử chống lặp.
-    }
+      localStorage.setItem(
+        QUOTE_SEEN_KEY,
+        JSON.stringify(ids.slice(-MAX_SEEN_IDS))
+      );
+    } catch {}
   }
 
-  function rememberQuoteId(id, cycleReset = false) {
-    if (!id) return;
+  function chooseQuoteFromLocalLibrary() {
+    const library = loadQuoteLibrary();
+    let seen = loadSeenIds();
+    const seenSet = new Set(seen);
 
-    let seen = cycleReset ? [] : loadStringArray(QUOTE_SEEN_KEY);
+    let available = library.filter(
+      quote => !seenSet.has(quote.id)
+    );
 
-    if (!seen.includes(id)) {
-      seen.push(id);
-    }
-
-    // Giữ payload request nhỏ, trong khi kho hiện tại nhỏ hơn giới hạn này nhiều.
-    if (seen.length > MAX_SEEN_IDS_SENT) {
-      seen = seen.slice(-MAX_SEEN_IDS_SENT);
-    }
-
-    saveStringArray(QUOTE_SEEN_KEY, seen);
-  }
-
-  function chooseOfflineQuote() {
-    let seen = loadStringArray(OFFLINE_SEEN_KEY);
-    let available = OFFLINE_QUOTES.filter(quote => !seen.includes(quote.id));
-
+    // Đã xem hết kho: bắt đầu vòng mới.
     if (!available.length) {
       seen = [];
-      available = [...OFFLINE_QUOTES];
+      available = [...library];
     }
 
-    const quote = available[Math.floor(Math.random() * available.length)];
-    seen.push(quote.id);
-    saveStringArray(OFFLINE_SEEN_KEY, seen);
+    const quote =
+      available[Math.floor(Math.random() * available.length)] ||
+      BUILTIN_LIBRARY[0];
 
-    return {
-      ...quote,
-      delivery: "offline-fallback"
-    };
+    if (quote?.id) {
+      seen.push(quote.id);
+      saveSeenIds(seen);
+    }
+
+    return quote;
   }
 
-  async function fetchOnlineQuote() {
+  async function fetchQuoteLibraryFromEdge() {
     if (!QUOTE_ENDPOINT) {
       throw new Error("Chưa có SUPABASE_URL.");
     }
@@ -140,11 +223,8 @@
     const controller = new AbortController();
     const timeout = window.setTimeout(
       () => controller.abort(),
-      QUOTE_REQUEST_TIMEOUT_MS
+      LIBRARY_REQUEST_TIMEOUT_MS
     );
-
-    const seenIds = loadStringArray(QUOTE_SEEN_KEY)
-      .slice(-MAX_SEEN_IDS_SENT);
 
     try {
       const response = await fetch(QUOTE_ENDPOINT, {
@@ -153,51 +233,73 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          seen_ids: seenIds
+          action: "library"
         }),
         signal: controller.signal
       });
 
       if (!response.ok) {
-        throw new Error(`Quote Edge Function HTTP ${response.status}`);
+        throw new Error(`Quote library HTTP ${response.status}`);
       }
 
       const payload = await response.json();
-      const quote = payload?.quote;
+      const library = dedupeLibrary(payload?.quotes || []);
 
-      if (
-        !quote ||
-        typeof quote.id !== "string" ||
-        typeof quote.text !== "string" ||
-        !quote.text.trim() ||
-        typeof quote.source_url !== "string" ||
-        !quote.source_url.startsWith("http")
-      ) {
-        throw new Error("Edge Function trả dữ liệu danh ngôn không hợp lệ.");
+      if (!library.length) {
+        throw new Error("Edge Function chưa trả thư viện danh ngôn.");
       }
 
-      rememberQuoteId(quote.id, Boolean(payload.cycle_reset));
-
       return {
-        id: quote.id,
-        text: quote.text.trim(),
-        author: String(quote.author || "Khuyết danh").trim(),
-        source_name: String(quote.source_name || SOURCE_NAME).trim(),
-        source_url: quote.source_url,
-        delivery: String(payload.cache_status || "edge")
+        library,
+        cache_status: String(payload.cache_status || "edge"),
+        source_name: String(payload.source_name || SOURCE_NAME)
       };
     } finally {
       window.clearTimeout(timeout);
     }
   }
 
-  async function getQuote() {
-    try {
-      return await fetchOnlineQuote();
-    } catch (error) {
-      console.warn("Minty quote: dùng fallback offline.", error);
-      return chooseOfflineQuote();
+  async function syncQuoteLibraryInBackground() {
+    if (
+      librarySyncPromise ||
+      document.hidden ||
+      pet.hidden
+    ) {
+      return librarySyncPromise;
     }
+
+    librarySyncPromise = (async () => {
+      try {
+        const result = await fetchQuoteLibraryFromEdge();
+        saveQuoteLibrary(result.library);
+
+        console.info(
+          `Minty: đã cập nhật ${result.library.length} danh ngôn (${result.cache_status}).`
+        );
+
+        return result.library;
+      } catch (error) {
+        console.warn(
+          "Minty: chưa cập nhật được thư viện online, tiếp tục dùng local.",
+          error
+        );
+
+        return loadQuoteLibrary();
+      } finally {
+        librarySyncPromise = null;
+      }
+    })();
+
+    return librarySyncPromise;
+  }
+
+  function scheduleLibrarySync() {
+    window.clearTimeout(librarySyncTimer);
+
+    librarySyncTimer = window.setTimeout(async () => {
+      await syncQuoteLibraryInBackground();
+      scheduleLibrarySync();
+    }, LIBRARY_SYNC_INTERVAL_MS);
   }
 
   function setHidden(hidden) {
@@ -206,9 +308,7 @@
 
     try {
       localStorage.setItem(PET_HIDDEN_KEY, hidden ? "1" : "0");
-    } catch {
-      // localStorage có thể bị chặn.
-    }
+    } catch {}
   }
 
   function clearSpeechClasses() {
@@ -224,17 +324,6 @@
     speechTimer = window.setTimeout(() => {
       speech.classList.remove("is-visible");
     }, duration);
-  }
-
-  function showQuoteLoading() {
-    speech.replaceChildren();
-
-    const loading = document.createElement("span");
-    loading.className = "pet-quote-loading";
-    loading.textContent = "Minty đang tìm một câu hay…";
-
-    speech.append(loading);
-    speech.classList.add("is-quote", "is-loading", "is-visible");
   }
 
   function renderQuote(quote) {
@@ -275,31 +364,29 @@
     }, QUOTE_VISIBLE_MS);
   }
 
-  async function showQuote({ reschedule = true } = {}) {
-    if (pet.hidden || document.hidden || quoteLoading) {
+  function showLocalQuote({ reschedule = true } = {}) {
+    if (pet.hidden || document.hidden) {
       if (reschedule) scheduleNextQuote();
       return;
     }
 
-    quoteLoading = true;
-    showQuoteLoading();
+    /*
+     * QUAN TRỌNG:
+     * Không fetch ở đây.
+     * Click luôn lấy localStorage => gần như tức thời.
+     */
+    const quote = chooseQuoteFromLocalLibrary();
+    renderQuote(quote);
 
-    try {
-      const quote = await getQuote();
-      renderQuote(quote);
-    } finally {
-      quoteLoading = false;
-
-      if (reschedule) {
-        scheduleNextQuote();
-      }
+    if (reschedule) {
+      scheduleNextQuote();
     }
   }
 
   function scheduleFirstQuote() {
     window.clearTimeout(quoteTimer);
     quoteTimer = window.setTimeout(
-      () => showQuote({ reschedule: true }),
+      () => showLocalQuote({ reschedule: true }),
       QUOTE_INTERVAL_MS
     );
   }
@@ -307,7 +394,7 @@
   function scheduleNextQuote() {
     window.clearTimeout(quoteTimer);
     quoteTimer = window.setTimeout(
-      () => showQuote({ reschedule: true }),
+      () => showLocalQuote({ reschedule: true }),
       QUOTE_INTERVAL_MS
     );
   }
@@ -327,25 +414,32 @@
     const rect = character.getBoundingClientRect();
     const centerX = rect.left + rect.width * 0.5;
     const centerY = rect.top + rect.height * 0.42;
-
     const dx = pointerX - centerX;
     const dy = pointerY - centerY;
     const distance = Math.max(1, Math.hypot(dx, dy));
-
     const nx = clamp(dx / distance, -1, 1);
     const ny = clamp(dy / distance, -1, 1);
 
-    const eyeX = clamp(nx * 4.2, -4.2, 4.2);
-    const eyeY = clamp(ny * 3.0, -3.0, 3.0);
-    const headRotate = clamp(dx / 110, -7, 7);
-    const bodyX = clamp(dx / 350, -3.5, 3.5);
-    const tailRotate = clamp(-dx / 90, -11, 11);
-
-    pet.style.setProperty("--pet-eye-x", `${eyeX.toFixed(2)}px`);
-    pet.style.setProperty("--pet-eye-y", `${eyeY.toFixed(2)}px`);
-    pet.style.setProperty("--pet-head-rotate", `${headRotate.toFixed(2)}deg`);
-    pet.style.setProperty("--pet-body-x", `${bodyX.toFixed(2)}px`);
-    pet.style.setProperty("--pet-tail-rotate", `${tailRotate.toFixed(2)}deg`);
+    pet.style.setProperty(
+      "--pet-eye-x",
+      `${clamp(nx * 4.2, -4.2, 4.2).toFixed(2)}px`
+    );
+    pet.style.setProperty(
+      "--pet-eye-y",
+      `${clamp(ny * 3.0, -3.0, 3.0).toFixed(2)}px`
+    );
+    pet.style.setProperty(
+      "--pet-head-rotate",
+      `${clamp(dx / 110, -7, 7).toFixed(2)}deg`
+    );
+    pet.style.setProperty(
+      "--pet-body-x",
+      `${clamp(dx / 350, -3.5, 3.5).toFixed(2)}px`
+    );
+    pet.style.setProperty(
+      "--pet-tail-rotate",
+      `${clamp(-dx / 90, -11, 11).toFixed(2)}deg`
+    );
   }
 
   function schedulePointerRender() {
@@ -368,7 +462,11 @@
     lastScrollY = currentY;
     const shift = clamp(delta * 0.20, -11, 11);
 
-    pet.style.setProperty("--pet-scroll-y", `${shift.toFixed(1)}px`);
+    pet.style.setProperty(
+      "--pet-scroll-y",
+      `${shift.toFixed(1)}px`
+    );
+
     pet.classList.add("is-scrolling");
 
     window.clearTimeout(scrollTimer);
@@ -378,9 +476,12 @@
     }, 150);
   }
 
-  character.addEventListener("click", async () => {
+  character.addEventListener("click", () => {
     window.clearTimeout(quoteTimer);
-    await showQuote({ reschedule: false });
+
+    // Tức thời: tuyệt đối không gọi mạng trong click.
+    showLocalQuote({ reschedule: false });
+
     scheduleNextQuote();
   });
 
@@ -388,40 +489,68 @@
     event.stopPropagation();
     setHidden(true);
     window.clearTimeout(quoteTimer);
+    window.clearTimeout(librarySyncTimer);
   });
 
   restoreButton.addEventListener("click", () => {
     setHidden(false);
     showSpeech("Mình quay lại rồi! 🐾", 1500);
     schedulePointerRender();
+
+    // Sync chạy nền, không chặn UI.
+    syncQuoteLibraryInBackground();
+    scheduleLibrarySync();
     scheduleFirstQuote();
   });
 
-  window.addEventListener("pointermove", handlePointerMove, { passive: true });
-  window.addEventListener("scroll", handleScroll, { passive: true });
-  window.addEventListener("resize", schedulePointerRender, { passive: true });
+  window.addEventListener(
+    "pointermove",
+    handlePointerMove,
+    { passive: true }
+  );
+
+  window.addEventListener(
+    "scroll",
+    handleScroll,
+    { passive: true }
+  );
+
+  window.addEventListener(
+    "resize",
+    schedulePointerRender,
+    { passive: true }
+  );
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       window.clearTimeout(quoteTimer);
+      window.clearTimeout(librarySyncTimer);
       return;
     }
 
     if (!pet.hidden) {
+      syncQuoteLibraryInBackground();
+      scheduleLibrarySync();
       scheduleFirstQuote();
     }
   });
 
-  reduceMotion.addEventListener?.("change", schedulePointerRender);
-  finePointer.addEventListener?.("change", schedulePointerRender);
+  reduceMotion.addEventListener?.(
+    "change",
+    schedulePointerRender
+  );
+
+  finePointer.addEventListener?.(
+    "change",
+    schedulePointerRender
+  );
 
   let initiallyHidden = false;
 
   try {
-    initiallyHidden = localStorage.getItem(PET_HIDDEN_KEY) === "1";
-  } catch {
-    initiallyHidden = false;
-  }
+    initiallyHidden =
+      localStorage.getItem(PET_HIDDEN_KEY) === "1";
+  } catch {}
 
   setHidden(initiallyHidden);
 
@@ -430,6 +559,16 @@
       showSpeech("Chào bạn! Mình là Minty 🌿", 1800);
     }, 850);
 
+    /*
+     * Sau khi trang mở:
+     * 1. Minty đã có thư viện local ngay.
+     * 2. Đồng bộ thư viện mới ở nền.
+     */
+    window.setTimeout(() => {
+      syncQuoteLibraryInBackground();
+    }, 500);
+
+    scheduleLibrarySync();
     scheduleFirstQuote();
   }
 })();

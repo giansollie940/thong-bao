@@ -7453,3 +7453,28 @@ html[data-theme="dark"] .pet-quote-loading {
     border-top-color: rgba(61, 155, 125, .78);
   }
 }
+
+
+/* =========================================================
+   V3.9.2 — Pet vertical position
+   Chỉ cần đổi biến này để nâng / hạ Minty.
+   ========================================================= */
+:root {
+  --pet-top-position: 160px;
+}
+
+.pet-companion {
+  top: var(--pet-top-position) !important;
+  bottom: auto !important;
+}
+
+.pet-restore {
+  top: calc(var(--pet-top-position) + 10px) !important;
+  bottom: auto !important;
+}
+
+@media (max-width: 520px) {
+  :root {
+    --pet-top-position: 120px;
+  }
+}
