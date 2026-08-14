@@ -1,88 +1,85 @@
 # Bảng Thông Báo Theo Tuần
 
-Ứng dụng web đơn giản để đăng và xem thông báo theo tuần, phù hợp cho lớp học hoặc trường học.
+Ứng dụng web HTML/CSS/JavaScript + Supabase để quản lý thông báo theo tuần.
 
-## Tính năng chính
+## Tính năng
 
-- Xem thông báo theo tuần
-- Tạo nhiều năm học và chọn năm học để xem
-- Lưu trữ các tuần cũ, không tự xóa dữ liệu
-- Tìm kiếm thông báo
-- Phân loại theo chuyên mục
-- Đính kèm hình ảnh
-- Nhập nhanh nhiều thông báo
-- Định dạng nội dung cơ bản
-- Giao diện responsive, hỗ trợ dark mode
-- Thú cưng Minty theo dõi chuột, chuyển động khi cuộn; click để xem ngay danh ngôn và tự hiện câu mới mỗi 60 giây
-- Admin có thể thêm, sửa, xóa tuần, thông báo và chuyên mục
-- Public chỉ xem nội dung
+- Thông báo theo tuần và nhiều năm học
+- Lưu trữ năm học cũ
+- Chuyên mục, tìm kiếm, ảnh đính kèm
+- Admin quản lý; Public chỉ đọc
+- Responsive + dark mode
+- Minty theo dõi chuột, cử động nhẹ khi cuộn
+- Click Minty để xem danh ngôn ngay từ thư viện local
+- Danh ngôn tự hiện mỗi 60 giây
+- Edge Function cập nhật thư viện danh ngôn ở nền
+- Không lặp câu đến khi xem hết kho
+- Mọi câu đều có nguồn
 
-## Công nghệ
-
-- HTML
-- CSS
-- JavaScript thuần
-- Supabase Database
-- Supabase Auth
-- Supabase Storage
-- GitHub Pages
-
-## Cấu hình
-
-Tạo file `config.js` bên cạnh `index.html`:
-
-```js
-window.APP_CONFIG = {
-  SUPABASE_URL: "YOUR_SUPABASE_URL",
-  SUPABASE_KEY: "YOUR_SUPABASE_PUBLISHABLE_KEY"
-};
-```
-
-Chỉ dùng **publishable/anon key** ở frontend.
-
-Không đưa `service_role` hoặc secret key lên GitHub.
-
-## Chạy ứng dụng
-
-Có thể mở bằng local server hoặc deploy trực tiếp lên GitHub Pages.
-
-Các file chính:
+## Cấu trúc chính
 
 ```text
 index.html
 styles.css
+pet-companion.css
 app.js
 pet-companion.js
 config.js
 mint-garden-hero.svg
 mint-garden-pattern.svg
+quote-cache.sql
+supabase/
 ```
 
-## Cập nhật GitHub
+## Cấu hình frontend
 
-Khi sửa giao diện hoặc chức năng, chỉ cần thay các file tương ứng trong repository rồi chờ GitHub Pages cập nhật.
+Sao chép `config.example.js` thành `config.js` và điền:
 
-## Dữ liệu
+```js
+window.APP_CONFIG = {
+  SUPABASE_URL: "https://YOUR_PROJECT.supabase.co",
+  SUPABASE_KEY: "YOUR_PUBLISHABLE_OR_ANON_KEY"
+};
+```
 
-Dữ liệu được lưu trên Supabase.
+Không đưa `service_role` hoặc secret key vào frontend.
 
-- Năm học cũ vẫn được giữ lại
-- Tuần cũ chuyển sang phần Lưu trữ
-- Tạo năm học mới không làm mất dữ liệu năm trước
-- Không nên xóa tuần cũ nếu muốn giữ lịch sử thông báo
+## Danh ngôn
 
-## Bảo mật
+Frontend lấy danh ngôn trực tiếp từ `localStorage`, nên click Minty không phải chờ mạng.
 
-Ứng dụng sử dụng Supabase RLS.
+Edge Function `learning-quote` chỉ đồng bộ thư viện ở nền:
 
-Khuyến nghị:
+```text
+localStorage
+    ↑
+learning-quote
+    ↑
+quote_cache
+    ↑
+Từ điển danh ngôn
+```
 
-- Public chỉ có quyền đọc
-- Chỉ đúng Admin UID được thêm, sửa, xóa
-- Tắt public signup nếu chỉ có một Admin
-- Không dùng `service_role` ở frontend
-- Kiểm tra Security Advisor định kỳ
+Nếu nguồn online lỗi, app tiếp tục dùng cache hoặc thư viện fallback.
 
----
+## Supabase
 
-Phiên bản hiện tại: **V3.8.3**
+Chạy `quote-cache.sql` một lần nếu project chưa có bảng `quote_cache`.
+
+Edge Function nằm tại:
+
+```text
+supabase/functions/learning-quote/
+```
+
+Function được cấu hình public trong:
+
+```text
+supabase/config.toml
+```
+
+## Deploy
+
+Frontend có thể chạy trên GitHub Pages.
+
+Phiên bản: **V3.10 Clean Complete**

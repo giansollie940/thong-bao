@@ -203,8 +203,7 @@
 
     const current = weeks.find(w => weekState(w, today) === "current");
 
-    // V2.3:
-    // Từ Thứ Bảy, nếu đã có tuần kế tiếp thì trang chính bắt đầu
+    //     // Từ Thứ Bảy, nếu đã có tuần kế tiếp thì trang chính bắt đầu
     // hiển thị nội dung của tuần kế tiếp để chuẩn bị sớm.
     if (current) {
       const todayDate = dateObj(today);
@@ -231,7 +230,7 @@
 
     return state.announcements
       .filter(item => {
-        // V2.3: nếu có thời gian hiệu lực, thông báo xuất hiện ở mọi tuần
+        // nếu có thời gian hiệu lực, thông báo xuất hiện ở mọi tuần
         // mà khoảng hiệu lực giao với khoảng thời gian của tuần đó.
         if (item.valid_from || item.valid_until) {
           const from = item.valid_from || item.event_date || week.start_date;
