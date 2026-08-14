@@ -8,8 +8,33 @@
     !config.SUPABASE_URL.includes("YOUR_") &&
     !config.SUPABASE_KEY.includes("YOUR_");
 
+  function clearLegacyPersistentAuth() {
+    if (!isConfigured) return;
+
+    try {
+      const projectRef = new URL(config.SUPABASE_URL).hostname.split(".")[0];
+      const legacyKey = `sb-${projectRef}-auth-token`;
+      localStorage.removeItem(legacyKey);
+    } catch (error) {
+      console.warn("Không thể dọn session Supabase cũ trong localStorage.", error);
+    }
+  }
+
+  clearLegacyPersistentAuth();
+
   const client = isConfigured
-    ? window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_KEY)
+    ? window.supabase.createClient(
+        config.SUPABASE_URL,
+        config.SUPABASE_KEY,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storage: window.sessionStorage
+          }
+        }
+      )
     : null;
 
   const IMAGE_BUCKET = "announcement-images";

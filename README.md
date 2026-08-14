@@ -44,6 +44,18 @@ window.APP_CONFIG = {
 
 Không đưa `service_role` hoặc secret key vào frontend.
 
+
+## Phiên đăng nhập Admin
+
+Admin dùng `sessionStorage`:
+
+- Refresh trang: vẫn đăng nhập
+- Đóng hẳn phiên trình duyệt: session phía trình duyệt không được lưu lâu dài
+- Mở lại app ở phiên mới: cần đăng nhập lại
+- Bấm Đăng xuất: session bị xóa ngay
+
+V3.10.1 cũng xóa khóa Auth Supabase cũ từng được lưu trong `localStorage` trên trình duyệt đó.
+
 ## Danh ngôn
 
 Frontend lấy danh ngôn trực tiếp từ `localStorage`, nên click Minty không phải chờ mạng.
@@ -82,4 +94,4 @@ supabase/config.toml
 
 Frontend có thể chạy trên GitHub Pages.
 
-Phiên bản: **V3.10 Clean Complete**
+Phiên bản: **V3.10.1 Session Auth**
