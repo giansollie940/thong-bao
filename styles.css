@@ -6423,3 +6423,59 @@ html[data-theme="dark"] .school-year-toolbar {
     text-align: left;
   }
 }
+
+/* =========================================================
+   V3.11 — Smooth UI performance layer
+   Giảm repaint/blur nặng nhưng giữ nguyên phong cách giao diện.
+   ========================================================= */
+
+/* Các khu vực dài bên dưới viewport chỉ render khi cần. */
+#year-section,
+#archive-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+/* Card xuất hiện trực tiếp thay vì chạy hàng loạt animation khi render lại. */
+.announcement-card {
+  animation: none;
+  backdrop-filter: none;
+}
+
+/* Các lớp kính cố định / lặp nhiều: giảm blur để cuộn nhẹ hơn. */
+.app-topbar {
+  backdrop-filter: blur(6px);
+}
+
+.week-number,
+.week-date,
+.week-school-year,
+.button-glass,
+.button-glass-danger {
+  backdrop-filter: none;
+}
+
+/* Ưu tiên GPU cho các chuyển động transform thực sự thường xuyên. */
+.scroll-top-button,
+.sidebar-link,
+.button {
+  transform: translateZ(0);
+}
+
+/* Trên thiết bị cảm ứng / màn hình nhỏ: tránh blur nền cố định tốn paint. */
+@media (max-width: 820px) {
+  .app-topbar {
+    backdrop-filter: none;
+    background: rgba(247, 251, 249, .97);
+  }
+
+  html[data-theme="dark"] .app-topbar {
+    background: rgba(25, 39, 35, .97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

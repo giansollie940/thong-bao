@@ -1646,6 +1646,17 @@
     renderArchives();
   }
 
+  let renderFrame = 0;
+
+  function scheduleRenderAll() {
+    if (renderFrame) return;
+
+    renderFrame = window.requestAnimationFrame(() => {
+      renderFrame = 0;
+      renderAll();
+    });
+  }
+
 
   async function loadData() {
     if (!client) {
@@ -1677,7 +1688,7 @@
     }
 
     [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek();
-    renderAll();
+    scheduleRenderAll();
   }
 
   async function loadSession() {
@@ -1711,7 +1722,7 @@
     state.user = data.user;
     el.loginForm.reset();
     el.loginDialog.close();
-    renderAll();
+    scheduleRenderAll();
     showToast("Đã vào chế độ quản trị.");
   }
 
@@ -1719,7 +1730,7 @@
     if (!client) return;
     await client.auth.signOut();
     state.user = null;
-    renderAll();
+    scheduleRenderAll();
     showToast("Đã đăng xuất.");
   }
 
@@ -2527,7 +2538,7 @@
     if (client) {
       client.auth.onAuthStateChange((_event, session) => {
         state.user = session?.user || null;
-        renderAll();
+        scheduleRenderAll();
       });
     }
   }

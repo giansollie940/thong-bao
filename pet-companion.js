@@ -73,6 +73,8 @@
   let syncTimer = 0;
   let syncPromise = null;
   let animationFrame = 0;
+  let scrollFrame = 0;
+  let pendingScrollY = window.scrollY;
   let pointerX = window.innerWidth / 2;
   let pointerY = window.innerHeight / 2;
 
@@ -429,21 +431,27 @@
   function handleScroll() {
     if (reducedMotion.matches || pet.hidden) return;
 
-    const currentY = window.scrollY;
-    const delta = currentY - lastScrollY;
-    lastScrollY = currentY;
+    pendingScrollY = window.scrollY;
+    if (scrollFrame) return;
 
-    pet.style.setProperty(
-      "--pet-scroll-y",
-      `${clamp(delta * 0.2, -11, 11).toFixed(1)}px`
-    );
-    pet.classList.add("is-scrolling");
+    scrollFrame = window.requestAnimationFrame(() => {
+      scrollFrame = 0;
 
-    window.clearTimeout(scrollTimer);
-    scrollTimer = window.setTimeout(() => {
-      pet.style.setProperty("--pet-scroll-y", "0px");
-      pet.classList.remove("is-scrolling");
-    }, 150);
+      const delta = pendingScrollY - lastScrollY;
+      lastScrollY = pendingScrollY;
+
+      pet.style.setProperty(
+        "--pet-scroll-y",
+        `${clamp(delta * 0.2, -11, 11).toFixed(1)}px`
+      );
+      pet.classList.add("is-scrolling");
+
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        pet.style.setProperty("--pet-scroll-y", "0px");
+        pet.classList.remove("is-scrolling");
+      }, 150);
+    });
   }
 
   character.addEventListener("click", () => {

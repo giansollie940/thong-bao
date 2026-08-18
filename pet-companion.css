@@ -3,7 +3,7 @@
    ========================================================= */
 
 :root {
-  --pet-top-position: 240px;
+  --pet-top-position: 160px;
 }
 
 .pet-companion {
@@ -684,4 +684,25 @@ html[data-theme="dark"] .pet-quote-source {
     --pet-scroll-y: 0px !important;
     --pet-tail-rotate: 0deg !important;
   }
+}
+
+
+/* V3.11 — Minty performance polish */
+.pet-companion {
+  /* SVG đã có shadow riêng; bỏ filter toàn khối để giảm repaint khi mắt/chân cử động. */
+  filter: none;
+}
+
+.pet-character {
+  will-change: transform;
+}
+
+.pet-speech {
+  -webkit-backdrop-filter: blur(6px) saturate(108%);
+  backdrop-filter: blur(6px) saturate(108%);
+  will-change: transform, opacity;
+}
+
+.pet-restore {
+  backdrop-filter: none;
 }
