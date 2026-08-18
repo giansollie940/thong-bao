@@ -750,6 +750,25 @@
       : '<p class="muted">Chưa có nội dung để xem trước.</p>';
   }
 
+  let announcementPreviewFrame = 0;
+
+  function scheduleAnnouncementPreview() {
+    const preview = $("#announcement-content-preview");
+
+    if (!preview || preview.classList.contains("hidden")) {
+      return;
+    }
+
+    if (announcementPreviewFrame) {
+      window.cancelAnimationFrame(announcementPreviewFrame);
+    }
+
+    announcementPreviewFrame = window.requestAnimationFrame(() => {
+      announcementPreviewFrame = 0;
+      updateAnnouncementPreview();
+    });
+  }
+
   function toggleAnnouncementPreview() {
     const preview = $("#announcement-content-preview");
     const button = $("#announcement-preview-button");
@@ -2442,15 +2461,38 @@
   }
 
   function initDialogs() {
+    const dialogs = [...document.querySelectorAll("dialog")];
+
+    const updateDialogState = () => {
+      document.documentElement.classList.toggle(
+        "has-open-dialog",
+        dialogs.some(dialog => dialog.open)
+      );
+    };
+
+    const dialogObserver = new MutationObserver(updateDialogState);
+
     document.querySelectorAll(".close-dialog").forEach(button => {
       button.addEventListener("click", () => button.closest("dialog")?.close());
     });
 
-    document.querySelectorAll("dialog").forEach(dialog => {
+    dialogs.forEach(dialog => {
+      dialogObserver.observe(dialog, {
+        attributes: true,
+        attributeFilter: ["open"]
+      });
+
       dialog.addEventListener("click", event => {
         if (event.target === dialog) dialog.close();
       });
+
+      dialog.addEventListener("close", updateDialogState);
+      dialog.addEventListener("cancel", () => {
+        window.requestAnimationFrame(updateDialogState);
+      });
     });
+
+    updateDialogState();
   }
 
   function initEvents() {
@@ -2496,7 +2538,7 @@
     });
 
     $("#announcement-preview-button").addEventListener("click", toggleAnnouncementPreview);
-    $("#announcement-content").addEventListener("input", updateAnnouncementPreview);
+    $("#announcement-content").addEventListener("input", scheduleAnnouncementPreview);
 
     $("#announcement-image").addEventListener("change", () => {
       previewSelectedFile(

@@ -80,6 +80,9 @@
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+  const hasOpenDialog = () =>
+    document.documentElement.classList.contains("has-open-dialog");
+
   function readJson(key, fallback) {
     try {
       const value = localStorage.getItem(key);
@@ -335,7 +338,7 @@
   }
 
   function showQuote() {
-    if (pet.hidden || document.hidden) return;
+    if (pet.hidden || document.hidden || hasOpenDialog()) return;
 
     const quote = chooseLocalQuote();
 
@@ -380,7 +383,12 @@
   function renderPointerReaction() {
     animationFrame = 0;
 
-    if (reducedMotion.matches || !finePointer.matches || pet.hidden) {
+    if (
+      reducedMotion.matches ||
+      !finePointer.matches ||
+      pet.hidden ||
+      hasOpenDialog()
+    ) {
       pet.style.setProperty("--pet-eye-x", "0px");
       pet.style.setProperty("--pet-eye-y", "0px");
       pet.style.setProperty("--pet-head-rotate", "0deg");
@@ -429,7 +437,7 @@
   }
 
   function handleScroll() {
-    if (reducedMotion.matches || pet.hidden) return;
+    if (reducedMotion.matches || pet.hidden || hasOpenDialog()) return;
 
     pendingScrollY = window.scrollY;
     if (scrollFrame) return;
@@ -476,6 +484,8 @@
   window.addEventListener(
     "pointermove",
     event => {
+      if (hasOpenDialog()) return;
+
       pointerX = event.clientX;
       pointerY = event.clientY;
       schedulePointerRender();
