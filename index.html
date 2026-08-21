@@ -6,11 +6,11 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.15.0">
-  <link rel="stylesheet" href="controls.css?v=3.15.0">
-  <link rel="stylesheet" href="content-renderer.css?v=3.15.0">
-  <link rel="stylesheet" href="rich-editor.css?v=3.15.0">
-  <link rel="stylesheet" href="pet-companion.css?v=3.15.0">
+  <link rel="stylesheet" href="styles.css?v=3.15.1">
+  <link rel="stylesheet" href="controls.css?v=3.15.1">
+  <link rel="stylesheet" href="content-renderer.css?v=3.15.1">
+  <link rel="stylesheet" href="rich-editor.css?v=3.15.1">
+  <link rel="stylesheet" href="pet-companion.css?v=3.15.1">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -322,7 +322,7 @@
         <div class="field field-span-2">
           <div class="editor-label-row">
             <span class="editor-field-label" id="announcement-editor-label">Nội dung</span>
-            <span class="editor-help">Soạn trực quan, chỉnh HTML hoặc xem trước trong cùng một khung</span>
+            <span class="editor-help">Soạn trực quan hoặc chỉnh HTML trong cùng một khung</span>
           </div>
 
           <div
@@ -358,20 +358,6 @@
               >
                 <span aria-hidden="true">&lt;/&gt;</span>
                 <span>HTML</span>
-              </button>
-
-              <button
-                class="editor-view-tab"
-                id="announcement-tab-preview"
-                type="button"
-                role="tab"
-                aria-selected="false"
-                aria-controls="announcement-panel-preview"
-                tabindex="-1"
-                data-editor-view="preview"
-              >
-                <span aria-hidden="true">👁</span>
-                <span>Xem trước</span>
               </button>
             </div>
 
@@ -439,7 +425,6 @@
                 hidden
               >
                 <div class="html-code-editor" id="announcement-code-editor">
-                  <pre class="html-code-highlight" aria-hidden="true"><code id="announcement-html-highlight"></code></pre>
                   <div class="html-line-numbers" id="announcement-html-lines" aria-hidden="true">1</div>
 
                   <textarea
@@ -452,23 +437,9 @@
                     autocapitalize="off"
                     autocomplete="off"
                     autocorrect="off"
+                    wrap="off"
                   ></textarea>
                 </div>
-              </section>
-
-              <section
-                class="editor-panel"
-                id="announcement-panel-preview"
-                role="tabpanel"
-                aria-labelledby="announcement-tab-preview"
-                data-editor-panel="preview"
-                hidden
-              >
-                <div
-                  class="content-preview rich-editor-preview"
-                  id="announcement-content-preview"
-                  aria-live="polite"
-                ></div>
               </section>
             </div>
 
@@ -479,10 +450,9 @@
           </div>
 
           <p class="field-hint editor-syntax-hint" id="announcement-editor-help">
-            <strong>Soạn thảo</strong> để nhập trực quan ·
-            <strong>HTML</strong> để chỉnh mã với số dòng ·
-            <strong>Xem trước</strong> để kiểm tra kết quả.
-            HTML luôn được lọc an toàn trước khi lưu và hiển thị.
+            <strong>Soạn thảo</strong> là chế độ trực quan và cũng chính là kết quả hiển thị.
+            <strong>HTML</strong> dùng để chỉnh mã nguồn với số dòng.
+            HTML luôn được lọc an toàn khi chuyển chế độ, lưu và hiển thị.
           </p>
         </div>
 
@@ -969,9 +939,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="content-renderer.js?v=3.14.0"></script>
-  <script src="rich-editor.js?v=3.15.0"></script>
-  <script src="app.js?v=3.15.0"></script>
-  <script src="pet-companion.js?v=3.15.0"></script>
+  <script src="content-renderer.js?v=3.15.1"></script>
+  <script src="rich-editor.js?v=3.15.1"></script>
+  <script src="app.js?v=3.15.1"></script>
+  <script src="pet-companion.js?v=3.15.1"></script>
 </body>
 </html>

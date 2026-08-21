@@ -2954,8 +2954,7 @@ body {
     linear-gradient(135deg, var(--sunny-soft), var(--brand-soft), var(--coral-soft));
 }
 
-.format-button,
-.format-preview-button {
+.format-button {
   display: inline-grid;
   place-items: center;
   min-width: 36px;
@@ -2975,26 +2974,11 @@ body {
 }
 
 .format-button:hover,
-.format-preview-button:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
-  background: var(--surface-solid);
-  box-shadow: 0 6px 14px rgba(132, 71, 36, 0.09);
-}
 
 .format-button:focus-visible,
-.format-preview-button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--brand) 27%, transparent);
-  outline-offset: 2px;
-}
 
 .format-button-wide {
   min-width: 38px;
-}
-
-.format-preview-button {
-  margin-left: auto;
-  color: var(--brand-strong);
 }
 
 .format-separator {
@@ -3004,11 +2988,6 @@ body {
   background: color-mix(in srgb, var(--brand) 13%, var(--line));
 }
 
-#announcement-content {
-  border-radius: 0 0 15px 15px;
-  min-height: 230px;
-  resize: vertical;
-}
 
 .content-preview {
   margin-top: 11px;
@@ -3109,25 +3088,17 @@ html[data-theme="dark"] .content-preview {
     margin-top: 3px;
   }
 
-  .format-preview-button {
-    margin-left: 0;
-  }
-
   .format-toolbar {
     gap: 5px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .format-button,
-  .format-preview-button {
+  .format-button {
     transition: none !important;
   }
 
   .format-button:hover,
-  .format-preview-button:hover {
-    transform: none !important;
-  }
 }
 
 
@@ -3402,17 +3373,12 @@ body {
   border-color: color-mix(in srgb, var(--sunny) 25%, var(--line));
 }
 
-.format-button,
-.format-preview-button {
+.format-button {
   background: var(--surface-solid);
   border-color: var(--line);
 }
 
 .format-button:hover,
-.format-preview-button:hover {
-  border-color: color-mix(in srgb, var(--brand) 34%, var(--line));
-  background: var(--brand-soft);
-}
 
 .content-preview {
   background:
@@ -3763,17 +3729,12 @@ body {
   border-color: color-mix(in srgb, var(--sunny) 20%, var(--line));
 }
 
-.format-button,
-.format-preview-button {
+.format-button {
   background: var(--surface-solid);
   border-color: var(--line);
 }
 
 .format-button:hover,
-.format-preview-button:hover {
-  border-color: color-mix(in srgb, var(--brand) 28%, var(--line));
-  background: var(--brand-soft);
-}
 
 .content-preview {
   background: var(--surface-solid);
@@ -4353,22 +4314,14 @@ select:focus {
     );
 }
 
-.format-button,
-.format-preview-button {
+.format-button {
   border-radius: 11px;
   background: var(--surface-solid);
   border-color: var(--line);
 }
 
 .format-button:hover,
-.format-preview-button:hover {
-  background: var(--brand-soft);
-  border-color: color-mix(in srgb, var(--brand) 30%, var(--line));
-}
 
-#announcement-content {
-  border-radius: 0 0 16px 16px;
-}
 
 .content-preview {
   border-radius: 16px;
@@ -6504,15 +6457,9 @@ dialog::backdrop {
 #announcement-dialog textarea,
 #announcement-dialog select,
 #announcement-dialog .format-button,
-#announcement-dialog .format-preview-button {
-  transition-duration: 80ms;
-}
+#announcement-dialog
 
 /* Preview dài chỉ cần dựng khi thực sự xuất hiện gần viewport. */
-#announcement-content-preview:not(.hidden) {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 260px;
-}
 
 /* Khi dialog mở, dừng các phần nền không cần thiết phải animate/repaint. */
 html.has-open-dialog .pet-companion,

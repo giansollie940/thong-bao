@@ -1,114 +1,29 @@
 (() => {
   "use strict";
 
-  function escapeHtml(value = "") {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  function escapeAttribute(value = "") {
-    return escapeHtml(value);
-  }
-
-  function highlightHtmlSource(raw = "") {
-    const source = String(raw);
-    const tokenPattern = /<!--[\s\S]*?-->|<!DOCTYPE[\s\S]*?>|<\/?[A-Za-z][^>]*>/gi;
-    const out = [];
-    let cursor = 0;
-
-    for (const match of source.matchAll(tokenPattern)) {
-      const index = match.index ?? 0;
-
-      if (index > cursor) {
-        out.push(
-          `<span class="syntax-text">${escapeHtml(source.slice(cursor, index))}</span>`
-        );
-      }
-
-      const token = match[0];
-
-      if (/^<!--/.test(token)) {
-        out.push(
-          `<span class="syntax-comment">${escapeHtml(token)}</span>`
-        );
-      } else if (/^<!DOCTYPE/i.test(token)) {
-        out.push(
-          `<span class="syntax-doctype">${escapeHtml(token)}</span>`
-        );
-      } else {
-        const tagMatch = token.match(
-          /^(<\/?)([A-Za-z][\w:-]*)([\s\S]*?)(\/?>)$/
-        );
-
-        if (!tagMatch) {
-          out.push(
-            `<span class="syntax-tag">${escapeHtml(token)}</span>`
-          );
-        } else {
-          const [, open, tagName, rest, close] = tagMatch;
-
-          out.push(
-            `<span class="syntax-punc">${escapeHtml(open)}</span>` +
-            `<span class="syntax-tag-name">${escapeHtml(tagName)}</span>` +
-            `<span class="syntax-attributes">${escapeHtml(rest)}</span>` +
-            `<span class="syntax-punc">${escapeHtml(close)}</span>`
-          );
-        }
-      }
-
-      cursor = index + token.length;
-    }
-
-    if (cursor < source.length) {
-      out.push(
-        `<span class="syntax-text">${escapeHtml(source.slice(cursor))}</span>`
-      );
-    }
-
-    return out.join("") || " ";
-  }
-
-  function create({
-    root,
-    renderer,
-    onToast = () => {}
-  } = {}) {
-    if (!root) {
-      throw new Error("Rich editor cần phần tử root.");
-    }
-
-    if (!renderer) {
-      throw new Error("Rich editor cần content renderer.");
+  function create({ root, renderer, onToast = () => {} } = {}) {
+    if (!root || !renderer) {
+      throw new Error("Thiếu root hoặc content renderer.");
     }
 
     const visual = root.querySelector("#announcement-visual-editor");
     const source = root.querySelector("#announcement-content");
-    const preview = root.querySelector("#announcement-content-preview");
     const toolbar = root.querySelector("#announcement-format-toolbar");
     const status = root.querySelector("#announcement-editor-status");
     const counter = root.querySelector("#announcement-editor-count");
     const lineNumbers = root.querySelector("#announcement-html-lines");
-    const highlight = root.querySelector("#announcement-html-highlight");
-    const codeEditor = root.querySelector("#announcement-code-editor");
     const tabs = [...root.querySelectorAll("[data-editor-view]")];
     const panels = [...root.querySelectorAll("[data-editor-panel]")];
 
     if (
       !visual ||
       !source ||
-      !preview ||
       !toolbar ||
       !status ||
       !counter ||
       !lineNumbers ||
-      !highlight ||
-      !codeEditor ||
-      tabs.length !== 3 ||
-      panels.length !== 3
+      tabs.length !== 2 ||
+      panels.length !== 2
     ) {
       throw new Error("Thiếu thành phần của rich editor.");
     }
@@ -116,73 +31,50 @@
     let currentView = "visual";
     let savedVisualRange = null;
 
-    function sanitize(value = "") {
-      return renderer.sanitizeHtml(value);
-    }
+    const sanitize = value => renderer.sanitizeHtml(value || "");
 
-    function getCleanSource() {
-      const clean = sanitize(source.value);
-      source.value = clean;
-      return clean;
-    }
-
-    function syncVisualToSource() {
-      source.value = sanitize(visual.innerHTML);
-      updateCodeDecorations();
-      updateCounter();
-    }
-
-    function syncSourceToVisual() {
-      const clean = getCleanSource();
-      visual.innerHTML = clean;
-      updateCodeDecorations();
-      updateCounter();
-    }
-
-    function updatePreview() {
-      const clean = getCleanSource();
-
-      preview.innerHTML = clean
-        ? renderer.renderEditorContent(clean, "html")
-        : '<p class="muted">Chưa có nội dung để xem trước.</p>';
-
-      preview.classList.add("html-preview");
-      updateCounter();
-    }
-
-    function updateCodeDecorations() {
-      const value = source.value;
-      const lineCount = Math.max(1, value.split("\n").length);
+    function updateLineNumbers() {
+      const count = Math.max(1, source.value.split("\n").length);
 
       lineNumbers.textContent = Array.from(
-        { length: lineCount },
+        { length: count },
         (_, index) => String(index + 1)
       ).join("\n");
-
-      highlight.innerHTML =
-        highlightHtmlSource(value) +
-        (value.endsWith("\n") ? "\n " : "");
     }
 
-    function syncCodeScroll() {
-      highlight.style.transform =
-        `translate(${-source.scrollLeft}px, ${-source.scrollTop}px)`;
-
+    function syncLineNumberScroll() {
       lineNumbers.style.transform =
         `translateY(${-source.scrollTop}px)`;
     }
 
-    function getPlainText() {
-      return renderer.toPlainText(
-        currentView === "visual"
-          ? sanitize(visual.innerHTML)
-          : sanitize(source.value),
-        "html"
-      );
+    function syncVisualToSource() {
+      source.value = sanitize(visual.innerHTML);
+      updateLineNumbers();
+      updateCounter();
+    }
+
+    function syncSourceToVisual() {
+      const clean = sanitize(source.value);
+
+      source.value = clean;
+      visual.innerHTML = clean;
+
+      updateLineNumbers();
+      updateCounter();
+    }
+
+    function currentHtml() {
+      return currentView === "visual"
+        ? sanitize(visual.innerHTML)
+        : sanitize(source.value);
     }
 
     function updateCounter() {
-      const text = getPlainText();
+      const text = renderer.toPlainText(
+        currentHtml(),
+        "html"
+      );
+
       const chars = [...text].length;
       const words = text
         ? text.trim().split(/\s+/).filter(Boolean).length
@@ -191,48 +83,13 @@
       counter.textContent = `${chars} ký tự · ${words} từ`;
     }
 
-    function updateToolbarState() {
-      const previewMode = currentView === "preview";
-
-      toolbar.classList.toggle(
-        "toolbar-preview-mode",
-        previewMode
-      );
-
-      for (const button of toolbar.querySelectorAll("button")) {
-        button.disabled = previewMode;
-      }
-    }
-
     function setView(view, { focus = true } = {}) {
-      if (!["visual", "html", "preview"].includes(view)) {
-        return;
-      }
+      if (!["visual", "html"].includes(view)) return;
 
-      if (currentView === "visual" && view !== "visual") {
+      if (currentView === "visual" && view === "html") {
         syncVisualToSource();
-      }
-
-      if (view === "visual" && currentView !== "visual") {
+      } else if (currentView === "html" && view === "visual") {
         syncSourceToVisual();
-      }
-
-      if (view === "html") {
-        if (currentView === "visual") {
-          syncVisualToSource();
-        } else {
-          getCleanSource();
-        }
-
-        updateCodeDecorations();
-      }
-
-      if (view === "preview") {
-        if (currentView === "visual") {
-          syncVisualToSource();
-        }
-
-        updatePreview();
       }
 
       currentView = view;
@@ -250,99 +107,90 @@
         panel.hidden = panel.dataset.editorPanel !== view;
       }
 
-      const labels = {
-        visual: "Soạn thảo trực quan",
-        html: "HTML an toàn",
-        preview: "Xem trước"
-      };
+      status.textContent =
+        view === "visual"
+          ? "Soạn thảo trực quan"
+          : "HTML an toàn";
 
-      status.textContent = labels[view];
-      updateToolbarState();
       updateCounter();
 
       if (!focus) return;
 
-      window.requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         if (view === "visual") {
           visual.focus();
-        } else if (view === "html") {
-          source.focus();
         } else {
-          preview.focus?.();
+          source.focus();
+          syncLineNumberScroll();
         }
       });
     }
 
     function saveVisualSelection() {
       const selection = window.getSelection();
-      if (!selection || !selection.rangeCount) return;
+      if (!selection?.rangeCount) return;
 
       const range = selection.getRangeAt(0);
-      const container = range.commonAncestorContainer;
-      const element = container.nodeType === Node.ELEMENT_NODE
-        ? container
-        : container.parentElement;
+      const node = range.commonAncestorContainer;
+      const element = node.nodeType === Node.ELEMENT_NODE
+        ? node
+        : node.parentElement;
 
-      if (!element || !visual.contains(element)) return;
-
-      savedVisualRange = range.cloneRange();
-    }
-
-    function restoreVisualSelection() {
-      if (!savedVisualRange) return null;
-
-      const selection = window.getSelection();
-      if (!selection) return null;
-
-      selection.removeAllRanges();
-      selection.addRange(savedVisualRange);
-      return savedVisualRange;
+      if (element && visual.contains(element)) {
+        savedVisualRange = range.cloneRange();
+      }
     }
 
     function currentVisualRange() {
       const selection = window.getSelection();
 
-      if (selection && selection.rangeCount) {
+      if (selection?.rangeCount) {
         const range = selection.getRangeAt(0);
-        const container = range.commonAncestorContainer;
-        const element = container.nodeType === Node.ELEMENT_NODE
-          ? container
-          : container.parentElement;
+        const node = range.commonAncestorContainer;
+        const element = node.nodeType === Node.ELEMENT_NODE
+          ? node
+          : node.parentElement;
 
         if (element && visual.contains(element)) {
           return range;
         }
       }
 
-      return restoreVisualSelection();
+      if (!savedVisualRange || !selection) return null;
+
+      selection.removeAllRanges();
+      selection.addRange(savedVisualRange);
+      return savedVisualRange;
+    }
+
+    function selectContents(node) {
+      const selection = window.getSelection();
+      if (!selection) return;
+
+      const range = document.createRange();
+
+      range.selectNodeContents(node);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      savedVisualRange = range.cloneRange();
     }
 
     function placeCaretAfter(node) {
-      const range = document.createRange();
       const selection = window.getSelection();
+      if (!selection) return;
+
+      const range = document.createRange();
 
       range.setStartAfter(node);
       range.collapse(true);
-
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-
-      savedVisualRange = range.cloneRange();
-    }
-
-    function selectNodeContents(node) {
-      const range = document.createRange();
-      const selection = window.getSelection();
-
-      range.selectNodeContents(node);
-
-      selection?.removeAllRanges();
-      selection?.addRange(range);
+      selection.removeAllRanges();
+      selection.addRange(range);
 
       savedVisualRange = range.cloneRange();
     }
 
-    function wrapVisualSelection(tagName, placeholder) {
+    function wrapVisual(tag, placeholder) {
       const range = currentVisualRange();
 
       if (!range) {
@@ -350,23 +198,21 @@
         return;
       }
 
-      const wrapper = document.createElement(tagName);
+      const wrapper = document.createElement(tag);
 
       if (range.collapsed) {
         wrapper.textContent = placeholder;
         range.insertNode(wrapper);
-        selectNodeContents(wrapper);
       } else {
-        const fragment = range.extractContents();
-        wrapper.append(fragment);
+        wrapper.append(range.extractContents());
         range.insertNode(wrapper);
-        selectNodeContents(wrapper);
       }
 
+      selectContents(wrapper);
       syncVisualToSource();
     }
 
-    function visualList(tagName) {
+    function makeVisualList(tag) {
       const range = currentVisualRange();
 
       if (!range) {
@@ -374,33 +220,52 @@
         return;
       }
 
-      const text = range.toString().trim();
-      const lines = text
-        ? text.split(/\n+/).map(line => line.trim()).filter(Boolean)
+      const selected = range.toString().trim();
+      const items = selected
+        ? selected
+            .split(/\n+/)
+            .map(value => value.trim())
+            .filter(Boolean)
         : ["Mục thứ nhất", "Mục thứ hai"];
 
-      const list = document.createElement(tagName);
+      const list = document.createElement(tag);
 
-      for (const line of lines) {
+      for (const text of items) {
         const item = document.createElement("li");
-        item.textContent = line;
+        item.textContent = text;
         list.append(item);
       }
 
       range.deleteContents();
       range.insertNode(list);
 
-      const firstItem = list.querySelector("li");
-      if (firstItem) {
-        selectNodeContents(firstItem);
-      } else {
-        placeCaretAfter(list);
-      }
+      const first = list.querySelector("li");
+      first
+        ? selectContents(first)
+        : placeCaretAfter(list);
 
       syncVisualToSource();
     }
 
-    function visualLink() {
+    function promptSafeUrl() {
+      const url = prompt(
+        "Nhập địa chỉ liên kết (https://...):",
+        "https://"
+      );
+
+      if (!url) return "";
+
+      const safeUrl = renderer.safeLinkUrl(url);
+
+      if (!safeUrl) {
+        onToast("Liên kết không hợp lệ.");
+        return "";
+      }
+
+      return safeUrl;
+    }
+
+    function makeVisualLink() {
       const range = currentVisualRange();
 
       if (!range) {
@@ -408,26 +273,14 @@
         return;
       }
 
-      const url = window.prompt(
-        "Nhập địa chỉ liên kết (https://...):",
-        "https://"
-      );
-
-      if (!url) return;
-
-      const cleanUrl = renderer.safeLinkUrl(url);
-
-      if (!cleanUrl) {
-        onToast(
-          "Liên kết chỉ hỗ trợ http://, https://, mailto:, tel: hoặc đường dẫn tương đối."
-        );
-        return;
-      }
+      const safeUrl = promptSafeUrl();
+      if (!safeUrl) return;
 
       const anchor = document.createElement("a");
-      anchor.href = cleanUrl;
 
-      if (/^https?:\/\//i.test(cleanUrl)) {
+      anchor.href = safeUrl;
+
+      if (/^https?:\/\//i.test(safeUrl)) {
         anchor.target = "_blank";
         anchor.rel = "noopener noreferrer";
       }
@@ -435,24 +288,27 @@
       if (range.collapsed) {
         anchor.textContent = "tên liên kết";
         range.insertNode(anchor);
-        selectNodeContents(anchor);
       } else {
         anchor.append(range.extractContents());
         range.insertNode(anchor);
-        selectNodeContents(anchor);
       }
 
+      selectContents(anchor);
       syncVisualToSource();
     }
 
-    function replaceSourceSelection(before, after, placeholder) {
+    function replaceSourceSelection(
+      before,
+      after,
+      placeholder
+    ) {
       const start = source.selectionStart;
       const end = source.selectionEnd;
-      const selected = source.value.slice(start, end) || placeholder;
-      const replacement = `${before}${selected}${after}`;
+      const selected =
+        source.value.slice(start, end) || placeholder;
 
       source.setRangeText(
-        replacement,
+        `${before}${selected}${after}`,
         start,
         end,
         "select"
@@ -471,56 +327,27 @@
       );
     }
 
-    function sourceList(tagName) {
-      const start = source.selectionStart;
-      const end = source.selectionEnd;
-      const selected = source.value.slice(start, end).trim();
-
-      const items = selected
-        ? selected.split("\n").map(line => line.trim()).filter(Boolean)
-        : ["Mục thứ nhất", "Mục thứ hai"];
-
-      const html = [
-        `<${tagName}>`,
-        ...items.map(item => `  <li>${item}</li>`),
-        `</${tagName}>`
-      ].join("\n");
-
-      source.setRangeText(html, start, end, "end");
-      source.focus();
-      source.dispatchEvent(
-        new Event("input", { bubbles: true })
-      );
-    }
-
-    function sourceLink() {
+    function makeSourceList(tag) {
       const start = source.selectionStart;
       const end = source.selectionEnd;
       const selected =
-        source.value.slice(start, end) ||
-        "tên liên kết";
+        source.value.slice(start, end).trim();
 
-      const url = window.prompt(
-        "Nhập địa chỉ liên kết (https://...):",
-        "https://"
-      );
+      const items = selected
+        ? selected
+            .split("\n")
+            .map(value => value.trim())
+            .filter(Boolean)
+        : ["Mục thứ nhất", "Mục thứ hai"];
 
-      if (!url) return;
-
-      const cleanUrl = renderer.safeLinkUrl(url);
-
-      if (!cleanUrl) {
-        onToast(
-          "Liên kết chỉ hỗ trợ http://, https://, mailto:, tel: hoặc đường dẫn tương đối."
-        );
-        return;
-      }
-
-      const html =
-        `<a href="${escapeAttribute(cleanUrl)}">${selected}</a>`;
+      const block = [
+        `<${tag}>`,
+        ...items.map(item => `  <li>${item}</li>`),
+        `</${tag}>`
+      ].join("\n");
 
       source.setRangeText(
-        html,
+        block,
         start,
         end,
         "end"
@@ -532,167 +359,153 @@
       );
     }
 
-    function applyVisualFormat(format) {
-      if (format === "bold") {
-        wrapVisualSelection("strong", "nội dung đậm");
-        return;
-      }
+    function makeSourceLink() {
+      const start = source.selectionStart;
+      const end = source.selectionEnd;
+      const selected =
+        source.value.slice(start, end) ||
+        "tên liên kết";
 
-      if (format === "italic") {
-        wrapVisualSelection("em", "nội dung nghiêng");
-        return;
-      }
+      const safeUrl = promptSafeUrl();
+      if (!safeUrl) return;
 
-      if (format === "heading") {
-        wrapVisualSelection("h3", "Tiêu đề");
-        return;
-      }
+      const escapedUrl = safeUrl
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;");
 
-      if (format === "bullet") {
-        visualList("ul");
-        return;
-      }
+      source.setRangeText(
+        `<a href="${escapedUrl}">${selected}</a>`,
+        start,
+        end,
+        "end"
+      );
 
-      if (format === "numbered") {
-        visualList("ol");
-        return;
-      }
-
-      if (format === "quote") {
-        wrapVisualSelection(
-          "blockquote",
-          "Nội dung trích dẫn"
-        );
-        return;
-      }
-
-      if (format === "link") {
-        visualLink();
-      }
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
     }
 
-    function applySourceFormat(format) {
+    function applyFormat(format) {
+      if (currentView === "visual") {
+        if (format === "bold") {
+          wrapVisual("strong", "nội dung đậm");
+        } else if (format === "italic") {
+          wrapVisual("em", "nội dung nghiêng");
+        } else if (format === "heading") {
+          wrapVisual("h3", "Tiêu đề");
+        } else if (format === "bullet") {
+          makeVisualList("ul");
+        } else if (format === "numbered") {
+          makeVisualList("ol");
+        } else if (format === "quote") {
+          wrapVisual(
+            "blockquote",
+            "Nội dung trích dẫn"
+          );
+        } else if (format === "link") {
+          makeVisualLink();
+        }
+
+        return;
+      }
+
       if (format === "bold") {
         replaceSourceSelection(
           "<strong>",
           "</strong>",
           "nội dung đậm"
         );
-        return;
-      }
-
-      if (format === "italic") {
+      } else if (format === "italic") {
         replaceSourceSelection(
           "<em>",
           "</em>",
           "nội dung nghiêng"
         );
-        return;
-      }
-
-      if (format === "heading") {
+      } else if (format === "heading") {
         replaceSourceSelection(
           "<h3>",
           "</h3>",
           "Tiêu đề"
         );
-        return;
-      }
-
-      if (format === "bullet") {
-        sourceList("ul");
-        return;
-      }
-
-      if (format === "numbered") {
-        sourceList("ol");
-        return;
-      }
-
-      if (format === "quote") {
+      } else if (format === "bullet") {
+        makeSourceList("ul");
+      } else if (format === "numbered") {
+        makeSourceList("ol");
+      } else if (format === "quote") {
         replaceSourceSelection(
           "<blockquote>",
           "</blockquote>",
           "Nội dung trích dẫn"
         );
-        return;
-      }
-
-      if (format === "link") {
-        sourceLink();
+      } else if (format === "link") {
+        makeSourceLink();
       }
     }
 
-    function applyFormat(format) {
-      if (currentView === "preview") {
-        setView("visual");
-      }
-
-      if (currentView === "html") {
-        applySourceFormat(format);
-      } else {
-        applyVisualFormat(format);
-      }
-    }
-
-    function insertSanitizedPaste(event) {
+    function pasteVisual(event) {
       event.preventDefault();
 
       const clipboard = event.clipboardData;
-      const html = clipboard?.getData("text/html") || "";
-      const text = clipboard?.getData("text/plain") || "";
+      const pastedHtml =
+        clipboard?.getData("text/html") || "";
+      const pastedText =
+        clipboard?.getData("text/plain") || "";
       const range = currentVisualRange();
 
       if (!range) return;
 
       range.deleteContents();
 
-      if (html) {
-        const clean = sanitize(html);
+      if (pastedHtml) {
         const fragment =
-          range.createContextualFragment(clean);
+          range.createContextualFragment(
+            sanitize(pastedHtml)
+          );
 
         const marker = document.createTextNode("");
+
         fragment.append(marker);
         range.insertNode(fragment);
         placeCaretAfter(marker);
         marker.remove();
       } else {
-        const node = document.createTextNode(text);
-        range.insertNode(node);
-        placeCaretAfter(node);
+        const textNode =
+          document.createTextNode(pastedText);
+
+        range.insertNode(textNode);
+        placeCaretAfter(textNode);
       }
 
       syncVisualToSource();
     }
 
-    function handleVisualShortcut(event) {
+    function handleVisualKeydown(event) {
       if (!(event.ctrlKey || event.metaKey)) return;
 
       const key = event.key.toLowerCase();
 
       if (key === "b") {
         event.preventDefault();
-        applyVisualFormat("bold");
-      }
-
-      if (key === "i") {
+        wrapVisual("strong", "nội dung đậm");
+      } else if (key === "i") {
         event.preventDefault();
-        applyVisualFormat("italic");
+        wrapVisual("em", "nội dung nghiêng");
       }
     }
 
-    function handleSourceShortcut(event) {
-      if (event.key === "Tab" && !event.ctrlKey && !event.metaKey) {
+    function handleSourceKeydown(event) {
+      if (
+        event.key === "Tab" &&
+        !event.ctrlKey &&
+        !event.metaKey
+      ) {
         event.preventDefault();
-
-        const start = source.selectionStart;
-        const end = source.selectionEnd;
 
         source.setRangeText(
           "  ",
-          start,
-          end,
+          source.selectionStart,
+          source.selectionEnd,
           "end"
         );
 
@@ -709,130 +522,137 @@
 
       if (key === "b") {
         event.preventDefault();
-        applySourceFormat("bold");
-      }
 
-      if (key === "i") {
+        replaceSourceSelection(
+          "<strong>",
+          "</strong>",
+          "nội dung đậm"
+        );
+      } else if (key === "i") {
         event.preventDefault();
-        applySourceFormat("italic");
+
+        replaceSourceSelection(
+          "<em>",
+          "</em>",
+          "nội dung nghiêng"
+        );
       }
     }
 
-    function handleTabKeyboard(event) {
-      const activeIndex = tabs.indexOf(event.target);
-      if (activeIndex < 0) return;
+    function handleTabKeydown(event) {
+      const index = tabs.indexOf(event.currentTarget);
+      if (index < 0) return;
 
-      let nextIndex = activeIndex;
+      let next = index;
 
       if (event.key === "ArrowRight") {
-        nextIndex = (activeIndex + 1) % tabs.length;
+        next = (index + 1) % tabs.length;
       } else if (event.key === "ArrowLeft") {
-        nextIndex =
-          (activeIndex - 1 + tabs.length) % tabs.length;
+        next =
+          (index - 1 + tabs.length) %
+          tabs.length;
       } else if (event.key === "Home") {
-        nextIndex = 0;
+        next = 0;
       } else if (event.key === "End") {
-        nextIndex = tabs.length - 1;
+        next = tabs.length - 1;
       } else {
         return;
       }
 
       event.preventDefault();
-      const nextTab = tabs[nextIndex];
-      setView(nextTab.dataset.editorView);
-      nextTab.focus();
+
+      setView(tabs[next].dataset.editorView);
+      tabs[next].focus();
     }
 
-    function bindEvents() {
-      for (const tab of tabs) {
-        tab.addEventListener("click", () => {
-          setView(tab.dataset.editorView);
-        });
-
-        tab.addEventListener(
-          "keydown",
-          handleTabKeyboard
-        );
-      }
-
-      toolbar.addEventListener(
-        "pointerdown",
-        event => {
-          if (event.target.closest("[data-format]")) {
-            event.preventDefault();
-          }
-        }
+    for (const tab of tabs) {
+      tab.addEventListener(
+        "click",
+        () => setView(tab.dataset.editorView)
       );
 
-      toolbar.addEventListener("click", event => {
+      tab.addEventListener(
+        "keydown",
+        handleTabKeydown
+      );
+    }
+
+    toolbar.addEventListener(
+      "pointerdown",
+      event => {
+        if (event.target.closest("[data-format]")) {
+          event.preventDefault();
+        }
+      }
+    );
+
+    toolbar.addEventListener(
+      "click",
+      event => {
         const button =
           event.target.closest("[data-format]");
 
-        if (!button || button.disabled) return;
-        applyFormat(button.dataset.format);
-      });
-
-      visual.addEventListener(
-        "input",
-        syncVisualToSource
-      );
-
-      visual.addEventListener(
-        "paste",
-        insertSanitizedPaste
-      );
-
-      visual.addEventListener(
-        "keydown",
-        handleVisualShortcut
-      );
-
-      for (const type of [
-        "keyup",
-        "mouseup",
-        "focus",
-        "input"
-      ]) {
-        visual.addEventListener(
-          type,
-          saveVisualSelection
-        );
+        if (button) {
+          applyFormat(button.dataset.format);
+        }
       }
+    );
 
-      source.addEventListener("input", () => {
-        updateCodeDecorations();
-        updateCounter();
-      });
+    visual.addEventListener(
+      "input",
+      syncVisualToSource
+    );
+    visual.addEventListener(
+      "paste",
+      pasteVisual
+    );
+    visual.addEventListener(
+      "keydown",
+      handleVisualKeydown
+    );
 
-      source.addEventListener(
-        "scroll",
-        syncCodeScroll,
-        { passive: true }
-      );
-
-      source.addEventListener(
-        "keydown",
-        handleSourceShortcut
-      );
-
-      window.addEventListener(
-        "resize",
-        syncCodeScroll,
-        { passive: true }
+    for (const eventName of [
+      "keyup",
+      "mouseup",
+      "focus",
+      "input"
+    ]) {
+      visual.addEventListener(
+        eventName,
+        saveVisualSelection
       );
     }
 
-    function setHtml(value = "", {
-      view = "visual",
-      focus = false
-    } = {}) {
+    source.addEventListener(
+      "input",
+      () => {
+        updateLineNumbers();
+        updateCounter();
+      }
+    );
+
+    source.addEventListener(
+      "scroll",
+      syncLineNumberScroll,
+      { passive: true }
+    );
+
+    source.addEventListener(
+      "keydown",
+      handleSourceKeydown
+    );
+
+    function setHtml(
+      value = "",
+      { view = "visual", focus = false } = {}
+    ) {
       const clean = sanitize(value);
 
       source.value = clean;
       visual.innerHTML = clean;
 
-      updateCodeDecorations();
-      syncCodeScroll();
+      updateLineNumbers();
+      syncLineNumberScroll();
       updateCounter();
       setView(view, { focus });
     }
@@ -840,15 +660,16 @@
     function getHtml() {
       if (currentView === "visual") {
         syncVisualToSource();
+      } else {
+        syncSourceToVisual();
       }
 
-      const clean = getCleanSource();
+      const clean = sanitize(source.value);
 
-      if (currentView === "visual") {
-        visual.innerHTML = clean;
-      }
+      source.value = clean;
+      visual.innerHTML = clean;
 
-      updateCodeDecorations();
+      updateLineNumbers();
       updateCounter();
 
       return clean;
@@ -857,16 +678,14 @@
     function clear() {
       source.value = "";
       visual.innerHTML = "";
-      preview.innerHTML = "";
       savedVisualRange = null;
 
-      updateCodeDecorations();
-      syncCodeScroll();
+      updateLineNumbers();
+      syncLineNumberScroll();
       setView("visual", { focus: false });
       updateCounter();
     }
 
-    bindEvents();
     clear();
 
     return Object.freeze({

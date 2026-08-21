@@ -1465,17 +1465,6 @@
     el.announcementForm.reset();
     setMessage(el.announcementMessage, "");
 
-    const editorPreview = $("#announcement-content-preview");
-    const editorPreviewButton = $("#announcement-preview-button");
-    if (editorPreview) {
-      editorPreview.classList.add("hidden");
-      editorPreview.innerHTML = "";
-    }
-    if (editorPreviewButton) {
-      editorPreviewButton.setAttribute("aria-expanded", "false");
-      editorPreviewButton.textContent = "👁 Xem trước";
-    }
-
     const targetWeekId = item?.week_id || state.currentWeek?.id || sortedWeeks()[0]?.id || "";
     fillWeekSelect($("#announcement-week"), targetWeekId);
 

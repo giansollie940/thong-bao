@@ -41,7 +41,6 @@
   .sidebar-link,
   .category-filter,
   .format-button,
-  .format-preview-button,
   .icon-button,
   .topbar-search-button,
   .mini-action,
@@ -67,7 +66,6 @@
   .sidebar-link,
   .category-filter,
   .format-button,
-  .format-preview-button,
   .icon-button,
   .topbar-search-button,
   .mini-action,
@@ -83,7 +81,6 @@
   .sidebar-link,
   .category-filter,
   .format-button,
-  .format-preview-button,
   .icon-button,
   .topbar-search-button,
   .mini-action,
@@ -337,8 +334,7 @@
 }
 
 /* Format toolbar — editor-like feedback */
-.format-button,
-.format-preview-button {
+.format-button {
   min-width: 44px;
   min-height: 44px;
   background:
@@ -355,11 +351,6 @@
 }
 
 .format-button:is(:hover, :focus-visible),
-.format-preview-button:is(:hover, :focus-visible) {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--brand) 32%, var(--line));
-  box-shadow: 0 5px 12px rgba(46,113,91,.07);
-}
 
 /* Topbar / mini actions — soft fill */
 .topbar-search-button,
@@ -478,7 +469,6 @@ input[type="radio"] {
 html[data-theme="dark"] .button-secondary,
 html[data-theme="dark"] .button-soft,
 html[data-theme="dark"] .format-button,
-html[data-theme="dark"] .format-preview-button,
 html[data-theme="dark"] .topbar-search-button,
 html[data-theme="dark"] .mini-action {
   color: #d9ebe4;
@@ -513,7 +503,6 @@ html[data-theme="dark"] :where(
     .sidebar-link,
     .category-filter,
     .format-button,
-    .format-preview-button,
     .icon-button,
     .topbar-search-button,
     .mini-action,
@@ -531,7 +520,6 @@ html[data-theme="dark"] :where(
     .sidebar-link,
     .category-filter,
     .format-button,
-    .format-preview-button,
     .icon-button,
     .topbar-search-button,
     .mini-action,

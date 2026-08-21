@@ -130,3 +130,16 @@ Thông báo Markdown cũ vẫn đọc được. Khi mở và lưu lại trong V3
 nội dung được chuẩn hóa sang HTML an toàn.
 
 Không cần migration database mới.
+
+
+## V3.15.1 — Editor Fix + Cleanup
+
+- `Soạn thảo | HTML` luôn nằm ngang.
+- Bỏ `Xem trước` vì `Soạn thảo` đã là WYSIWYG trực quan.
+- Bỏ syntax overlay trong HTML editor; code hiển thị trực tiếp và luôn nhìn thấy.
+- Giữ số dòng, đồng bộ scroll và phím `Tab` = 2 spaces.
+- Xóa các rule `#announcement-content` cũ gây nền textarea che lớp code.
+- Xóa code Preview cũ còn sót trong `app.js`.
+- Xóa selector `.format-preview-button` đã không còn dùng.
+
+Không thay đổi database, RLS hoặc Edge Function.

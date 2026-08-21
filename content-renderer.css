@@ -1,33 +1,34 @@
 /* =========================================================
-   V3.15 — Rendered announcement content
-   Chỉ giữ style cho nội dung sau khi render.
-   Editor UI nằm trong rich-editor.css.
+   V3.15.1 — Rendered announcement content
    ========================================================= */
 
-.announcement-content.html-content,
-.content-preview {
+.announcement-content.html-content {
   overflow-wrap: anywhere;
 }
 
-.announcement-content.html-content :is(h2, h3, h4, h5),
-.content-preview :is(h2, h3, h4, h5) {
+.announcement-content.html-content :is(h2, h3, h4, h5) {
   margin: 1em 0 .55em;
   line-height: 1.25;
   color: var(--text);
 }
 
-.announcement-content.html-content :is(p, ul, ol, blockquote, pre, table, figure),
-.content-preview :is(p, ul, ol, blockquote, pre, table, figure) {
+.announcement-content.html-content :is(
+  p,
+  ul,
+  ol,
+  blockquote,
+  pre,
+  table,
+  figure
+) {
   margin: .75em 0;
 }
 
-.announcement-content.html-content :is(ul, ol),
-.content-preview :is(ul, ol) {
+.announcement-content.html-content :is(ul, ol) {
   padding-left: 1.35rem;
 }
 
-.announcement-content.html-content img,
-.content-preview img {
+.announcement-content.html-content img {
   display: block;
   max-width: 100%;
   height: auto;
@@ -35,86 +36,98 @@
   border-radius: 14px;
 }
 
-.announcement-content.html-content figure,
-.content-preview figure {
+.announcement-content.html-content figure {
   margin-inline: 0;
 }
 
-.announcement-content.html-content figcaption,
-.content-preview figcaption {
+.announcement-content.html-content figcaption {
   margin-top: 7px;
   color: var(--muted);
   font-size: .84rem;
   text-align: center;
 }
 
-.announcement-content.html-content table,
-.content-preview table {
+.announcement-content.html-content table {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid var(--line);
   background: var(--surface-solid);
 }
 
-.announcement-content.html-content :is(th, td),
-.content-preview :is(th, td) {
+.announcement-content.html-content :is(th, td) {
   padding: 9px 10px;
   border: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
 }
 
-.announcement-content.html-content th,
-.content-preview th {
+.announcement-content.html-content th {
   background: var(--brand-soft);
   color: var(--text);
   font-weight: 850;
 }
 
-.announcement-content.html-content pre,
-.content-preview pre {
+.announcement-content.html-content pre {
   max-width: 100%;
   overflow-x: auto;
   padding: 13px 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--surface-soft) 86%, #edf6ff);
+  background:
+    color-mix(
+      in srgb,
+      var(--surface-soft) 86%,
+      #edf6ff
+    );
   white-space: pre-wrap;
 }
 
-.announcement-content.html-content mark,
-.content-preview mark {
+.announcement-content.html-content mark {
   padding: .08em .28em;
   border-radius: .35em;
-  background: color-mix(in srgb, var(--sunny) 34%, #fff);
+  background:
+    color-mix(in srgb, var(--sunny) 34%, #fff);
   color: inherit;
 }
 
-/* Class tiện dụng cho HTML do Admin nhập */
-.announcement-content .notice-box,
-.content-preview .notice-box {
+.announcement-content .notice-box {
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--brand) 22%, var(--line));
+  border:
+    1px solid
+    color-mix(in srgb, var(--brand) 22%, var(--line));
   border-radius: 15px;
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--brand-soft) 68%, var(--surface-solid)),
-      color-mix(in srgb, #edf6ff 46%, var(--surface-solid))
+      color-mix(
+        in srgb,
+        var(--brand-soft) 68%,
+        var(--surface-solid)
+      ),
+      color-mix(
+        in srgb,
+        #edf6ff 46%,
+        var(--surface-solid)
+      )
     );
 }
 
-.announcement-content .notice-warning,
-.content-preview .notice-warning {
+.announcement-content .notice-warning {
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, #f59e0b 30%, var(--line));
+  border:
+    1px solid
+    color-mix(in srgb, #f59e0b 30%, var(--line));
   border-radius: 15px;
-  background: color-mix(in srgb, #fff4d6 65%, var(--surface-solid));
+  background:
+    color-mix(
+      in srgb,
+      #fff4d6 65%,
+      var(--surface-solid)
+    );
 }
 
 @media (max-width: 520px) {
-  .announcement-content.html-content :is(th, td),
-  .content-preview :is(th, td) {
+  .announcement-content.html-content :is(th, td) {
     padding: 7px 8px;
     font-size: .9rem;
   }
