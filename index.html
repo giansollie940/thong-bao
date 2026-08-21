@@ -6,10 +6,11 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.14.0">
-  <link rel="stylesheet" href="controls.css?v=3.14.0">
-  <link rel="stylesheet" href="content-renderer.css?v=3.14.0">
-  <link rel="stylesheet" href="pet-companion.css?v=3.14.0">
+  <link rel="stylesheet" href="styles.css?v=3.15.0">
+  <link rel="stylesheet" href="controls.css?v=3.15.0">
+  <link rel="stylesheet" href="content-renderer.css?v=3.15.0">
+  <link rel="stylesheet" href="rich-editor.css?v=3.15.0">
+  <link rel="stylesheet" href="pet-companion.css?v=3.15.0">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -320,55 +321,168 @@
 
         <div class="field field-span-2">
           <div class="editor-label-row">
-            <label for="announcement-content">Nội dung</label>
-            <span class="editor-help">Chọn đoạn chữ rồi bấm nút định dạng</span>
+            <span class="editor-field-label" id="announcement-editor-label">Nội dung</span>
+            <span class="editor-help">Soạn trực quan, chỉnh HTML hoặc xem trước trong cùng một khung</span>
           </div>
 
-          <div class="format-toolbar" id="announcement-format-toolbar" role="toolbar" aria-label="Định dạng nội dung thông báo">
-            <button class="format-button" type="button" data-format="bold" title="In đậm" aria-label="In đậm"><strong>B</strong></button>
-            <button class="format-button" type="button" data-format="italic" title="In nghiêng" aria-label="In nghiêng"><em>I</em></button>
-            <button class="format-button format-button-wide" type="button" data-format="heading" title="Tiêu đề nhỏ" aria-label="Tiêu đề nhỏ">T</button>
-            <span class="format-separator" aria-hidden="true"></span>
-            <button class="format-button" type="button" data-format="bullet" title="Danh sách chấm" aria-label="Danh sách chấm">•</button>
-            <button class="format-button" type="button" data-format="numbered" title="Danh sách số" aria-label="Danh sách số">1.</button>
-            <button class="format-button" type="button" data-format="quote" title="Trích dẫn / ghi chú" aria-label="Trích dẫn">❝</button>
-            <span class="format-separator" aria-hidden="true"></span>
-            <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">🔗</button>
-            <button
-              class="format-button html-mode-toggle"
-              id="announcement-html-button"
-              type="button"
-              data-format="html"
-              aria-label="Bật hoặc tắt chế độ HTML an toàn"
-              aria-pressed="false"
-              title="Chế độ HTML an toàn"
-            >&lt;/&gt; HTML</button>
-            <span
-              class="editor-mode-badge"
-              id="announcement-editor-mode"
-              data-mode="markdown"
-              aria-live="polite"
-            >Markdown</span>
-            <button class="format-preview-button" id="announcement-preview-button" type="button" aria-expanded="false">👁 Xem trước</button>
+          <div
+            class="canvas-rich-editor"
+            id="announcement-rich-editor"
+            data-view="visual"
+            aria-labelledby="announcement-editor-label"
+          >
+            <div class="editor-view-tabs" role="tablist" aria-label="Chế độ trình soạn thảo">
+              <button
+                class="editor-view-tab active"
+                id="announcement-tab-visual"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="announcement-panel-visual"
+                tabindex="0"
+                data-editor-view="visual"
+              >
+                <span aria-hidden="true">✏️</span>
+                <span>Soạn thảo</span>
+              </button>
+
+              <button
+                class="editor-view-tab"
+                id="announcement-tab-html"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="announcement-panel-html"
+                tabindex="-1"
+                data-editor-view="html"
+              >
+                <span aria-hidden="true">&lt;/&gt;</span>
+                <span>HTML</span>
+              </button>
+
+              <button
+                class="editor-view-tab"
+                id="announcement-tab-preview"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="announcement-panel-preview"
+                tabindex="-1"
+                data-editor-view="preview"
+              >
+                <span aria-hidden="true">👁</span>
+                <span>Xem trước</span>
+              </button>
+            </div>
+
+            <div
+              class="format-toolbar canvas-format-toolbar"
+              id="announcement-format-toolbar"
+              role="toolbar"
+              aria-label="Định dạng nội dung thông báo"
+            >
+              <button class="format-button" type="button" data-format="bold" title="In đậm" aria-label="In đậm">
+                <strong>B</strong>
+              </button>
+              <button class="format-button" type="button" data-format="italic" title="In nghiêng" aria-label="In nghiêng">
+                <em>I</em>
+              </button>
+              <button class="format-button format-button-wide" type="button" data-format="heading" title="Tiêu đề nhỏ" aria-label="Tiêu đề nhỏ">
+                T
+              </button>
+
+              <span class="format-separator" aria-hidden="true"></span>
+
+              <button class="format-button" type="button" data-format="bullet" title="Danh sách chấm" aria-label="Danh sách chấm">
+                •
+              </button>
+              <button class="format-button" type="button" data-format="numbered" title="Danh sách số" aria-label="Danh sách số">
+                1.
+              </button>
+              <button class="format-button" type="button" data-format="quote" title="Trích dẫn / ghi chú" aria-label="Trích dẫn">
+                ❝
+              </button>
+
+              <span class="format-separator" aria-hidden="true"></span>
+
+              <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">
+                🔗
+              </button>
+            </div>
+
+            <div class="editor-panels">
+              <section
+                class="editor-panel"
+                id="announcement-panel-visual"
+                role="tabpanel"
+                aria-labelledby="announcement-tab-visual"
+                data-editor-panel="visual"
+              >
+                <div
+                  class="visual-rich-editor"
+                  id="announcement-visual-editor"
+                  contenteditable="true"
+                  role="textbox"
+                  aria-multiline="true"
+                  aria-describedby="announcement-editor-help"
+                  data-placeholder="Nhập nội dung thông báo..."
+                  spellcheck="true"
+                ></div>
+              </section>
+
+              <section
+                class="editor-panel"
+                id="announcement-panel-html"
+                role="tabpanel"
+                aria-labelledby="announcement-tab-html"
+                data-editor-panel="html"
+                hidden
+              >
+                <div class="html-code-editor" id="announcement-code-editor">
+                  <pre class="html-code-highlight" aria-hidden="true"><code id="announcement-html-highlight"></code></pre>
+                  <div class="html-line-numbers" id="announcement-html-lines" aria-hidden="true">1</div>
+
+                  <textarea
+                    class="html-code-input"
+                    id="announcement-content"
+                    rows="14"
+                    aria-label="Mã HTML của thông báo"
+                    aria-describedby="announcement-editor-help"
+                    spellcheck="false"
+                    autocapitalize="off"
+                    autocomplete="off"
+                    autocorrect="off"
+                  ></textarea>
+                </div>
+              </section>
+
+              <section
+                class="editor-panel"
+                id="announcement-panel-preview"
+                role="tabpanel"
+                aria-labelledby="announcement-tab-preview"
+                data-editor-panel="preview"
+                hidden
+              >
+                <div
+                  class="content-preview rich-editor-preview"
+                  id="announcement-content-preview"
+                  aria-live="polite"
+                ></div>
+              </section>
+            </div>
+
+            <div class="editor-statusbar" aria-live="polite">
+              <span id="announcement-editor-status">Soạn thảo trực quan</span>
+              <span id="announcement-editor-count">0 ký tự</span>
+            </div>
           </div>
 
-          <textarea id="announcement-content" rows="10" required
-            aria-describedby="announcement-editor-help"
-            data-editor-mode="markdown"
-            spellcheck="true"
-            placeholder="Nhập nội dung thông báo...
-
-Ví dụ Markdown:
-**Nội dung quan trọng**
-- Mục thứ nhất
-- Mục thứ hai
-
-Hoặc bấm </> HTML để viết HTML an toàn."></textarea>
-
-          <div class="content-preview hidden" id="announcement-content-preview" aria-live="polite"></div>
           <p class="field-hint editor-syntax-hint" id="announcement-editor-help">
-            Markdown dùng cho nhập nhanh. Bật <strong>&lt;/&gt; HTML</strong> để viết HTML thật;
-            hệ thống tự loại script, iframe, thuộc tính sự kiện và URL nguy hiểm trước khi hiển thị.
+            <strong>Soạn thảo</strong> để nhập trực quan ·
+            <strong>HTML</strong> để chỉnh mã với số dòng ·
+            <strong>Xem trước</strong> để kiểm tra kết quả.
+            HTML luôn được lọc an toàn trước khi lưu và hiển thị.
           </p>
         </div>
 
@@ -856,7 +970,8 @@ Hoặc bấm </> HTML để viết HTML an toàn."></textarea>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="content-renderer.js?v=3.14.0"></script>
-  <script src="app.js?v=3.14.0"></script>
-  <script src="pet-companion.js?v=3.14.0"></script>
+  <script src="rich-editor.js?v=3.15.0"></script>
+  <script src="app.js?v=3.15.0"></script>
+  <script src="pet-companion.js?v=3.15.0"></script>
 </body>
 </html>

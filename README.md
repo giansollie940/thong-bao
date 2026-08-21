@@ -78,26 +78,55 @@ Tối ưu riêng cửa sổ đăng/chỉnh sửa thông báo:
 
 
 
-## V3.14 — Safe HTML Editor
 
-Nút `</> HTML` giờ là chế độ soạn HTML thật:
 
-- Markdown cũ vẫn hoạt động bình thường.
-- HTML được đánh dấu nội bộ trong chính cột `content`, nên không cần thêm cột database.
-- HTML được sanitize khi lưu và sanitize lần nữa khi render.
-- Cho phép bố cục, heading, list, table, link, ảnh, class và style nội tuyến cơ bản.
-- Chặn `script`, `style`, `iframe`, `object`, `embed`, form controls, SVG/MathML.
-- Chặn mọi thuộc tính sự kiện `on*` như `onclick`, `onerror`, `onload`.
-- Chặn URL `javascript:`, `vbscript:` và `data:`.
-- Bold / Italic / Heading / List / Quote / Link tự dùng Markdown hoặc HTML theo chế độ editor.
-- Search, tự phân loại và Sao chép chỉ dùng plain text, không lấy HTML thô.
+## V3.15 — Canvas-style Rich Editor
+
+Phần nhập thông báo được gộp thành một rich editor với 3 chế độ:
+
+- `✏️ Soạn thảo`: `contenteditable`, nhập và định dạng trực quan.
+- `</> HTML`: chỉnh HTML nguồn, có số dòng và syntax highlight nhẹ.
+- `👁 Xem trước`: xem chính nội dung đã sanitize trước khi lưu.
+
+Ba chế độ dùng cùng một nội dung và đồng bộ hai chiều.
+
+### Toolbar
+
+Toolbar hoạt động theo ngữ cảnh:
+
+- In đậm
+- In nghiêng
+- Tiêu đề
+- Danh sách chấm
+- Danh sách số
+- Trích dẫn
+- Liên kết
+
+Trong Visual mode, toolbar thao tác trực tiếp với vùng soạn thảo.
+Trong HTML mode, toolbar chèn thẻ HTML vào source.
+
+### An toàn
+
+Vẫn dùng `content-renderer.js` từ V3.14:
+
+- sanitize HTML khi chuyển chế độ / lưu / hiển thị;
+- loại `script`, `style`, `iframe`, `object`, `embed`;
+- loại thuộc tính sự kiện `on*`;
+- chặn URL `javascript:`, `vbscript:` và `data:`.
+
+Paste HTML vào Visual Editor cũng được sanitize trước khi chèn.
 
 ### Clean code
 
-Phần nội dung được tách khỏi `app.js`:
+V3.15 tách trách nhiệm rõ hơn:
 
-- `content-renderer.js`: Markdown, HTML marker, sanitizer, render và plain text.
-- `content-renderer.css`: giao diện HTML editor và nội dung HTML.
-- `app.js`: workflow ứng dụng và trạng thái editor.
+- `app.js`: workflow ứng dụng, Supabase, CRUD.
+- `content-renderer.js`: sanitizer, Markdown cũ, render, plain text.
+- `content-renderer.css`: style nội dung đã render.
+- `rich-editor.js`: tabs, đồng bộ Visual ↔ HTML ↔ Preview, toolbar, line numbers.
+- `rich-editor.css`: toàn bộ UI của trình soạn thảo.
 
-Không cần chạy migration database mới.
+Thông báo Markdown cũ vẫn đọc được. Khi mở và lưu lại trong V3.15,
+nội dung được chuẩn hóa sang HTML an toàn.
+
+Không cần migration database mới.

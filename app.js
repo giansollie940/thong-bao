@@ -44,7 +44,7 @@
     throw new Error("Thiếu content-renderer.js.");
   }
 
-  let announcementEditorMode = "markdown";
+  let announcementEditor = null;
 
   const state = {
     user: null,
@@ -479,371 +479,6 @@
     let total = 0;
     for (const ch of String(seed)) total += ch.charCodeAt(0);
     return (total % 5) + 1;
-  }
-
-  function replaceTextareaSelection(textarea, replacement, selectionStart = null, selectionEnd = null) {
-    const start = selectionStart ?? textarea.selectionStart;
-    const end = selectionEnd ?? textarea.selectionEnd;
-
-    textarea.setRangeText(replacement, start, end, "end");
-    textarea.focus();
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-  }
-
-  function updateAnnouncementEditorModeUi() {
-    const textarea = $("#announcement-content");
-    const button = $("#announcement-html-button");
-    const badge = $("#announcement-editor-mode");
-    const isHtml = announcementEditorMode === "html";
-
-    if (textarea) {
-      textarea.dataset.editorMode = announcementEditorMode;
-      textarea.spellcheck = !isHtml;
-    }
-
-    if (button) {
-      button.setAttribute("aria-pressed", String(isHtml));
-      button.title = isHtml
-        ? "Đang dùng HTML an toàn — bấm để về Markdown"
-        : "Bật chế độ HTML an toàn";
-    }
-
-    if (badge) {
-      badge.dataset.mode = announcementEditorMode;
-      badge.textContent = isHtml ? "HTML an toàn" : "Markdown";
-    }
-  }
-
-  function setAnnouncementEditorMode(mode, { insertTemplate = false } = {}) {
-    announcementEditorMode = mode === "html" ? "html" : "markdown";
-
-    const textarea = $("#announcement-content");
-
-    if (
-      textarea &&
-      insertTemplate &&
-      announcementEditorMode === "html" &&
-      !textarea.value.trim()
-    ) {
-      textarea.value = [
-        '<section class="notice-box">',
-        '  <h3>📣 Tiêu đề thông báo</h3>',
-        '  <p>Nội dung <strong>quan trọng</strong> của bạn.</p>',
-        '  <ul>',
-        '    <li>Mục thứ nhất</li>',
-        '    <li>Mục thứ hai</li>',
-        '  </ul>',
-        '</section>'
-      ].join("\\n");
-
-      const start = textarea.value.indexOf("Tiêu đề thông báo");
-      textarea.setSelectionRange(
-        start,
-        start + "Tiêu đề thông báo".length
-      );
-    }
-
-    updateAnnouncementEditorModeUi();
-
-    if (textarea) {
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-      textarea.focus();
-    }
-  }
-
-  function toggleAnnouncementHtmlMode() {
-    const textarea = $("#announcement-content");
-    if (!textarea) return;
-
-    if (announcementEditorMode === "html") {
-      const hasHtml = /<\/?[a-z][^>]*>/i.test(textarea.value);
-
-      if (
-        hasHtml &&
-        !window.confirm(
-          "Chuyển về Markdown sẽ giữ nguyên các thẻ HTML dưới dạng văn bản. Tiếp tục?"
-        )
-      ) {
-        return;
-      }
-
-      setAnnouncementEditorMode("markdown");
-      showToast("Đã chuyển trình soạn thảo về Markdown.");
-      return;
-    }
-
-    setAnnouncementEditorMode("html", { insertTemplate: true });
-    showToast("Đã bật HTML an toàn. Script và thuộc tính nguy hiểm sẽ bị loại.");
-  }
-
-  function wrapHtmlSelection(textarea, tag, placeholder) {
-    wrapTextareaSelection(
-      textarea,
-      `<${tag}>`,
-      `</${tag}>`,
-      placeholder
-    );
-  }
-
-  function htmlListSelection(textarea, tag) {
-    const selection = selectedTextareaLines(textarea);
-    const items = selection.text
-      .split("\\n")
-      .map(line => line.trim())
-      .filter(Boolean);
-
-    const content = items.length
-      ? items
-      : ["Mục thứ nhất", "Mục thứ hai"];
-
-    const replacement = [
-      `<${tag}>`,
-      ...content.map(item => `  <li>${item}</li>`),
-      `</${tag}>`
-    ].join("\\n");
-
-    replaceTextareaSelection(
-      textarea,
-      replacement,
-      selection.start,
-      selection.end
-    );
-  }
-
-  function selectedTextareaLines(textarea) {
-    const value = textarea.value;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-
-    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
-    const nextBreak = value.indexOf("\n", end);
-    const lineEnd = nextBreak === -1 ? value.length : nextBreak;
-
-    return {
-      start: lineStart,
-      end: lineEnd,
-      text: value.slice(lineStart, lineEnd)
-    };
-  }
-
-  function wrapTextareaSelection(textarea, before, after, placeholder) {
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = textarea.value.slice(start, end) || placeholder;
-    const replacement = `${before}${selected}${after}`;
-
-    textarea.setRangeText(replacement, start, end, "select");
-
-    if (start === end) {
-      textarea.setSelectionRange(
-        start + before.length,
-        start + before.length + selected.length
-      );
-    }
-
-    textarea.focus();
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-  }
-
-  function prefixTextareaLines(textarea, formatter) {
-    const selection = selectedTextareaLines(textarea);
-    const lines = selection.text.split("\n");
-
-    const replacement = lines
-      .map((line, index) => formatter(line, index))
-      .join("\n");
-
-    replaceTextareaSelection(
-      textarea,
-      replacement,
-      selection.start,
-      selection.end
-    );
-  }
-
-  function applyAnnouncementFormat(format) {
-    const textarea = $("#announcement-content");
-    if (!textarea) return;
-
-    if (format === "html") {
-      toggleAnnouncementHtmlMode();
-      return;
-    }
-
-    const htmlMode = announcementEditorMode === "html";
-
-    if (format === "bold") {
-      if (htmlMode) {
-        wrapHtmlSelection(textarea, "strong", "nội dung đậm");
-      } else {
-        wrapTextareaSelection(textarea, "**", "**", "nội dung đậm");
-      }
-      return;
-    }
-
-    if (format === "italic") {
-      if (htmlMode) {
-        wrapHtmlSelection(textarea, "em", "nội dung nghiêng");
-      } else {
-        wrapTextareaSelection(textarea, "*", "*", "nội dung nghiêng");
-      }
-      return;
-    }
-
-    if (format === "heading") {
-      if (htmlMode) {
-        wrapHtmlSelection(textarea, "h3", "Tiêu đề");
-      } else {
-        prefixTextareaLines(
-          textarea,
-          line => line.trim()
-            ? `### ${line.replace(/^#{2,4}\s+/, "")}`
-            : line
-        );
-      }
-      return;
-    }
-
-    if (format === "bullet") {
-      if (htmlMode) {
-        htmlListSelection(textarea, "ul");
-      } else {
-        prefixTextareaLines(
-          textarea,
-          line => line.trim()
-            ? `- ${line.replace(/^(-|\d+\.)\s+/, "")}`
-            : line
-        );
-      }
-      return;
-    }
-
-    if (format === "numbered") {
-      if (htmlMode) {
-        htmlListSelection(textarea, "ol");
-      } else {
-        prefixTextareaLines(
-          textarea,
-          (line, index) => line.trim()
-            ? `${index + 1}. ${line.replace(/^(-|\d+\.)\s+/, "")}`
-            : line
-        );
-      }
-      return;
-    }
-
-    if (format === "quote") {
-      if (htmlMode) {
-        wrapHtmlSelection(
-          textarea,
-          "blockquote",
-          "Nội dung trích dẫn"
-        );
-      } else {
-        prefixTextareaLines(
-          textarea,
-          line => line.trim()
-            ? `> ${line.replace(/^>\s+/, "")}`
-            : line
-        );
-      }
-      return;
-    }
-
-    if (format === "link") {
-      const selected = textarea.value.slice(
-        textarea.selectionStart,
-        textarea.selectionEnd
-      ) || "tên liên kết";
-
-      const url = window.prompt(
-        "Nhập địa chỉ liên kết (https://...):",
-        "https://"
-      );
-
-      if (!url) return;
-
-      const cleanUrl = contentRenderer.safeLinkUrl(url);
-
-      if (!cleanUrl) {
-        showToast(
-          "Liên kết chỉ hỗ trợ http://, https://, mailto:, tel: hoặc đường dẫn tương đối."
-        );
-        return;
-      }
-
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const replacement = htmlMode
-        ? `<a href="${escapeHtml(cleanUrl)}">${selected}</a>`
-        : `[${selected}](${cleanUrl})`;
-
-      textarea.setRangeText(
-        replacement,
-        start,
-        end,
-        "end"
-      );
-
-      textarea.focus();
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-  }
-
-  function updateAnnouncementPreview() {
-    const preview = $("#announcement-content-preview");
-    const textarea = $("#announcement-content");
-
-    if (!preview || !textarea || preview.classList.contains("hidden")) {
-      return;
-    }
-
-    const value = textarea.value.trim();
-
-    preview.classList.toggle(
-      "html-preview",
-      announcementEditorMode === "html"
-    );
-
-    preview.innerHTML = value
-      ? contentRenderer.renderEditorContent(
-          value,
-          announcementEditorMode
-        )
-      : '<p class="muted">Chưa có nội dung để xem trước.</p>';
-  }
-
-  let announcementPreviewFrame = 0;
-
-  function scheduleAnnouncementPreview() {
-    const preview = $("#announcement-content-preview");
-
-    if (!preview || preview.classList.contains("hidden")) {
-      return;
-    }
-
-    if (announcementPreviewFrame) {
-      window.cancelAnimationFrame(announcementPreviewFrame);
-    }
-
-    announcementPreviewFrame = window.requestAnimationFrame(() => {
-      announcementPreviewFrame = 0;
-      updateAnnouncementPreview();
-    });
-  }
-
-  function toggleAnnouncementPreview() {
-    const preview = $("#announcement-content-preview");
-    const button = $("#announcement-preview-button");
-
-    if (!preview || !button) return;
-
-    const opening = preview.classList.contains("hidden");
-    preview.classList.toggle("hidden", !opening);
-    button.setAttribute("aria-expanded", String(opening));
-    button.textContent = opening ? "✕ Đóng xem trước" : "👁 Xem trước";
-
-    if (opening) updateAnnouncementPreview();
   }
 
   function parseQuickInput(raw = "") {
@@ -1862,13 +1497,22 @@
     $("#announcement-priority").value = item?.priority || "normal";
     $("#announcement-pinned").checked = Boolean(item?.is_pinned);
     const storedContent = item?.content || "";
-    announcementEditorMode =
+    const storedMode =
       contentRenderer.getStoredMode(storedContent);
-
-    $("#announcement-content").value =
+    const editorSource =
       contentRenderer.getEditorContent(storedContent);
 
-    updateAnnouncementEditorModeUi();
+    const editorHtml = storedMode === "html"
+      ? contentRenderer.sanitizeHtml(editorSource)
+      : contentRenderer.renderMarkdown(editorSource);
+
+    announcementEditor.setHtml(
+      editorHtml,
+      {
+        view: "visual",
+        focus: false
+      }
+    );
     $("#announcement-image-alt").value = item?.image_alt || item?.title || "";
     $("#announcement-remove-image").checked = false;
 
@@ -1917,12 +1561,11 @@
     const id = $("#announcement-id").value;
     const existing = state.announcements.find(item => item.id === id) || null;
     const title = $("#announcement-title").value.trim();
-    const rawEditorContent = $("#announcement-content").value.trim();
+    const rawEditorContent =
+      announcementEditor.getHtml().trim();
 
     const cleanedEditorContent =
-      announcementEditorMode === "html"
-        ? contentRenderer.sanitizeHtml(rawEditorContent)
-        : rawEditorContent;
+      contentRenderer.sanitizeHtml(rawEditorContent);
 
     if (!cleanedEditorContent) {
       setMessage(
@@ -1935,13 +1578,13 @@
     const storedContent =
       contentRenderer.serializeEditorContent(
         cleanedEditorContent,
-        announcementEditorMode
+        "html"
       );
 
     const categoryContent =
       contentRenderer.toPlainText(
         cleanedEditorContent,
-        announcementEditorMode
+        "html"
       );
 
     const newFile = $("#announcement-image").files?.[0] || null;
@@ -2631,15 +2274,6 @@
     $("#bulk-preview-button").addEventListener("click", previewBulk);
     $("#school-year-preview-button").addEventListener("click", generateSchoolYearPreview);
 
-    $("#announcement-format-toolbar").addEventListener("click", event => {
-      const button = event.target.closest("[data-format]");
-      if (!button) return;
-      applyAnnouncementFormat(button.dataset.format);
-    });
-
-    $("#announcement-preview-button").addEventListener("click", toggleAnnouncementPreview);
-    $("#announcement-content").addEventListener("input", scheduleAnnouncementPreview);
-
     $("#announcement-image").addEventListener("change", () => {
       previewSelectedFile(
         $("#announcement-image"),
@@ -2687,6 +2321,18 @@
 
   async function init() {
     initTheme();
+
+    announcementEditor =
+      window.WeeklyRichEditor?.create({
+        root: $("#announcement-rich-editor"),
+        renderer: contentRenderer,
+        onToast: showToast
+      });
+
+    if (!announcementEditor) {
+      throw new Error("Không khởi tạo được rich editor.");
+    }
+
     initDialogs();
     initEvents();
     await loadSession();
