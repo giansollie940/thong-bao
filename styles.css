@@ -2989,25 +2989,7 @@ body {
 }
 
 
-.content-preview {
-  margin-top: 11px;
-  padding: 18px;
-  border: 1px dashed color-mix(in srgb, var(--brand) 28%, var(--line));
-  border-radius: 15px;
-  background:
-    linear-gradient(145deg, rgba(255, 247, 216, 0.42), rgba(255, 240, 236, 0.35)),
-    var(--surface-solid);
-}
 
-.content-preview::before {
-  content: "XEM TRƯỚC";
-  display: block;
-  margin-bottom: 10px;
-  color: var(--brand-strong);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.10em;
-}
 
 .content-subheading {
   margin: 16px 0 8px;
@@ -3016,8 +2998,7 @@ body {
   line-height: 1.35;
 }
 
-.announcement-content blockquote,
-.content-preview blockquote {
+.announcement-content blockquote {
   margin: 12px 0;
   padding: 10px 13px;
   border-left: 4px solid var(--brand);
@@ -3026,29 +3007,25 @@ body {
   color: color-mix(in srgb, var(--text) 84%, var(--muted));
 }
 
-.announcement-content ol,
-.content-preview ol {
+.announcement-content ol {
   margin: 10px 0 12px;
   padding-left: 1.35rem;
 }
 
-.announcement-content hr,
-.content-preview hr {
+.announcement-content hr {
   margin: 16px 0;
   border: 0;
   border-top: 1px solid var(--line);
 }
 
-.announcement-content a,
-.content-preview a {
+.announcement-content a {
   color: var(--brand-strong);
   font-weight: 750;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 2px;
 }
 
-.announcement-content code,
-.content-preview code {
+.announcement-content code {
   padding: 2px 6px;
   border-radius: 7px;
   background: color-mix(in srgb, var(--sunny) 16%, var(--surface-soft));
@@ -3074,9 +3051,6 @@ html[data-theme="dark"] .search-panel {
     var(--surface);
 }
 
-html[data-theme="dark"] .content-preview {
-  background: var(--surface-soft);
-}
 
 @media (max-width: 640px) {
   .editor-label-row {
@@ -3380,15 +3354,6 @@ body {
 
 .format-button:hover,
 
-.content-preview {
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--sunny-soft) 38%, var(--surface-solid)),
-      color-mix(in srgb, var(--mint-soft) 32%, var(--surface-solid))
-    );
-  border-color: color-mix(in srgb, var(--brand) 22%, var(--line));
-}
 
 .category-editor {
   background:
@@ -3736,10 +3701,6 @@ body {
 
 .format-button:hover,
 
-.content-preview {
-  background: var(--surface-solid);
-  border-color: color-mix(in srgb, var(--brand) 20%, var(--line));
-}
 
 .category-editor {
   background:
@@ -3769,9 +3730,6 @@ body {
 html[data-theme="dark"] .hero-copy,
 html[data-theme="dark"] .announcement-card,
 html[data-theme="dark"] .year-week-card,
-html[data-theme="dark"] .content-preview {
-  background: var(--surface-solid);
-}
 
 html[data-theme="dark"] .search-panel {
   background:
@@ -4323,13 +4281,6 @@ select:focus {
 .format-button:hover,
 
 
-.content-preview {
-  border-radius: 16px;
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.96), rgba(241,248,245,.90)),
-    var(--surface-solid);
-  border-color: color-mix(in srgb, var(--brand) 14%, var(--line));
-}
 
 /* Category manager */
 .category-editor {
@@ -4352,7 +4303,6 @@ html[data-theme="dark"] .hero-copy,
 html[data-theme="dark"] .announcement-card,
 html[data-theme="dark"] .year-week-card,
 html[data-theme="dark"] .archive-card,
-html[data-theme="dark"] .content-preview,
 html[data-theme="dark"] .search-panel {
   background: var(--surface-solid);
 }

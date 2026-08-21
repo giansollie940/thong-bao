@@ -44,6 +44,11 @@
     throw new Error("Thiếu content-renderer.js.");
   }
 
+  const contentInteractions = window.WeeklyInteractions;
+  if (!contentInteractions) {
+    throw new Error("Thiếu content-interactions.js.");
+  }
+
   let announcementEditor = null;
 
   const state = {
@@ -935,7 +940,7 @@
             </div>
           </article>
         `).join("")
-      : '<div class="empty-state">Chưa có chuyên mục. Hãy chạy migration-v2-8.sql.</div>';
+      : '<div class="empty-state">Chưa có chuyên mục. Hãy kiểm tra schema.sql.</div>';
   }
 
   function openCategoriesDialog() {
@@ -1358,14 +1363,7 @@
   }
 
   function enhanceRenderedContent() {
-    /*
-     * Interactive HTML (tabs/accordion) có thể xuất hiện nhiều lần
-     * ở dashboard, chuyên mục, năm học hoặc lưu trữ.
-     * Chạy enhancer trực tiếp sau render để không phụ thuộc timing
-     * của MutationObserver.
-     */
-    contentRenderer.enhanceTabs?.(document);
-    contentRenderer.enhanceAccordions?.(document);
+    contentInteractions.enhance(document);
   }
 
   function renderAll() {
@@ -1410,7 +1408,7 @@
         console.error(weekError || itemError || categoryError);
         el.connectionBanner.className = "status-banner warning";
         el.connectionBanner.textContent =
-          "Không tải được dữ liệu. Hãy kiểm tra config.js và chạy migration-v2-8.sql.";
+          "Không tải được dữ liệu. Hãy kiểm tra config.js và schema.sql.";
         return;
       }
 

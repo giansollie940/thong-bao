@@ -212,6 +212,62 @@
       syncVisualToSource();
     }
 
+    function formatVisualBlock(tag, placeholder) {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      const startNode = range.startContainer;
+      const endNode = range.endContainer;
+
+      const startElement =
+        startNode.nodeType === Node.ELEMENT_NODE
+          ? startNode
+          : startNode.parentElement;
+
+      const endElement =
+        endNode.nodeType === Node.ELEMENT_NODE
+          ? endNode
+          : endNode.parentElement;
+
+      const selector = "p, h2, h3, h4, h5";
+
+      const startBlock =
+        startElement?.closest(selector);
+      const endBlock =
+        endElement?.closest(selector);
+
+      if (
+        startBlock &&
+        startBlock === endBlock &&
+        startBlock !== visual &&
+        visual.contains(startBlock)
+      ) {
+        const replacement =
+          document.createElement(tag);
+
+        while (startBlock.firstChild) {
+          replacement.append(
+            startBlock.firstChild
+          );
+        }
+
+        if (!replacement.textContent.trim()) {
+          replacement.textContent = placeholder;
+        }
+
+        startBlock.replaceWith(replacement);
+        selectContents(replacement);
+        syncVisualToSource();
+        return;
+      }
+
+      wrapVisual(tag, placeholder);
+    }
+
     function makeVisualList(tag) {
       const range = currentVisualRange();
 
@@ -393,7 +449,7 @@
         } else if (format === "italic") {
           wrapVisual("em", "nội dung nghiêng");
         } else if (format === "heading") {
-          wrapVisual("h3", "Tiêu đề");
+          formatVisualBlock("h3", "Tiêu đề");
         } else if (format === "bullet") {
           makeVisualList("ul");
         } else if (format === "numbered") {
@@ -463,12 +519,13 @@
             sanitize(pastedHtml)
           );
 
-        const marker = document.createTextNode("");
+        const lastNode = fragment.lastChild;
 
-        fragment.append(marker);
         range.insertNode(fragment);
-        placeCaretAfter(marker);
-        marker.remove();
+
+        if (lastNode) {
+          placeCaretAfter(lastNode);
+        }
       } else {
         const textNode =
           document.createTextNode(pastedText);
