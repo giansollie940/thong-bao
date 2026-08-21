@@ -39,6 +39,13 @@
 
   const IMAGE_BUCKET = "announcement-images";
 
+  const contentRenderer = window.WeeklyContent;
+  if (!contentRenderer) {
+    throw new Error("Thiếu content-renderer.js.");
+  }
+
+  let announcementEditorMode = "markdown";
+
   const state = {
     user: null,
     weeks: [],
@@ -474,121 +481,6 @@
     return (total % 5) + 1;
   }
 
-  function safeLinkUrl(value = "") {
-    const url = String(value).trim();
-
-    if (/^https?:\/\//i.test(url) || /^mailto:/i.test(url)) {
-      return url;
-    }
-
-    return "";
-  }
-
-  function inlineMarkdown(text = "") {
-    const links = [];
-
-    let source = String(text).replace(
-      /\[([^\]]+)\]\(([^)\s]+)\)/g,
-      (_match, label, url) => {
-        const safeUrl = safeLinkUrl(url);
-
-        if (!safeUrl) {
-          return `${label} (${url})`;
-        }
-
-        const token = `@@WEEKLY_LINK_${links.length}@@`;
-
-        links.push(
-          `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`
-        );
-
-        return token;
-      }
-    );
-
-    let html = escapeHtml(source)
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/`(.+?)`/g, "<code>$1</code>");
-
-    html = html.replace(
-      /@@WEEKLY_LINK_(\d+)@@/g,
-      (_match, index) => links[Number(index)] || ""
-    );
-
-    return html;
-  }
-
-  function richContent(raw = "") {
-    const lines = String(raw).replace(/\r\n/g, "\n").split("\n");
-    const out = [];
-    let list = [];
-    let listType = "";
-
-    const flushList = () => {
-      if (!list.length) return;
-
-      const tag = listType === "ol" ? "ol" : "ul";
-      out.push(
-        `<${tag}>${list.map(item => `<li>${inlineMarkdown(item)}</li>`).join("")}</${tag}>`
-      );
-
-      list = [];
-      listType = "";
-    };
-
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-
-      if (!line) {
-        flushList();
-        continue;
-      }
-
-      if (/^#{2,4}\s+/.test(line)) {
-        flushList();
-        out.push(
-          `<h4 class="content-subheading">${inlineMarkdown(line.replace(/^#{2,4}\s+/, ""))}</h4>`
-        );
-        continue;
-      }
-
-      if (/^>\s+/.test(line)) {
-        flushList();
-        out.push(
-          `<blockquote>${inlineMarkdown(line.replace(/^>\s+/, ""))}</blockquote>`
-        );
-        continue;
-      }
-
-      if (/^---+$/.test(line)) {
-        flushList();
-        out.push("<hr>");
-        continue;
-      }
-
-      if (/^-\s+/.test(line)) {
-        if (listType && listType !== "ul") flushList();
-        listType = "ul";
-        list.push(line.replace(/^-\s+/, ""));
-        continue;
-      }
-
-      if (/^\d+\.\s+/.test(line)) {
-        if (listType && listType !== "ol") flushList();
-        listType = "ol";
-        list.push(line.replace(/^\d+\.\s+/, ""));
-        continue;
-      }
-
-      flushList();
-      out.push(`<p>${inlineMarkdown(line)}</p>`);
-    }
-
-    flushList();
-    return out.join("");
-  }
-
   function replaceTextareaSelection(textarea, replacement, selectionStart = null, selectionEnd = null) {
     const start = selectionStart ?? textarea.selectionStart;
     const end = selectionEnd ?? textarea.selectionEnd;
@@ -596,6 +488,126 @@
     textarea.setRangeText(replacement, start, end, "end");
     textarea.focus();
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  function updateAnnouncementEditorModeUi() {
+    const textarea = $("#announcement-content");
+    const button = $("#announcement-html-button");
+    const badge = $("#announcement-editor-mode");
+    const isHtml = announcementEditorMode === "html";
+
+    if (textarea) {
+      textarea.dataset.editorMode = announcementEditorMode;
+      textarea.spellcheck = !isHtml;
+    }
+
+    if (button) {
+      button.setAttribute("aria-pressed", String(isHtml));
+      button.title = isHtml
+        ? "Đang dùng HTML an toàn — bấm để về Markdown"
+        : "Bật chế độ HTML an toàn";
+    }
+
+    if (badge) {
+      badge.dataset.mode = announcementEditorMode;
+      badge.textContent = isHtml ? "HTML an toàn" : "Markdown";
+    }
+  }
+
+  function setAnnouncementEditorMode(mode, { insertTemplate = false } = {}) {
+    announcementEditorMode = mode === "html" ? "html" : "markdown";
+
+    const textarea = $("#announcement-content");
+
+    if (
+      textarea &&
+      insertTemplate &&
+      announcementEditorMode === "html" &&
+      !textarea.value.trim()
+    ) {
+      textarea.value = [
+        '<section class="notice-box">',
+        '  <h3>📣 Tiêu đề thông báo</h3>',
+        '  <p>Nội dung <strong>quan trọng</strong> của bạn.</p>',
+        '  <ul>',
+        '    <li>Mục thứ nhất</li>',
+        '    <li>Mục thứ hai</li>',
+        '  </ul>',
+        '</section>'
+      ].join("\\n");
+
+      const start = textarea.value.indexOf("Tiêu đề thông báo");
+      textarea.setSelectionRange(
+        start,
+        start + "Tiêu đề thông báo".length
+      );
+    }
+
+    updateAnnouncementEditorModeUi();
+
+    if (textarea) {
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      textarea.focus();
+    }
+  }
+
+  function toggleAnnouncementHtmlMode() {
+    const textarea = $("#announcement-content");
+    if (!textarea) return;
+
+    if (announcementEditorMode === "html") {
+      const hasHtml = /<\/?[a-z][^>]*>/i.test(textarea.value);
+
+      if (
+        hasHtml &&
+        !window.confirm(
+          "Chuyển về Markdown sẽ giữ nguyên các thẻ HTML dưới dạng văn bản. Tiếp tục?"
+        )
+      ) {
+        return;
+      }
+
+      setAnnouncementEditorMode("markdown");
+      showToast("Đã chuyển trình soạn thảo về Markdown.");
+      return;
+    }
+
+    setAnnouncementEditorMode("html", { insertTemplate: true });
+    showToast("Đã bật HTML an toàn. Script và thuộc tính nguy hiểm sẽ bị loại.");
+  }
+
+  function wrapHtmlSelection(textarea, tag, placeholder) {
+    wrapTextareaSelection(
+      textarea,
+      `<${tag}>`,
+      `</${tag}>`,
+      placeholder
+    );
+  }
+
+  function htmlListSelection(textarea, tag) {
+    const selection = selectedTextareaLines(textarea);
+    const items = selection.text
+      .split("\\n")
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    const content = items.length
+      ? items
+      : ["Mục thứ nhất", "Mục thứ hai"];
+
+    const replacement = [
+      `<${tag}>`,
+      ...content.map(item => `  <li>${item}</li>`),
+      `</${tag}>`
+    ].join("\\n");
+
+    replaceTextareaSelection(
+      textarea,
+      replacement,
+      selection.start,
+      selection.end
+    );
   }
 
   function selectedTextareaLines(textarea) {
@@ -653,52 +665,88 @@
     const textarea = $("#announcement-content");
     if (!textarea) return;
 
+    if (format === "html") {
+      toggleAnnouncementHtmlMode();
+      return;
+    }
+
+    const htmlMode = announcementEditorMode === "html";
+
     if (format === "bold") {
-      wrapTextareaSelection(textarea, "**", "**", "nội dung đậm");
+      if (htmlMode) {
+        wrapHtmlSelection(textarea, "strong", "nội dung đậm");
+      } else {
+        wrapTextareaSelection(textarea, "**", "**", "nội dung đậm");
+      }
       return;
     }
 
     if (format === "italic") {
-      wrapTextareaSelection(textarea, "*", "*", "nội dung nghiêng");
-      return;
-    }
-
-    if (format === "code") {
-      wrapTextareaSelection(textarea, "`", "`", "ký hiệu");
+      if (htmlMode) {
+        wrapHtmlSelection(textarea, "em", "nội dung nghiêng");
+      } else {
+        wrapTextareaSelection(textarea, "*", "*", "nội dung nghiêng");
+      }
       return;
     }
 
     if (format === "heading") {
-      prefixTextareaLines(
-        textarea,
-        line => line.trim() ? `### ${line.replace(/^#{2,4}\s+/, "")}` : line
-      );
+      if (htmlMode) {
+        wrapHtmlSelection(textarea, "h3", "Tiêu đề");
+      } else {
+        prefixTextareaLines(
+          textarea,
+          line => line.trim()
+            ? `### ${line.replace(/^#{2,4}\s+/, "")}`
+            : line
+        );
+      }
       return;
     }
 
     if (format === "bullet") {
-      prefixTextareaLines(
-        textarea,
-        line => line.trim() ? `- ${line.replace(/^(-|\d+\.)\s+/, "")}` : line
-      );
+      if (htmlMode) {
+        htmlListSelection(textarea, "ul");
+      } else {
+        prefixTextareaLines(
+          textarea,
+          line => line.trim()
+            ? `- ${line.replace(/^(-|\d+\.)\s+/, "")}`
+            : line
+        );
+      }
       return;
     }
 
     if (format === "numbered") {
-      prefixTextareaLines(
-        textarea,
-        (line, index) => line.trim()
-          ? `${index + 1}. ${line.replace(/^(-|\d+\.)\s+/, "")}`
-          : line
-      );
+      if (htmlMode) {
+        htmlListSelection(textarea, "ol");
+      } else {
+        prefixTextareaLines(
+          textarea,
+          (line, index) => line.trim()
+            ? `${index + 1}. ${line.replace(/^(-|\d+\.)\s+/, "")}`
+            : line
+        );
+      }
       return;
     }
 
     if (format === "quote") {
-      prefixTextareaLines(
-        textarea,
-        line => line.trim() ? `> ${line.replace(/^>\s+/, "")}` : line
-      );
+      if (htmlMode) {
+        wrapHtmlSelection(
+          textarea,
+          "blockquote",
+          "Nội dung trích dẫn"
+        );
+      } else {
+        prefixTextareaLines(
+          textarea,
+          line => line.trim()
+            ? `> ${line.replace(/^>\s+/, "")}`
+            : line
+        );
+      }
       return;
     }
 
@@ -715,16 +763,23 @@
 
       if (!url) return;
 
-      if (!safeLinkUrl(url)) {
-        showToast("Liên kết chỉ hỗ trợ http://, https:// hoặc mailto:.");
+      const cleanUrl = contentRenderer.safeLinkUrl(url);
+
+      if (!cleanUrl) {
+        showToast(
+          "Liên kết chỉ hỗ trợ http://, https://, mailto:, tel: hoặc đường dẫn tương đối."
+        );
         return;
       }
 
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
+      const replacement = htmlMode
+        ? `<a href="${escapeHtml(cleanUrl)}">${selected}</a>`
+        : `[${selected}](${cleanUrl})`;
 
       textarea.setRangeText(
-        `[${selected}](${url.trim()})`,
+        replacement,
         start,
         end,
         "end"
@@ -745,8 +800,16 @@
 
     const value = textarea.value.trim();
 
+    preview.classList.toggle(
+      "html-preview",
+      announcementEditorMode === "html"
+    );
+
     preview.innerHTML = value
-      ? richContent(value)
+      ? contentRenderer.renderEditorContent(
+          value,
+          announcementEditorMode
+        )
       : '<p class="muted">Chưa có nội dung để xem trước.</p>';
   }
 
@@ -1063,7 +1126,7 @@
     }
 
     const source = normalizeText(
-      `${item.category || ""} ${item.title || ""} ${item.content || ""}`
+      `${item.category || ""} ${item.title || ""} ${contentRenderer.toPlainText(item.content || "")}`
     );
 
     const categories = activeCategories();
@@ -1394,6 +1457,9 @@
   function announcementCard(item, showWeek = false) {
     const week = state.weeks.find(w => w.id === item.week_id);
     const category = categoryInfo(item);
+    const contentMode = contentRenderer.getStoredMode(item.content);
+    const renderedContent =
+      contentRenderer.renderStoredContent(item.content);
     const adminButtons = isAdmin()
       ? `<button class="button button-ghost button-small card-command" data-action="edit-announcement" data-id="${escapeHtml(item.id)}">
            <span aria-hidden="true">✎</span><span>Sửa</span>
@@ -1429,7 +1495,7 @@
               : ""
           }
 
-          <div class="announcement-content">${richContent(item.content)}</div>
+          <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${renderedContent}</div>
 
           <div class="announcement-meta">
             <span class="meta-chip">📅 ${escapeHtml(formatDate(item.event_date))}</span>
@@ -1795,7 +1861,14 @@
     $("#announcement-category").value = item?.category || "";
     $("#announcement-priority").value = item?.priority || "normal";
     $("#announcement-pinned").checked = Boolean(item?.is_pinned);
-    $("#announcement-content").value = item?.content || "";
+    const storedContent = item?.content || "";
+    announcementEditorMode =
+      contentRenderer.getStoredMode(storedContent);
+
+    $("#announcement-content").value =
+      contentRenderer.getEditorContent(storedContent);
+
+    updateAnnouncementEditorModeUi();
     $("#announcement-image-alt").value = item?.image_alt || item?.title || "";
     $("#announcement-remove-image").checked = false;
 
@@ -1844,6 +1917,33 @@
     const id = $("#announcement-id").value;
     const existing = state.announcements.find(item => item.id === id) || null;
     const title = $("#announcement-title").value.trim();
+    const rawEditorContent = $("#announcement-content").value.trim();
+
+    const cleanedEditorContent =
+      announcementEditorMode === "html"
+        ? contentRenderer.sanitizeHtml(rawEditorContent)
+        : rawEditorContent;
+
+    if (!cleanedEditorContent) {
+      setMessage(
+        el.announcementMessage,
+        "Nội dung trống hoặc chỉ chứa HTML không được phép."
+      );
+      return;
+    }
+
+    const storedContent =
+      contentRenderer.serializeEditorContent(
+        cleanedEditorContent,
+        announcementEditorMode
+      );
+
+    const categoryContent =
+      contentRenderer.toPlainText(
+        cleanedEditorContent,
+        announcementEditorMode
+      );
+
     const newFile = $("#announcement-image").files?.[0] || null;
     const removeCurrent = $("#announcement-remove-image").checked;
 
@@ -1874,12 +1974,12 @@
     const payload = {
       week_id: targetWeek.id,
       title,
-      content: $("#announcement-content").value.trim(),
+      content: storedContent,
       ...categorySelectionToPayload(
         $("#announcement-category-select").value,
         {
           title,
-          content: $("#announcement-content").value.trim(),
+          content: categoryContent,
           category: $("#announcement-category").value.trim()
         }
       ),
@@ -1906,7 +2006,7 @@
       if (uploadedPath) await removeStorageImage(uploadedPath);
       setMessage(
         el.announcementMessage,
-        "Không lưu được. Hãy chạy migration-v2-4.sql và kiểm tra Storage/RLS."
+        "Không lưu được. Hãy kiểm tra kết nối Supabase, Storage và quyền RLS."
       );
       return;
     }
@@ -2338,7 +2438,7 @@
       item.category ? `Chuyên mục: ${item.category}` : "",
       item.image_path ? `Ảnh: ${getImagePublicUrl(item.image_path)}` : "",
       "",
-      item.content
+      contentRenderer.toPlainText(item.content)
     ].filter(Boolean).join("\n");
 
     try {
@@ -2383,7 +2483,7 @@
       const week = state.weeks.find(w => w.id === item.week_id);
       const haystack = normalizeText([
         item.title,
-        item.content,
+        contentRenderer.toPlainText(item.content),
         item.category,
         item.event_date,
         week?.week_number,

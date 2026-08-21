@@ -6,9 +6,10 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.13.0">
-  <link rel="stylesheet" href="controls.css?v=3.13.0">
-  <link rel="stylesheet" href="pet-companion.css?v=3.13.0">
+  <link rel="stylesheet" href="styles.css?v=3.14.0">
+  <link rel="stylesheet" href="controls.css?v=3.14.0">
+  <link rel="stylesheet" href="content-renderer.css?v=3.14.0">
+  <link rel="stylesheet" href="pet-companion.css?v=3.14.0">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -333,23 +334,41 @@
             <button class="format-button" type="button" data-format="quote" title="Trích dẫn / ghi chú" aria-label="Trích dẫn">❝</button>
             <span class="format-separator" aria-hidden="true"></span>
             <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">🔗</button>
-            <button class="format-button" type="button" data-format="code" title="Định dạng mã / ký hiệu" aria-label="Định dạng mã">&lt;/&gt;</button>
+            <button
+              class="format-button html-mode-toggle"
+              id="announcement-html-button"
+              type="button"
+              data-format="html"
+              aria-label="Bật hoặc tắt chế độ HTML an toàn"
+              aria-pressed="false"
+              title="Chế độ HTML an toàn"
+            >&lt;/&gt; HTML</button>
+            <span
+              class="editor-mode-badge"
+              id="announcement-editor-mode"
+              data-mode="markdown"
+              aria-live="polite"
+            >Markdown</span>
             <button class="format-preview-button" id="announcement-preview-button" type="button" aria-expanded="false">👁 Xem trước</button>
           </div>
 
           <textarea id="announcement-content" rows="10" required
+            aria-describedby="announcement-editor-help"
+            data-editor-mode="markdown"
+            spellcheck="true"
             placeholder="Nhập nội dung thông báo...
 
-Ví dụ:
+Ví dụ Markdown:
 **Nội dung quan trọng**
 - Mục thứ nhất
 - Mục thứ hai
-1. Bước một
-2. Bước hai"></textarea>
+
+Hoặc bấm </> HTML để viết HTML an toàn."></textarea>
 
           <div class="content-preview hidden" id="announcement-content-preview" aria-live="polite"></div>
-          <p class="field-hint editor-syntax-hint">
-            Hỗ trợ đậm, nghiêng, tiêu đề nhỏ, danh sách, trích dẫn, liên kết và mã ngắn.
+          <p class="field-hint editor-syntax-hint" id="announcement-editor-help">
+            Markdown dùng cho nhập nhanh. Bật <strong>&lt;/&gt; HTML</strong> để viết HTML thật;
+            hệ thống tự loại script, iframe, thuộc tính sự kiện và URL nguy hiểm trước khi hiển thị.
           </p>
         </div>
 
@@ -836,7 +855,8 @@ Ví dụ:
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=3.13.0"></script>
-  <script src="pet-companion.js?v=3.13.0"></script>
+  <script src="content-renderer.js?v=3.14.0"></script>
+  <script src="app.js?v=3.14.0"></script>
+  <script src="pet-companion.js?v=3.14.0"></script>
 </body>
 </html>

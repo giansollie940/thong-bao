@@ -1,0 +1,196 @@
+/* =========================================================
+   V3.14 — Safe HTML editor
+   Chỉ chứa style cho editor mode và HTML đã render.
+   ========================================================= */
+
+.html-mode-toggle {
+  min-width: 84px;
+  gap: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.html-mode-toggle[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-soft) 78%, var(--surface-solid)),
+      color-mix(in srgb, #e8f3ff 70%, var(--surface-solid))
+    );
+  color: var(--brand-strong);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--brand) 9%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .72);
+}
+
+.editor-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-solid);
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .02em;
+}
+
+.editor-mode-badge[data-mode="html"] {
+  border-color: color-mix(in srgb, var(--brand) 28%, var(--line));
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+#announcement-content[data-editor-mode="html"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .92rem;
+  line-height: 1.62;
+  tab-size: 2;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-solid) 96%, #e8f7f1),
+      var(--surface-solid)
+    );
+}
+
+#announcement-content[data-editor-mode="html"]:focus {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent),
+    inset 3px 0 0 color-mix(in srgb, var(--brand) 70%, transparent);
+}
+
+.content-preview.html-preview::before {
+  content: "XEM TRƯỚC HTML AN TOÀN";
+}
+
+.announcement-content.html-content,
+.content-preview.html-preview {
+  overflow-wrap: anywhere;
+}
+
+.announcement-content.html-content :is(h2, h3, h4, h5),
+.content-preview.html-preview :is(h2, h3, h4, h5) {
+  margin: 1em 0 .55em;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.announcement-content.html-content :is(p, ul, ol, blockquote, pre, table, figure),
+.content-preview.html-preview :is(p, ul, ol, blockquote, pre, table, figure) {
+  margin: .75em 0;
+}
+
+.announcement-content.html-content :is(ul, ol),
+.content-preview.html-preview :is(ul, ol) {
+  padding-left: 1.35rem;
+}
+
+.announcement-content.html-content img,
+.content-preview.html-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 12px auto;
+  border-radius: 14px;
+}
+
+.announcement-content.html-content figure,
+.content-preview.html-preview figure {
+  margin-inline: 0;
+}
+
+.announcement-content.html-content figcaption,
+.content-preview.html-preview figcaption {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: .84rem;
+  text-align: center;
+}
+
+.announcement-content.html-content table,
+.content-preview.html-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  background: var(--surface-solid);
+}
+
+.announcement-content.html-content :is(th, td),
+.content-preview.html-preview :is(th, td) {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.announcement-content.html-content th,
+.content-preview.html-preview th {
+  background: var(--brand-soft);
+  color: var(--text);
+  font-weight: 850;
+}
+
+.announcement-content.html-content pre,
+.content-preview.html-preview pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-soft) 86%, #edf6ff);
+  white-space: pre-wrap;
+}
+
+.announcement-content.html-content mark,
+.content-preview.html-preview mark {
+  padding: .08em .28em;
+  border-radius: .35em;
+  background: color-mix(in srgb, var(--sunny) 34%, #fff);
+  color: inherit;
+}
+
+/* Class tiện dụng khi soạn HTML */
+.announcement-content .notice-box,
+.content-preview .notice-box {
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, var(--line));
+  border-radius: 15px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-soft) 68%, var(--surface-solid)),
+      color-mix(in srgb, #edf6ff 46%, var(--surface-solid))
+    );
+}
+
+.announcement-content .notice-warning,
+.content-preview .notice-warning {
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, #f59e0b 30%, var(--line));
+  border-radius: 15px;
+  background: color-mix(in srgb, #fff4d6 65%, var(--surface-solid));
+}
+
+@media (max-width: 520px) {
+  .editor-mode-badge {
+    min-height: 30px;
+    padding-inline: 8px;
+  }
+
+  .announcement-content.html-content :is(th, td),
+  .content-preview.html-preview :is(th, td) {
+    padding: 7px 8px;
+    font-size: .9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .html-mode-toggle,
+  .editor-mode-badge,
+  #announcement-content {
+    transition: none !important;
+  }
+}

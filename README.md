@@ -76,18 +76,28 @@ Tối ưu riêng cửa sổ đăng/chỉnh sửa thông báo:
 
 
 
-## V3.13 — Smart Hover
 
-- Primary: gradient sweep
-- Secondary/Soft: fill + lift
-- Accent: cool gradient slide
-- Danger: warning glow
-- Glass: highlight wash
-- Ghost/Text: underline reveal
-- Sidebar: sliding rail + icon nudge
-- Category filter: pill fill
-- Icon button: micro scale + halo
-- Format toolbar: editor feedback
-- Input/Select/Textarea: border + focus glow
-- File input: animate nút chọn file
-- Có `prefers-reduced-motion`
+
+## V3.14 — Safe HTML Editor
+
+Nút `</> HTML` giờ là chế độ soạn HTML thật:
+
+- Markdown cũ vẫn hoạt động bình thường.
+- HTML được đánh dấu nội bộ trong chính cột `content`, nên không cần thêm cột database.
+- HTML được sanitize khi lưu và sanitize lần nữa khi render.
+- Cho phép bố cục, heading, list, table, link, ảnh, class và style nội tuyến cơ bản.
+- Chặn `script`, `style`, `iframe`, `object`, `embed`, form controls, SVG/MathML.
+- Chặn mọi thuộc tính sự kiện `on*` như `onclick`, `onerror`, `onload`.
+- Chặn URL `javascript:`, `vbscript:` và `data:`.
+- Bold / Italic / Heading / List / Quote / Link tự dùng Markdown hoặc HTML theo chế độ editor.
+- Search, tự phân loại và Sao chép chỉ dùng plain text, không lấy HTML thô.
+
+### Clean code
+
+Phần nội dung được tách khỏi `app.js`:
+
+- `content-renderer.js`: Markdown, HTML marker, sanitizer, render và plain text.
+- `content-renderer.css`: giao diện HTML editor và nội dung HTML.
+- `app.js`: workflow ứng dụng và trạng thái editor.
+
+Không cần chạy migration database mới.
