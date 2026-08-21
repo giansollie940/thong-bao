@@ -6,13 +6,14 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.16.0">
-  <link rel="stylesheet" href="controls.css?v=3.16.0">
-  <link rel="stylesheet" href="content-renderer.css?v=3.16.0">
-  <link rel="stylesheet" href="content-interactions.css?v=3.16.0">
-  <link rel="stylesheet" href="rich-editor.css?v=3.16.0">
-  <link rel="stylesheet" href="announcement-form.css?v=3.16.0">
-  <link rel="stylesheet" href="pet-companion.css?v=3.16.0">
+  <link rel="stylesheet" href="styles.css?v=3.16.1">
+  <link rel="stylesheet" href="controls.css?v=3.16.1">
+  <link rel="stylesheet" href="content-renderer.css?v=3.16.1">
+  <link rel="stylesheet" href="content-interactions.css?v=3.16.1">
+  <link rel="stylesheet" href="rich-editor.css?v=3.16.1">
+  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.1">
+  <link rel="stylesheet" href="announcement-form.css?v=3.16.1">
+  <link rel="stylesheet" href="pet-companion.css?v=3.16.1">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -396,7 +397,79 @@
               <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">
                 🔗
               </button>
+
+              <span class="format-separator" aria-hidden="true"></span>
+
+              <button
+                class="format-button format-button-wide editor-find-toggle"
+                id="announcement-find-toggle"
+                type="button"
+                data-editor-action="find-replace"
+                title="Tìm và thay thế (Ctrl/Cmd+F)"
+                aria-label="Tìm và thay thế"
+                aria-controls="announcement-find-panel"
+                aria-expanded="false"
+              >
+                🔎
+              </button>
             </div>
+
+            <section
+              class="editor-find-panel"
+              id="announcement-find-panel"
+              aria-label="Tìm và thay thế nội dung"
+              hidden
+            >
+              <div class="editor-find-fields">
+                <div class="editor-find-field">
+                  <label for="announcement-find-text">Tìm</label>
+                  <input
+                    id="announcement-find-text"
+                    type="search"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="Nhập nội dung cần tìm"
+                  >
+                </div>
+
+                <div class="editor-find-field">
+                  <label for="announcement-replace-text">Thay bằng</label>
+                  <input
+                    id="announcement-replace-text"
+                    type="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="Nội dung thay thế"
+                  >
+                </div>
+              </div>
+
+              <div class="editor-find-controls">
+                <label class="editor-find-option" for="announcement-find-case">
+                  <input id="announcement-find-case" type="checkbox">
+                  <span>Phân biệt hoa/thường</span>
+                </label>
+
+                <span
+                  class="editor-find-status"
+                  id="announcement-find-status"
+                  aria-live="polite"
+                >Nhập nội dung cần tìm.</span>
+
+                <div class="editor-find-actions" role="group" aria-label="Lệnh tìm và thay thế">
+                  <button class="button button-secondary editor-find-button" id="announcement-find-prev" type="button" title="Kết quả trước">↑ Trước</button>
+                  <button class="button button-secondary editor-find-button" id="announcement-find-next" type="button" title="Kết quả tiếp theo">↓ Tiếp</button>
+                  <button class="button button-secondary editor-find-button" id="announcement-replace-one" type="button">Thay</button>
+                  <button class="button button-primary editor-find-button" id="announcement-replace-all" type="button">Thay tất cả</button>
+                  <button class="icon-button editor-find-close" id="announcement-find-close" type="button" aria-label="Đóng tìm và thay thế" title="Đóng">×</button>
+                </div>
+              </div>
+
+              <p class="editor-find-hint">
+                <strong>Soạn thảo:</strong> tìm phần chữ hiển thị và giữ định dạng.
+                <strong>HTML:</strong> tìm trực tiếp trong mã nguồn.
+              </p>
+            </section>
 
             <div class="editor-panels">
               <section
@@ -941,10 +1014,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="content-renderer.js?v=3.16.0"></script>
-  <script src="content-interactions.js?v=3.16.0"></script>
-  <script src="rich-editor.js?v=3.16.0"></script>
-  <script src="app.js?v=3.16.0"></script>
-  <script src="pet-companion.js?v=3.16.0"></script>
+  <script src="content-renderer.js?v=3.16.1"></script>
+  <script src="content-interactions.js?v=3.16.1"></script>
+  <script src="rich-editor.js?v=3.16.1"></script>
+  <script src="editor-find-replace.js?v=3.16.1"></script>
+  <script src="app.js?v=3.16.1"></script>
+  <script src="pet-companion.js?v=3.16.1"></script>
 </body>
 </html>

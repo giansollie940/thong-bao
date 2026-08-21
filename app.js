@@ -50,6 +50,7 @@
   }
 
   let announcementEditor = null;
+  let announcementFindReplace = null;
 
   const state = {
     user: null,
@@ -1512,6 +1513,8 @@
         focus: false
       }
     );
+
+    announcementFindReplace?.reset();
     $("#announcement-image-alt").value = item?.image_alt || item?.title || "";
     $("#announcement-remove-image").checked = false;
 
@@ -2330,6 +2333,16 @@
 
     if (!announcementEditor) {
       throw new Error("Không khởi tạo được rich editor.");
+    }
+
+    announcementFindReplace =
+      window.WeeklyFindReplace?.create({
+        root: $("#announcement-rich-editor"),
+        onToast: showToast
+      });
+
+    if (!announcementFindReplace) {
+      throw new Error("Không khởi tạo được Find & Replace.");
     }
 
     initDialogs();

@@ -127,3 +127,17 @@ Không cần chạy migration mới khi nâng từ V3.15.8.
 ## QA
 
 Xem `QA-V3.16.md` để biết các bài kiểm thử đã chạy.
+
+
+## V3.16.1 — Find & Replace
+
+Trình đăng thông báo có thêm `🔎 Tìm & thay thế`.
+
+- `Ctrl/Cmd + F`: mở Tìm & thay thế.
+- `Ctrl/Cmd + H`: mở và chuyển thẳng đến ô Thay bằng.
+- `Enter`: kết quả tiếp theo; `Shift + Enter`: kết quả trước.
+- Soạn thảo trực quan: tìm/thay chữ hiển thị và giữ nguyên các thẻ định dạng xung quanh.
+- HTML: tìm/thay trực tiếp trong source HTML.
+- Hỗ trợ phân biệt hoa/thường, Thay một kết quả và Thay tất cả.
+
+Tính năng được tách riêng thành `editor-find-replace.js/css` để không làm phình `rich-editor.js`.

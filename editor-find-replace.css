@@ -1,0 +1,165 @@
+/* =========================================================
+   V3.16.1 — Find & Replace for announcement editor
+   ========================================================= */
+
+.editor-find-panel[hidden] {
+  display: none !important;
+}
+
+.editor-find-panel {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-soft) 78%, #fff),
+      var(--surface-solid)
+    );
+}
+
+.editor-find-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.editor-find-field {
+  min-width: 0;
+}
+
+.editor-find-field label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text);
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.editor-find-field input {
+  width: 100%;
+  min-height: 38px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-solid);
+  color: var(--text);
+  font: inherit;
+  font-size: .88rem;
+}
+
+.editor-find-field input:focus-visible {
+  outline:
+    3px solid
+    color-mix(in srgb, var(--brand) 22%, transparent);
+  outline-offset: 1px;
+  border-color:
+    color-mix(in srgb, var(--brand) 35%, var(--line));
+}
+
+.editor-find-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+}
+
+.editor-find-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.editor-find-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.editor-find-status {
+  flex: 1 1 150px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 750;
+}
+
+.editor-find-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.editor-find-button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  font-size: .76rem;
+}
+
+.editor-find-close {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+}
+
+.editor-find-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+
+.editor-find-toggle[aria-expanded="true"] {
+  border-color:
+    color-mix(in srgb, var(--brand) 28%, var(--line));
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+html[data-theme="dark"] .editor-find-panel {
+  border-color: #344f46;
+  background: #253a34;
+}
+
+html[data-theme="dark"] .editor-find-field input {
+  border-color: #3b574e;
+  background: #20322d;
+  color: #d6e6e0;
+}
+
+@media (max-width: 720px) {
+  .editor-find-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-find-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .editor-find-button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 460px) {
+  .editor-find-panel {
+    padding: 10px;
+  }
+
+  .editor-find-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .editor-find-close {
+    width: 100%;
+  }
+}
