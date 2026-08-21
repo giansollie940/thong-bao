@@ -104,11 +104,6 @@
     }
   }
 
-  function removeStorage(key) {
-    try {
-      localStorage.removeItem(key);
-    } catch {}
-  }
 
   function normalizeQuote(raw) {
     if (

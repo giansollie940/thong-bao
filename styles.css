@@ -4499,16 +4499,6 @@ body {
   color: var(--text);
 }
 
-.sidebar-logo {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #5bbd9a, #8fd8bd);
-  box-shadow: 0 8px 18px rgba(91, 189, 154, .19);
-  font-size: 1.2rem;
-}
 
 .sidebar-brand strong,
 .sidebar-brand small {
@@ -5383,27 +5373,6 @@ html[data-theme="dark"] .sidebar-action:hover {
     inset 0 1px 0 rgba(255,255,255,.24);
 }
 
-.button-primary::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -72%;
-  width: 54%;
-  height: 200%;
-  transform: rotate(18deg);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,.24),
-    transparent
-  );
-  transition: left 420ms ease;
-  pointer-events: none;
-}
-
-.button-primary:hover::after {
-  left: 125%;
-}
 
 .button-primary:hover {
   background: linear-gradient(135deg, #4eb18d, #379974);
@@ -5680,9 +5649,7 @@ html[data-theme="dark"] .sidebar-action-icon {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .button-primary::after {
-    display: none;
-  }
+  
 
   .button,
   .sidebar-link,

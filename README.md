@@ -74,16 +74,11 @@ Tối ưu riêng cửa sổ đăng/chỉnh sửa thông báo:
 - Preview nội dung được gom theo `requestAnimationFrame`
 - Mobile giảm thêm shadow để cuộn nhẹ hơn
 
-## Favicon mới
+## V3.12 — Cover Animation + Clean Controls
 
-Project đã được chèn favicon mới theo phong cách **giấy bay / gửi thông báo học tập** (`favicon.ico`, `favicon.png`, `favicon-64.png`).
-
-
-## Cập nhật favicon
-
-Bản này dùng favicon mới theo phong cách **phong bì thông báo học tập + chuông vàng**, gồm:
-
-- `favicon.ico`
-- `favicon.png`
-- `favicon-64.png`
-
+- Logo cạnh “Thông báo / Theo tuần” dùng chính `favicon-64.png`.
+- Hệ nút dùng một lớp tương tác thống nhất trong `controls.css`.
+- Cover Animation chạy từ trái sang phải bằng `background-size`, không làm thay đổi layout.
+- Thời lượng chuyển động 220ms và có `prefers-reduced-motion`.
+- Đã bỏ animation shine cũ của `.button-primary` và rule logo sidebar cũ để giảm ghi đè.
+- Không thay đổi database, RLS hay Edge Function.

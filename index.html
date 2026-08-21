@@ -6,10 +6,9 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.11.1">
-  <link rel="stylesheet" href="pet-companion.css?v=3.11.1">
-
-
+  <link rel="stylesheet" href="styles.css?v=3.12.0">
+  <link rel="stylesheet" href="controls.css?v=3.12.0">
+  <link rel="stylesheet" href="pet-companion.css?v=3.12.0">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -22,7 +21,9 @@
   <div class="app-shell">
     <aside class="app-sidebar" aria-label="Thanh điều hướng">
       <a class="sidebar-brand" href="#main-content" aria-label="Bảng thông báo theo tuần">
-        <span class="sidebar-logo" aria-hidden="true">🌿</span>
+        <span class="sidebar-logo" aria-hidden="true">
+          <img src="./favicon-64.png" alt="" width="44" height="44">
+        </span>
         <span>
           <strong>Thông báo</strong>
           <small>Theo tuần</small>
@@ -133,13 +134,9 @@
         </form>
       </header>
 
-
   <main id="main-content" class="dashboard-main">
 
-
     <aside class="status-banner hidden" id="connection-banner" aria-live="polite"></aside>
-
-
 
     <section class="current-section" id="current-section" aria-labelledby="current-heading">
       <div class="section-heading">
@@ -442,7 +439,6 @@ Ví dụ:
     </form>
   </dialog>
 
-
   <dialog id="bulk-dialog" class="modal">
     <form class="modal-card modal-card-wide" id="bulk-form">
       <div class="modal-heading">
@@ -623,8 +619,6 @@ Ví dụ:
     </article>
   </dialog>
 
-
-
   <dialog id="categories-dialog" class="modal">
     <form id="category-form" class="modal-card modal-card-wide">
       <input type="hidden" id="category-id">
@@ -706,7 +700,6 @@ Ví dụ:
       </figure>
     </article>
   </dialog>
-
 
   <!-- Minty pet companion -->
   <aside class="pet-companion" id="pet-companion" aria-label="Thú cưng đồng hành">
@@ -843,7 +836,7 @@ Ví dụ:
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=3.11.1"></script>
-  <script src="pet-companion.js?v=3.11.1"></script>
+  <script src="app.js?v=3.12.0"></script>
+  <script src="pet-companion.js?v=3.12.0"></script>
 </body>
 </html>
