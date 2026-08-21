@@ -4,30 +4,34 @@
   const HTML_MARKER = "<!--weekly-html:v1-->";
 
   const ALLOWED_TAGS = new Set([
-    "article", "section", "div", "span",
+    "article", "section", "nav", "div", "span",
     "p", "br", "hr",
     "strong", "b", "em", "i", "u", "s", "mark", "small",
     "h2", "h3", "h4", "h5",
     "ul", "ol", "li",
     "blockquote",
-    "a", "img", "figure", "figcaption",
+    "a", "button", "details", "summary",
+    "img", "figure", "figcaption",
     "table", "caption", "thead", "tbody", "tfoot", "tr", "th", "td",
-    "code", "pre", "kbd", "sup", "sub"
+    "code", "pre", "kbd", "sup", "sub", "style"
   ]);
 
   const DROP_WITH_CONTENT = new Set([
-    "script", "style", "iframe", "object", "embed",
+    "script", "iframe", "object", "embed",
     "svg", "math", "template", "form",
-    "input", "button", "select", "textarea",
+    "input", "select", "textarea",
     "meta", "link", "base"
   ]);
 
   const GLOBAL_ATTRIBUTES = new Set([
-    "class", "title", "style"
+    "id", "class", "title", "style",
+    "role", "tabindex", "hidden"
   ]);
 
   const TAG_ATTRIBUTES = {
     a: new Set(["href", "target", "rel"]),
+    button: new Set(["type", "disabled"]),
+    details: new Set(["open"]),
     img: new Set(["src", "alt", "width", "height", "loading", "decoding"]),
     th: new Set(["colspan", "rowspan", "scope"]),
     td: new Set(["colspan", "rowspan"])
@@ -69,7 +73,49 @@
     "padding-right",
     "padding-bottom",
     "padding-left",
-    "max-width"
+
+    "display",
+    "width",
+    "min-width",
+    "max-width",
+    "height",
+    "min-height",
+    "max-height",
+    "gap",
+    "row-gap",
+    "column-gap",
+
+    "flex",
+    "flex-direction",
+    "flex-wrap",
+    "flex-grow",
+    "flex-shrink",
+    "flex-basis",
+    "align-items",
+    "align-content",
+    "align-self",
+    "justify-content",
+    "justify-items",
+    "justify-self",
+    "order",
+
+    "grid-template-columns",
+    "grid-template-rows",
+    "grid-auto-columns",
+    "grid-auto-rows",
+    "grid-auto-flow",
+    "grid-column",
+    "grid-row",
+    "place-items",
+    "place-content",
+
+    "overflow",
+    "overflow-x",
+    "overflow-y",
+    "object-fit",
+    "aspect-ratio",
+    "vertical-align",
+    "opacity"
   ]);
 
   function escapeHtml(value = "") {
@@ -133,17 +179,94 @@
   function sanitizeInlineStyle(value = "") {
     const probe = document.createElement("span");
     probe.style.cssText = String(value);
+    return sanitizeCssStyleDeclaration(probe.style);
+  }
 
+  const STYLE_SCOPE =
+    ":is(.announcement-content.html-content, .visual-rich-editor)";
+
+  function isSafeAttributeName(name) {
+    return (
+      GLOBAL_ATTRIBUTES.has(name) ||
+      /^aria-[a-z0-9_-]+$/i.test(name) ||
+      /^data-[a-z0-9_-]+$/i.test(name)
+    );
+  }
+
+  function sanitizeId(value = "") {
+    return String(value)
+      .trim()
+      .replace(/[^\w:-]/g, "-")
+      .slice(0, 120);
+  }
+
+  function sanitizeTabIndex(value = "") {
+    return ["-1", "0"].includes(String(value).trim())
+      ? String(value).trim()
+      : "";
+  }
+
+  function splitSelectorList(selectorText = "") {
+    const selectors = [];
+    let current = "";
+    let depth = 0;
+    let quote = "";
+
+    for (let index = 0; index < selectorText.length; index += 1) {
+      const char = selectorText[index];
+
+      if (quote) {
+        current += char;
+
+        if (
+          char === quote &&
+          selectorText[index - 1] !== "\\"
+        ) {
+          quote = "";
+        }
+
+        continue;
+      }
+
+      if (char === '"' || char === "'") {
+        quote = char;
+        current += char;
+        continue;
+      }
+
+      if (char === "(" || char === "[") {
+        depth += 1;
+      } else if (char === ")" || char === "]") {
+        depth = Math.max(0, depth - 1);
+      }
+
+      if (char === "," && depth === 0) {
+        if (current.trim()) selectors.push(current.trim());
+        current = "";
+        continue;
+      }
+
+      current += char;
+    }
+
+    if (current.trim()) selectors.push(current.trim());
+    return selectors;
+  }
+
+  function sanitizeCssStyleDeclaration(style) {
     const cleaned = [];
 
     for (const property of SAFE_STYLE_PROPERTIES) {
-      const cssValue = probe.style.getPropertyValue(property).trim();
+      const cssValue =
+        style.getPropertyValue(property).trim();
+
       if (!cssValue) continue;
 
       if (
         /url\s*\(/i.test(cssValue) ||
         /expression\s*\(/i.test(cssValue) ||
         /javascript:/i.test(cssValue) ||
+        /vbscript:/i.test(cssValue) ||
         /@import/i.test(cssValue)
       ) {
         continue;
@@ -155,8 +278,92 @@
     return cleaned.join("; ");
   }
 
+  function scopeSelector(selector = "") {
+    const clean = String(selector).trim();
+    if (!clean) return "";
+
+    if (
+      clean.includes(".announcement-content.html-content") ||
+      clean.includes(".visual-rich-editor")
+    ) {
+      return clean;
+    }
+
+    return `${STYLE_SCOPE} ${clean}`;
+  }
+
+  function sanitizeStyleSheetText(value = "") {
+    if (
+      typeof CSSStyleSheet !== "function" ||
+      typeof CSSStyleSheet.prototype.replaceSync !== "function"
+    ) {
+      return "";
+    }
+
+    try {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(String(value));
+
+      const renderRules = rules => {
+        const safeRules = [];
+
+        for (const rule of rules) {
+          if (rule.type === 1) {
+            const declarations =
+              sanitizeCssStyleDeclaration(rule.style);
+
+            if (!declarations) continue;
+
+            const selectors = splitSelectorList(
+              rule.selectorText
+            )
+              .map(scopeSelector)
+              .filter(Boolean);
+
+            if (!selectors.length) continue;
+
+            safeRules.push(
+              `${selectors.join(", ")} { ${declarations}; }`
+            );
+
+            continue;
+          }
+
+          if (rule.type === 4) {
+            const nested = renderRules(rule.cssRules);
+
+            if (nested) {
+              safeRules.push(
+                `@media ${rule.conditionText} { ${nested} }`
+              );
+            }
+          }
+        }
+
+        return safeRules.join("\n");
+      };
+
+      return renderRules(sheet.cssRules);
+    } catch {
+      return "";
+    }
+  }
+
   function sanitizeElement(element) {
     const tag = element.tagName.toLowerCase();
+
+    if (tag === "style") {
+      const cleanCss =
+        sanitizeStyleSheetText(element.textContent);
+
+      if (cleanCss) {
+        element.textContent = cleanCss;
+      } else {
+        element.remove();
+      }
+
+      return;
+    }
 
     if (DROP_WITH_CONTENT.has(tag)) {
       element.remove();
@@ -192,8 +399,32 @@
         continue;
       }
 
-      if (!GLOBAL_ATTRIBUTES.has(name) && !allowedForTag.has(name)) {
+      if (!isSafeAttributeName(name) && !allowedForTag.has(name)) {
         element.removeAttribute(attribute.name);
+        continue;
+      }
+
+      if (name === "id") {
+        const cleanId = sanitizeId(value);
+
+        if (cleanId) {
+          element.setAttribute("id", cleanId);
+        } else {
+          element.removeAttribute("id");
+        }
+
+        continue;
+      }
+
+      if (name === "tabindex") {
+        const cleanTabIndex = sanitizeTabIndex(value);
+
+        if (cleanTabIndex) {
+          element.setAttribute("tabindex", cleanTabIndex);
+        } else {
+          element.removeAttribute("tabindex");
+        }
+
         continue;
       }
 
@@ -242,6 +473,10 @@
           element.removeAttribute("src");
         }
       }
+    }
+
+    if (tag === "button") {
+      element.setAttribute("type", "button");
     }
 
     if (tag === "a" && element.hasAttribute("href")) {
@@ -463,6 +698,234 @@
       : markdownToPlainText(source);
   }
 
+  const TAB_ROOT_SELECTOR = [
+    ".notice-tabs",
+    ".tabs",
+    "[data-tabs]",
+    "[data-notice-tabs]"
+  ].join(", ");
+
+  const TAB_BUTTON_SELECTOR = [
+    '[role="tab"]',
+    "[data-tab-target]",
+    "[data-tab]",
+    ".notice-tab-button",
+    ".tab-button",
+    ".tab-btn",
+    ".tab-buttons button",
+    ".tabs-nav button",
+    ".tab-list button",
+    '[role="tablist"] button'
+  ].join(", ");
+
+  const TAB_PANEL_SELECTOR = [
+    '[role="tabpanel"]',
+    "[data-tab-panel]",
+    ".notice-tab-panel",
+    ".tab-panel",
+    ".tab-content"
+  ].join(", ");
+
+  function tabTargetId(tab) {
+    const direct =
+      tab.getAttribute("aria-controls") ||
+      tab.getAttribute("data-tab-target") ||
+      tab.getAttribute("data-tab") ||
+      "";
+
+    if (direct) {
+      return direct.replace(/^#/, "");
+    }
+
+    const href = tab.getAttribute("href") || "";
+
+    return href.startsWith("#")
+      ? href.slice(1)
+      : "";
+  }
+
+  function tabParts(root) {
+    const tabs = [...root.querySelectorAll(
+      TAB_BUTTON_SELECTOR
+    )].filter(tab => tab.closest(TAB_ROOT_SELECTOR) === root);
+
+    const panels = [...root.querySelectorAll(
+      TAB_PANEL_SELECTOR
+    )].filter(panel => panel.closest(TAB_ROOT_SELECTOR) === root);
+
+    return { tabs, panels };
+  }
+
+  function activateTab(root, tab) {
+    const { tabs, panels } = tabParts(root);
+
+    if (tabs.length < 2 || panels.length < 2) return;
+
+    const explicitId = tabTargetId(tab);
+    const tabIndex = Math.max(0, tabs.indexOf(tab));
+
+    let activePanel = explicitId
+      ? panels.find(panel => panel.id === explicitId)
+      : null;
+
+    if (!activePanel) {
+      activePanel = panels[tabIndex] || panels[0];
+    }
+
+    tabs.forEach((item, index) => {
+      const active = item === tab;
+
+      item.setAttribute("role", "tab");
+      item.setAttribute("aria-selected", String(active));
+      item.tabIndex = active ? 0 : -1;
+      item.classList.toggle("is-active", active);
+
+      const panel = panels[index];
+
+      if (
+        panel &&
+        !item.hasAttribute("aria-controls") &&
+        panel.id
+      ) {
+        item.setAttribute("aria-controls", panel.id);
+      }
+    });
+
+    panels.forEach(panel => {
+      const active = panel === activePanel;
+
+      panel.setAttribute("role", "tabpanel");
+      panel.hidden = !active;
+      panel.classList.toggle("is-active", active);
+    });
+  }
+
+  function initializeTabRoot(root) {
+    if (!(root instanceof Element)) return;
+
+    const { tabs, panels } = tabParts(root);
+
+    if (tabs.length < 2 || panels.length < 2) return;
+
+    root.setAttribute("data-weekly-tabs-ready", "true");
+
+    const selected =
+      tabs.find(tab => tab.getAttribute("aria-selected") === "true") ||
+      tabs.find(tab => tab.classList.contains("active")) ||
+      tabs.find(tab => tab.classList.contains("is-active")) ||
+      tabs[0];
+
+    activateTab(root, selected);
+  }
+
+  function enhanceTabs(scope = document) {
+    if (!scope?.querySelectorAll) return;
+
+    if (
+      scope instanceof Element &&
+      scope.matches(TAB_ROOT_SELECTOR)
+    ) {
+      initializeTabRoot(scope);
+    }
+
+    for (const root of scope.querySelectorAll(
+      TAB_ROOT_SELECTOR
+    )) {
+      initializeTabRoot(root);
+    }
+  }
+
+  function scheduleTabEnhancement(scope = document) {
+    requestAnimationFrame(() => enhanceTabs(scope));
+  }
+
+  document.addEventListener("click", event => {
+    const tab = event.target.closest(TAB_BUTTON_SELECTOR);
+    if (!tab) return;
+
+    const root = tab.closest(TAB_ROOT_SELECTOR);
+    if (!root) return;
+
+    const { tabs, panels } = tabParts(root);
+    if (tabs.length < 2 || panels.length < 2) return;
+
+    event.preventDefault();
+    activateTab(root, tab);
+  });
+
+  document.addEventListener("keydown", event => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+      return;
+    }
+
+    const tab = event.target.closest('[role="tab"]');
+    if (!tab) return;
+
+    const root = tab.closest(TAB_ROOT_SELECTOR);
+    if (!root) return;
+
+    const { tabs } = tabParts(root);
+    const index = tabs.indexOf(tab);
+
+    if (index < 0 || tabs.length < 2) return;
+
+    let nextIndex = index;
+
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+
+    event.preventDefault();
+
+    const next = tabs[nextIndex];
+    activateTab(root, next);
+    next.focus();
+  });
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => scheduleTabEnhancement(document),
+      { once: true }
+    );
+  } else {
+    scheduleTabEnhancement(document);
+  }
+
+  const tabObserver = new MutationObserver(records => {
+    for (const record of records) {
+      if (record.addedNodes.length) {
+        scheduleTabEnhancement(document);
+        break;
+      }
+    }
+  });
+
+  const observeTabs = () => {
+    if (!document.body) return;
+
+    tabObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  };
+
+  if (document.body) {
+    observeTabs();
+  } else {
+    document.addEventListener(
+      "DOMContentLoaded",
+      observeTabs,
+      { once: true }
+    );
+  }
+
   window.WeeklyContent = Object.freeze({
     HTML_MARKER,
     safeLinkUrl,
@@ -473,6 +936,7 @@
     getStoredMode,
     getEditorContent,
     serializeEditorContent,
-    toPlainText
+    toPlainText,
+    enhanceTabs
   });
 })();

@@ -6452,14 +6452,13 @@ dialog::backdrop {
   box-shadow: none;
 }
 
-/* Không cần hiệu ứng chuyển động ở các field trong vùng cuộn dài. */
+/* Giảm animation trong form nhưng không ẩn control. */
 #announcement-dialog input,
 #announcement-dialog textarea,
 #announcement-dialog select,
-#announcement-dialog .format-button,
-#announcement-dialog
-
-/* Preview dài chỉ cần dựng khi thực sự xuất hiện gần viewport. */
+#announcement-dialog .format-button {
+  transition-duration: 80ms;
+}
 
 /* Khi dialog mở, dừng các phần nền không cần thiết phải animate/repaint. */
 html.has-open-dialog .pet-companion,

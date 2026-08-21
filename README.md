@@ -143,3 +143,30 @@ Không cần migration database mới.
 - Xóa selector `.format-preview-button` đã không còn dùng.
 
 Không thay đổi database, RLS hoặc Edge Function.
+
+
+## V3.15.2 — Form + HTML Layout Repair
+
+Sửa nguyên nhân thật của lỗi giao diện đăng thông báo:
+
+- `styles.css` có một selector bị đứt sau khi dọn `.format-preview-button`.
+  Selector đó vô tình nối với rule `visibility: hidden` của Minty và làm
+  input/select/textarea/format button trong dialog bị ẩn.
+- Đã sửa selector hỏng và thêm `announcement-form.css` làm layout chuẩn,
+  chỉ scope trong `#announcement-dialog`.
+
+Sửa HTML đăng lên bị chuyển thành giao diện dọc:
+
+- sanitizer trước đây bỏ `display`, `flex`, `grid`, `gap`, width/height...
+- V3.15.2 cho phép các CSS layout an toàn này.
+- Cho phép `<style>` nhưng CSS được sanitize và tự scope vào vùng nội dung,
+  không được tác động lên toàn trang.
+- Vẫn chặn script, iframe, form controls và mọi thuộc tính `on*`.
+- Cho phép `<button>` an toàn (`type="button"`) để làm tab.
+- Hỗ trợ tab không cần JavaScript tùy ý với các class/attribute phổ biến:
+  `.tabs`, `.tab-buttons`, `.tab-content`, `[role="tab"]`,
+  `[role="tabpanel"]`, `data-tab-target`, `aria-controls`.
+- Nếu HTML cũ dùng `onclick`, thuộc tính đó vẫn bị bỏ; hệ thống tab nội bộ
+  sẽ điều khiển các tab phổ biến theo target hoặc theo thứ tự.
+
+Không thay đổi database, RLS hoặc Edge Function.

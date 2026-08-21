@@ -132,3 +132,118 @@
     font-size: .9rem;
   }
 }
+
+
+/* =========================================================
+   V3.15.2 — Safe layout + tab components inside announcements
+   ========================================================= */
+
+.announcement-content.html-content
+:is(.notice-tabs, .tabs, [data-tabs], [data-notice-tabs]) {
+  width: 100%;
+  max-width: 100%;
+}
+
+.announcement-content.html-content
+:is(
+  .notice-tab-list,
+  .tab-buttons,
+  .tabs-nav,
+  .tab-list,
+  [role="tablist"]
+) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.announcement-content.html-content
+:is(
+  .notice-tab-button,
+  .tab-button,
+  .tab-btn,
+  [role="tab"]
+) {
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-solid);
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.announcement-content.html-content
+:is(
+  .notice-tab-button,
+  .tab-button,
+  .tab-btn,
+  [role="tab"]
+):is(:hover, :focus-visible) {
+  border-color:
+    color-mix(in srgb, var(--brand) 32%, var(--line));
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.announcement-content.html-content
+:is(
+  .notice-tab-button,
+  .tab-button,
+  .tab-btn,
+  [role="tab"]
+).is-active,
+.announcement-content.html-content
+[role="tab"][aria-selected="true"] {
+  border-color:
+    color-mix(in srgb, var(--brand) 38%, var(--line));
+  background:
+    linear-gradient(
+      135deg,
+      var(--brand-soft),
+      color-mix(in srgb, #edf6ff 55%, var(--surface-solid))
+    );
+  color: var(--brand-strong);
+}
+
+.announcement-content.html-content
+:is(
+  .notice-tab-panel,
+  .tab-panel,
+  .tab-content,
+  [role="tabpanel"]
+) {
+  width: 100%;
+  min-width: 0;
+}
+
+.announcement-content.html-content
+:is(
+  .notice-tab-panel,
+  .tab-panel,
+  .tab-content,
+  [role="tabpanel"]
+)[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-content.html-content
+  :is(
+    .notice-tab-button,
+    .tab-button,
+    .tab-btn,
+    [role="tab"]
+  ) {
+    transition: none !important;
+  }
+}

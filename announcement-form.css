@@ -1,0 +1,175 @@
+/* =========================================================
+   V3.15.2 — Announcement Form Canonical Layout
+   Scoped to #announcement-dialog to avoid legacy overrides.
+   ========================================================= */
+
+#announcement-dialog.modal {
+  width: min(1040px, calc(100vw - 24px));
+  max-width: 1040px;
+  max-height: 96vh;
+  max-height: 96dvh;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+}
+
+#announcement-dialog::backdrop {
+  background: rgba(18, 31, 52, .52);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+#announcement-dialog .modal-card {
+  width: 100%;
+  max-width: none;
+  max-height: min(92vh, 900px);
+  max-height: min(92dvh, 900px);
+  margin: 0;
+  padding: 24px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  visibility: visible;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface-solid);
+  box-shadow: 0 18px 54px rgba(25, 46, 40, .18);
+  scrollbar-gutter: stable;
+  overscroll-behavior-y: contain;
+}
+
+#announcement-dialog .modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+#announcement-dialog .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+#announcement-dialog .field {
+  min-width: 0;
+}
+
+#announcement-dialog .field-span-2 {
+  grid-column: 1 / -1;
+}
+
+#announcement-dialog .field > label,
+#announcement-dialog .editor-field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+#announcement-dialog
+:is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea
+) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  visibility: visible;
+}
+
+#announcement-dialog .checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding-top: 26px;
+}
+
+#announcement-dialog .checkbox-field input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+#announcement-dialog .checkbox-field label {
+  margin: 0;
+}
+
+#announcement-dialog .canvas-rich-editor {
+  width: 100%;
+  min-width: 0;
+}
+
+#announcement-dialog .canvas-format-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#announcement-dialog .modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  grid-column: 1 / -1;
+}
+
+#announcement-dialog .form-message {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  #announcement-dialog.modal {
+    width: calc(100vw - 10px);
+  }
+
+  #announcement-dialog .modal-card {
+    max-height: calc(100dvh - 10px);
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  #announcement-dialog .form-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  #announcement-dialog .field-span-2,
+  #announcement-dialog .modal-actions,
+  #announcement-dialog .form-message {
+    grid-column: auto;
+  }
+
+  #announcement-dialog .checkbox-field {
+    padding-top: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  #announcement-dialog.modal {
+    width: calc(100vw - 6px);
+  }
+
+  #announcement-dialog .modal-card {
+    max-height: calc(100dvh - 6px);
+    padding: 14px;
+    border-radius: 15px;
+  }
+
+  #announcement-dialog .modal-heading {
+    gap: 10px;
+  }
+
+  #announcement-dialog .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  #announcement-dialog .modal-actions .button {
+    width: 100%;
+  }
+}
