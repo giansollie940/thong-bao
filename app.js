@@ -49,6 +49,8 @@
     throw new Error("Thiếu content-interactions.js.");
   }
 
+  const appLoader = window.WeeklyLoader;
+
   let announcementEditor = null;
   let announcementFindReplace = null;
 
@@ -1390,36 +1392,48 @@
 
 
   async function loadData() {
-    if (!client) {
-      state.weeks = demoData.weeks;
-      state.announcements = demoData.announcements;
-      state.categories = DEFAULT_CATEGORIES;
-    } else {
-      const [
-        { data: weeks, error: weekError },
-        { data: items, error: itemError },
-        { data: categories, error: categoryError }
-      ] = await Promise.all([
-        client.from("weeks").select("*").order("start_date", { ascending: true }),
-        client.from("announcements").select("*").order("created_at", { ascending: false }),
-        client.from("categories").select("*").order("sort_order", { ascending: true })
-      ]);
+    const endLoading = appLoader?.begin({
+      title: "Đang tải bảng thông báo",
+      message: "Đang đồng bộ tuần, thông báo và chuyên mục...",
+      delay: 120,
+      minimum: 260,
+      blocking: false
+    });
 
-      if (weekError || itemError || categoryError) {
-        console.error(weekError || itemError || categoryError);
-        el.connectionBanner.className = "status-banner warning";
-        el.connectionBanner.textContent =
-          "Không tải được dữ liệu. Hãy kiểm tra config.js và schema.sql.";
-        return;
+    try {
+      if (!client) {
+        state.weeks = demoData.weeks;
+        state.announcements = demoData.announcements;
+        state.categories = DEFAULT_CATEGORIES;
+      } else {
+        const [
+          { data: weeks, error: weekError },
+          { data: items, error: itemError },
+          { data: categories, error: categoryError }
+        ] = await Promise.all([
+          client.from("weeks").select("*").order("start_date", { ascending: true }),
+          client.from("announcements").select("*").order("created_at", { ascending: false }),
+          client.from("categories").select("*").order("sort_order", { ascending: true })
+        ]);
+
+        if (weekError || itemError || categoryError) {
+          console.error(weekError || itemError || categoryError);
+          el.connectionBanner.className = "status-banner warning";
+          el.connectionBanner.textContent =
+            "Không tải được dữ liệu. Hãy kiểm tra config.js và schema.sql.";
+          return;
+        }
+
+        state.weeks = weeks || [];
+        state.announcements = items || [];
+        state.categories = categories || [];
       }
 
-      state.weeks = weeks || [];
-      state.announcements = items || [];
-      state.categories = categories || [];
+      [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek();
+      scheduleRenderAll();
+    } finally {
+      endLoading?.();
     }
-
-    [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek();
-    scheduleRenderAll();
   }
 
   async function loadSession() {
@@ -2349,9 +2363,11 @@
     initEvents();
     await loadSession();
     await loadData();
+    appLoader?.finishInitial?.();
   }
 
   init().catch(error => {
+    appLoader?.hide?.({ minimum: 180 });
     console.error(error);
     el.connectionBanner.className = "status-banner warning";
     el.connectionBanner.textContent =

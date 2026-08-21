@@ -6,14 +6,15 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.16.1">
-  <link rel="stylesheet" href="controls.css?v=3.16.1">
-  <link rel="stylesheet" href="content-renderer.css?v=3.16.1">
-  <link rel="stylesheet" href="content-interactions.css?v=3.16.1">
-  <link rel="stylesheet" href="rich-editor.css?v=3.16.1">
-  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.1">
-  <link rel="stylesheet" href="announcement-form.css?v=3.16.1">
-  <link rel="stylesheet" href="pet-companion.css?v=3.16.1">
+  <link rel="stylesheet" href="styles.css?v=3.16.2">
+  <link rel="stylesheet" href="controls.css?v=3.16.2">
+  <link rel="stylesheet" href="content-renderer.css?v=3.16.2">
+  <link rel="stylesheet" href="content-interactions.css?v=3.16.2">
+  <link rel="stylesheet" href="rich-editor.css?v=3.16.2">
+  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.2">
+  <link rel="stylesheet" href="loading-diamond.css?v=3.16.2">
+  <link rel="stylesheet" href="announcement-form.css?v=3.16.2">
+  <link rel="stylesheet" href="pet-companion.css?v=3.16.2">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -21,6 +22,29 @@
 
 </head>
 <body>
+  <div
+    class="diamond-loader is-visible is-blocking"
+    id="diamond-loader"
+    role="status"
+    aria-live="polite"
+    aria-busy="true"
+    aria-label="Đang tải dữ liệu"
+  >
+    <div class="diamond-loader-card">
+      <div class="diamond-loader-mark" aria-hidden="true">
+        <span class="diamond-piece diamond-piece-top"></span>
+        <span class="diamond-piece diamond-piece-right"></span>
+        <span class="diamond-piece diamond-piece-bottom"></span>
+        <span class="diamond-piece diamond-piece-left"></span>
+        <span class="diamond-core"></span>
+      </div>
+
+      <div class="diamond-loader-copy">
+        <strong id="diamond-loader-title">Đang tải bảng thông báo</strong>
+        <span id="diamond-loader-message">Chuẩn bị dữ liệu...</span>
+      </div>
+    </div>
+  </div>
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
 
   <div class="app-shell">
@@ -1014,11 +1038,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="content-renderer.js?v=3.16.1"></script>
-  <script src="content-interactions.js?v=3.16.1"></script>
-  <script src="rich-editor.js?v=3.16.1"></script>
-  <script src="editor-find-replace.js?v=3.16.1"></script>
-  <script src="app.js?v=3.16.1"></script>
-  <script src="pet-companion.js?v=3.16.1"></script>
+  <script src="content-renderer.js?v=3.16.2"></script>
+  <script src="content-interactions.js?v=3.16.2"></script>
+  <script src="rich-editor.js?v=3.16.2"></script>
+  <script src="editor-find-replace.js?v=3.16.2"></script>
+  <script src="loading-diamond.js?v=3.16.2"></script>
+  <script src="app.js?v=3.16.2"></script>
+  <script src="pet-companion.js?v=3.16.2"></script>
 </body>
 </html>

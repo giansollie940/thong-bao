@@ -141,3 +141,13 @@ Trình đăng thông báo có thêm `🔎 Tìm & thay thế`.
 - Hỗ trợ phân biệt hoa/thường, Thay một kết quả và Thay tất cả.
 
 Tính năng được tách riêng thành `editor-find-replace.js/css` để không làm phình `rich-editor.js`.
+
+
+## V3.16.2 — Diamond Loading Animation
+
+- Loader kim cương xuất hiện khi app khởi động và khi `loadData()` mất đủ lâu để người dùng nhận thấy.
+- Lần tải sau có delay ngắn để tránh nhấp nháy nếu dữ liệu trả về rất nhanh.
+- Có thời gian hiển thị tối thiểu để animation không bị giật.
+- Hỗ trợ light/dark theme và `prefers-reduced-motion`.
+- `role="status"`, `aria-live="polite"`, `aria-busy` được dùng cho accessibility.
+- Tách riêng `loading-diamond.js/css`, không đưa animation vào `app.js`.
