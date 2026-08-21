@@ -74,11 +74,20 @@ Tối ưu riêng cửa sổ đăng/chỉnh sửa thông báo:
 - Preview nội dung được gom theo `requestAnimationFrame`
 - Mobile giảm thêm shadow để cuộn nhẹ hơn
 
-## V3.12 — Cover Animation + Clean Controls
 
-- Logo cạnh “Thông báo / Theo tuần” dùng chính `favicon-64.png`.
-- Hệ nút dùng một lớp tương tác thống nhất trong `controls.css`.
-- Cover Animation chạy từ trái sang phải bằng `background-size`, không làm thay đổi layout.
-- Thời lượng chuyển động 220ms và có `prefers-reduced-motion`.
-- Đã bỏ animation shine cũ của `.button-primary` và rule logo sidebar cũ để giảm ghi đè.
-- Không thay đổi database, RLS hay Edge Function.
+
+## V3.13 — Smart Hover
+
+- Primary: gradient sweep
+- Secondary/Soft: fill + lift
+- Accent: cool gradient slide
+- Danger: warning glow
+- Glass: highlight wash
+- Ghost/Text: underline reveal
+- Sidebar: sliding rail + icon nudge
+- Category filter: pill fill
+- Icon button: micro scale + halo
+- Format toolbar: editor feedback
+- Input/Select/Textarea: border + focus glow
+- File input: animate nút chọn file
+- Có `prefers-reduced-motion`
