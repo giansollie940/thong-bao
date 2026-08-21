@@ -1,97 +1,89 @@
-# Bảng Thông Báo Theo Tuần
+# Bảng Thông Báo Theo Tuần — V3.11
 
-Ứng dụng web HTML/CSS/JavaScript + Supabase để quản lý thông báo theo tuần.
+Bản hoàn chỉnh tập trung vào **độ mượt** và **một file SQL duy nhất**.
 
-## Tính năng
+## Frontend
 
-- Thông báo theo tuần và nhiều năm học
-- Lưu trữ năm học cũ
-- Chuyên mục, tìm kiếm, ảnh đính kèm
-- Admin quản lý; Public chỉ đọc
-- Responsive + dark mode
-- Minty theo dõi chuột, cử động nhẹ khi cuộn
-- Click Minty để xem danh ngôn ngay từ thư viện local
-- Danh ngôn tự hiện mỗi 60 giây
-- Edge Function cập nhật thư viện danh ngôn ở nền
-- Không lặp câu đến khi xem hết kho
-- Mọi câu đều có nguồn
+- `index.html`
+- `styles.css`
+- `pet-companion.css`
+- `app.js`
+- `pet-companion.js`
+- `config.js` của project hiện tại
+- `mint-garden-hero.svg`
+- `mint-garden-pattern.svg`
 
-## Cấu trúc chính
+## SQL
 
-```text
-index.html
-styles.css
-pet-companion.css
-app.js
-pet-companion.js
-config.js
-mint-garden-hero.svg
-mint-garden-pattern.svg
-quote-cache.sql
-supabase/
-```
-
-## Cấu hình frontend
-
-Sao chép `config.example.js` thành `config.js` và điền:
-
-```js
-window.APP_CONFIG = {
-  SUPABASE_URL: "https://YOUR_PROJECT.supabase.co",
-  SUPABASE_KEY: "YOUR_PUBLISHABLE_OR_ANON_KEY"
-};
-```
-
-Không đưa `service_role` hoặc secret key vào frontend.
-
-
-## Phiên đăng nhập Admin
-
-Admin dùng `sessionStorage`:
-
-- Refresh trang: vẫn đăng nhập
-- Đóng hẳn phiên trình duyệt: session phía trình duyệt không được lưu lâu dài
-- Mở lại app ở phiên mới: cần đăng nhập lại
-- Bấm Đăng xuất: session bị xóa ngay
-
-V3.10.1 cũng xóa khóa Auth Supabase cũ từng được lưu trong `localStorage` trên trình duyệt đó.
-
-## Danh ngôn
-
-Frontend lấy danh ngôn trực tiếp từ `localStorage`, nên click Minty không phải chờ mạng.
-
-Edge Function `learning-quote` chỉ đồng bộ thư viện ở nền:
+Chỉ dùng:
 
 ```text
-localStorage
-    ↑
-learning-quote
-    ↑
-quote_cache
-    ↑
-Từ điển danh ngôn
+schema.sql
 ```
 
-Nếu nguồn online lỗi, app tiếp tục dùng cache hoặc thư viện fallback.
+`schema.sql` đã gom:
 
-## Supabase
+- Schema V1
+- Multi-year V2
+- Hiệu lực V2.2
+- Ảnh V2.4
+- Chuyên mục V2.8
+- Security hardening Admin-only
+- Storage policies
+- `quote_cache`
 
-Chạy `quote-cache.sql` một lần nếu project chưa có bảng `quote_cache`.
-
-Edge Function nằm tại:
+Admin UID hiện được cấu hình là:
 
 ```text
-supabase/functions/learning-quote/
+fd4c41d6-d19d-4ba4-b708-643094d1e671
 ```
 
-Function được cấu hình public trong:
+File được viết theo hướng chạy lại không xóa dữ liệu hiện có.
 
-```text
-supabase/config.toml
-```
+## Smooth UI
 
-## Deploy
+V3.11:
 
-Frontend có thể chạy trên GitHub Pages.
+- giảm `backdrop-filter` ở các thành phần lặp/fixed;
+- bỏ blur trên card thông báo;
+- dùng `content-visibility: auto` cho khu vực năm học/lưu trữ;
+- gom nhiều lần `renderAll()` trong cùng frame bằng `requestAnimationFrame`;
+- throttle phản ứng cuộn của Minty bằng `requestAnimationFrame`;
+- bỏ `filter` toàn khối trên Minty nhưng giữ shadow SVG.
 
-Phiên bản: **V3.10.1 Session Auth**
+## Auth
+
+Admin tiếp tục dùng `sessionStorage` như V3.10.1.
+
+## Edge Function
+
+Danh ngôn vẫn lấy từ thư viện local; Edge Function cập nhật thư viện ở nền.
+
+Phiên bản: **V3.11.1 Smooth Modal + One SQL**
+
+
+## V3.11.1 — Smooth Modal
+
+Tối ưu riêng cửa sổ đăng/chỉnh sửa thông báo:
+
+- Chỉ còn một vùng cuộn trong `.modal-card`
+- Bỏ blur của backdrop khi cuộn
+- Giảm shadow của modal
+- `overscroll-behavior: contain`
+- Dừng Minty trong lúc dialog mở
+- Preview nội dung được gom theo `requestAnimationFrame`
+- Mobile giảm thêm shadow để cuộn nhẹ hơn
+
+## Favicon mới
+
+Project đã được chèn favicon mới theo phong cách **giấy bay / gửi thông báo học tập** (`favicon.ico`, `favicon.png`, `favicon-64.png`).
+
+
+## Cập nhật favicon
+
+Bản này dùng favicon mới theo phong cách **phong bì thông báo học tập + chuông vàng**, gồm:
+
+- `favicon.ico`
+- `favicon.png`
+- `favicon-64.png`
+
