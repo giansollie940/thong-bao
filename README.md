@@ -151,3 +151,22 @@ Tính năng được tách riêng thành `editor-find-replace.js/css` để khô
 - Hỗ trợ light/dark theme và `prefers-reduced-motion`.
 - `role="status"`, `aria-live="polite"`, `aria-busy` được dùng cho accessibility.
 - Tách riêng `loading-diamond.js/css`, không đưa animation vào `app.js`.
+
+
+## V3.16.3 — Safe YouTube Embed
+
+Cho phép nhúng YouTube bằng `<iframe>` nhưng chỉ chấp nhận URL HTTPS dạng embed:
+
+- `youtube.com/embed/...`
+- `www.youtube.com/embed/...`
+- `youtube-nocookie.com/embed/...`
+- `www.youtube-nocookie.com/embed/...`
+
+Iframe từ domain khác, HTTP, `javascript:` hoặc URL YouTube không phải `/embed/`
+vẫn bị loại.
+
+Embed legacy kiểu `padding-top:56.25%` + iframe `position:absolute` được tự
+chuẩn hóa sang khung responsive `aspect-ratio:16/9`.
+
+Iframe được chuẩn hóa thêm `loading="lazy"`, `allowfullscreen`,
+`referrerpolicy="strict-origin-when-cross-origin"` và danh sách quyền media an toàn.

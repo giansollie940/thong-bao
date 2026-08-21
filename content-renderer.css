@@ -173,3 +173,64 @@
     font-size: .9rem;
   }
 }
+
+
+/* =========================================================
+   V3.16.3 — Safe YouTube embeds
+   ========================================================= */
+
+.announcement-content.html-content
+.weekly-video-frame,
+.visual-rich-editor
+.weekly-video-frame {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  margin: 12px 0;
+  padding: 0 !important;
+  border-radius: 12px;
+  background:
+    color-mix(
+      in srgb,
+      var(--surface-soft) 82%,
+      var(--surface-solid)
+    );
+}
+
+.announcement-content.html-content
+iframe.weekly-youtube-embed,
+.visual-rich-editor
+iframe.weekly-youtube-embed {
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: #000;
+}
+
+.announcement-content.html-content
+iframe.weekly-youtube-embed:focus-visible,
+.visual-rich-editor
+iframe.weekly-youtube-embed:focus-visible {
+  outline:
+    3px solid
+    color-mix(
+      in srgb,
+      var(--brand) 28%,
+      transparent
+    );
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  .announcement-content.html-content
+  .weekly-video-frame,
+  .visual-rich-editor
+  .weekly-video-frame {
+    border-radius: 9px;
+  }
+}

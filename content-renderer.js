@@ -11,13 +11,13 @@
     "ul", "ol", "li",
     "blockquote",
     "a", "button", "details", "summary",
-    "img", "figure", "figcaption",
+    "iframe", "img", "figure", "figcaption",
     "table", "caption", "thead", "tbody", "tfoot", "tr", "th", "td",
     "code", "pre", "kbd", "sup", "sub", "style"
   ]);
 
   const DROP_WITH_CONTENT = new Set([
-    "script", "iframe", "object", "embed",
+    "script", "object", "embed",
     "svg", "math", "template", "form",
     "input", "select", "textarea",
     "meta", "link", "base"
@@ -32,6 +32,10 @@
     a: new Set(["href", "target", "rel"]),
     button: new Set(["type", "disabled"]),
     details: new Set(["open", "name"]),
+    iframe: new Set([
+      "src", "title", "loading", "allow", "allowfullscreen",
+      "width", "height", "referrerpolicy"
+    ]),
     img: new Set(["src", "alt", "width", "height", "loading", "decoding"]),
     th: new Set(["colspan", "rowspan", "scope"]),
     td: new Set(["colspan", "rowspan"])
@@ -166,6 +170,48 @@
 
     return "";
   }
+
+  function safeYouTubeEmbedUrl(value = "") {
+    const raw = String(value).trim();
+    if (!raw) return "";
+
+    try {
+      const url = new URL(raw, window.location.href);
+
+      if (url.protocol !== "https:") {
+        return "";
+      }
+
+      const host = url.hostname.toLowerCase();
+      const allowedHost = new Set([
+        "youtube.com",
+        "www.youtube.com",
+        "youtube-nocookie.com",
+        "www.youtube-nocookie.com"
+      ]);
+
+      if (!allowedHost.has(host)) {
+        return "";
+      }
+
+      if (!url.pathname.startsWith("/embed/")) {
+        return "";
+      }
+
+      const videoId =
+        url.pathname.slice("/embed/".length).split("/")[0];
+
+      if (!/^[A-Za-z0-9_-]{6,64}$/.test(videoId)) {
+        return "";
+      }
+
+      url.hash = "";
+      return url.href;
+    } catch {
+      return "";
+    }
+  }
+
 
   function sanitizeClassName(value = "") {
     return String(value)
@@ -352,6 +398,19 @@
   function sanitizeElement(element) {
     const tag = element.tagName.toLowerCase();
 
+    if (tag === "iframe") {
+      const cleanSrc = safeYouTubeEmbedUrl(
+        element.getAttribute("src") || ""
+      );
+
+      if (!cleanSrc) {
+        element.remove();
+        return;
+      }
+
+      element.setAttribute("src", cleanSrc);
+    }
+
     if (tag === "style") {
       const cleanCss =
         sanitizeStyleSheetText(element.textContent);
@@ -428,6 +487,19 @@
         continue;
       }
 
+      if (tag === "iframe" && name === "src") {
+        const cleanUrl = safeYouTubeEmbedUrl(value);
+
+        if (cleanUrl) {
+          element.setAttribute("src", cleanUrl);
+        } else {
+          element.remove();
+          return;
+        }
+
+        continue;
+      }
+
       if (name === "class") {
         const cleanClass = sanitizeClassName(value);
 
@@ -479,6 +551,33 @@
       element.setAttribute("type", "button");
     }
 
+    if (tag === "iframe") {
+      element.classList.add("weekly-youtube-embed");
+
+      if (!element.getAttribute("title")) {
+        element.setAttribute("title", "Video YouTube");
+      }
+
+      element.setAttribute("loading", "lazy");
+      element.setAttribute(
+        "referrerpolicy",
+        "strict-origin-when-cross-origin"
+      );
+      element.setAttribute(
+        "allow",
+        [
+          "accelerometer",
+          "autoplay",
+          "clipboard-write",
+          "encrypted-media",
+          "gyroscope",
+          "picture-in-picture",
+          "web-share"
+        ].join("; ")
+      );
+      element.setAttribute("allowfullscreen", "");
+    }
+
     if (tag === "a" && element.hasAttribute("href")) {
       element.setAttribute("rel", "noopener noreferrer");
 
@@ -515,6 +614,35 @@
 
       if (node.nodeType === Node.ELEMENT_NODE) {
         sanitizeElement(node);
+      }
+    }
+
+    for (const iframe of [
+      ...template.content.querySelectorAll(
+        "iframe.weekly-youtube-embed"
+      )
+    ]) {
+      const parent = iframe.parentElement;
+
+      if (
+        parent &&
+        ["DIV", "FIGURE", "SECTION"].includes(parent.tagName) &&
+        parent.children.length === 1 &&
+        (parent.textContent || "").trim() === ""
+      ) {
+        parent.classList.add("weekly-video-frame");
+
+        parent.style.removeProperty("padding-top");
+        parent.style.removeProperty("padding-bottom");
+        parent.style.removeProperty("height");
+        parent.style.removeProperty("min-height");
+
+        iframe.style.removeProperty("position");
+        iframe.style.removeProperty("top");
+        iframe.style.removeProperty("right");
+        iframe.style.removeProperty("bottom");
+        iframe.style.removeProperty("left");
+        iframe.style.removeProperty("height");
       }
     }
 
