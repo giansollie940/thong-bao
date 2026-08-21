@@ -701,8 +701,27 @@
   const TAB_ROOT_SELECTOR = [
     ".notice-tabs",
     ".tabs",
+    ".tabs-container",
+    ".tab-container",
+    ".tabs-wrapper",
+    ".tab-wrapper",
+    ".tabbed-content",
     "[data-tabs]",
     "[data-notice-tabs]"
+  ].join(", ");
+
+  const TAB_NAV_SELECTOR = [
+    ".notice-tab-list",
+    ".tab-buttons",
+    ".tabs-nav",
+    ".tab-nav",
+    ".tab-list",
+    ".tab-links",
+    ".tab-menu",
+    ".nav-tabs",
+    '[role="tablist"]',
+    "ul.tabs",
+    "ol.tabs"
   ].join(", ");
 
   const TAB_BUTTON_SELECTOR = [
@@ -712,10 +731,23 @@
     ".notice-tab-button",
     ".tab-button",
     ".tab-btn",
+    ".tab-link",
     ".tab-buttons button",
     ".tabs-nav button",
+    ".tab-nav button",
     ".tab-list button",
-    '[role="tablist"] button'
+    ".tab-menu button",
+    ".nav-tabs button",
+    ".tab-buttons a[href^='#']",
+    ".tabs-nav a[href^='#']",
+    ".tab-nav a[href^='#']",
+    ".tab-list a[href^='#']",
+    ".tab-links a[href^='#']",
+    ".tab-menu a[href^='#']",
+    ".nav-tabs a[href^='#']",
+    "ul.tabs a[href^='#']",
+    "ol.tabs a[href^='#']",
+    '[role="tablist"] a[href^="#"]'
   ].join(", ");
 
   const TAB_PANEL_SELECTOR = [
@@ -723,7 +755,10 @@
     "[data-tab-panel]",
     ".notice-tab-panel",
     ".tab-panel",
-    ".tab-content"
+    ".tab-pane",
+    ".tab-content",
+    ".tabs-content",
+    ".tab-section"
   ].join(", ");
 
   function tabTargetId(tab) {
@@ -744,41 +779,149 @@
       : "";
   }
 
+  function candidateHasTabsAndPanels(candidate) {
+    if (!(candidate instanceof Element)) return false;
+
+    const tabs =
+      candidate.querySelectorAll(TAB_BUTTON_SELECTOR);
+    const panels =
+      candidate.querySelectorAll(TAB_PANEL_SELECTOR);
+
+    return tabs.length >= 2 && panels.length >= 2;
+  }
+
+  function resolveTabRoot(source) {
+    if (!(source instanceof Element)) return null;
+
+    const closestDeclared =
+      source.closest(TAB_ROOT_SELECTOR);
+
+    if (
+      closestDeclared &&
+      candidateHasTabsAndPanels(closestDeclared)
+    ) {
+      return closestDeclared;
+    }
+
+    let current =
+      closestDeclared?.parentElement ||
+      source.parentElement;
+
+    for (let depth = 0; current && depth < 4; depth += 1) {
+      if (candidateHasTabsAndPanels(current)) {
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    return closestDeclared || null;
+  }
+
   function tabParts(root) {
+    if (!(root instanceof Element)) {
+      return { tabs: [], panels: [] };
+    }
+
     const tabs = [...root.querySelectorAll(
       TAB_BUTTON_SELECTOR
-    )].filter(tab => tab.closest(TAB_ROOT_SELECTOR) === root);
+    )].filter(tab => resolveTabRoot(tab) === root);
 
     const panels = [...root.querySelectorAll(
       TAB_PANEL_SELECTOR
-    )].filter(panel => panel.closest(TAB_ROOT_SELECTOR) === root);
+    )].filter(panel => {
+      const nested = panel.closest(TAB_ROOT_SELECTOR);
+
+      if (!nested) return true;
+
+      const resolved = resolveTabRoot(nested);
+      return resolved === root;
+    });
 
     return { tabs, panels };
+  }
+
+  function findPanelForTab(tab, tabs, panels) {
+    const explicitId = tabTargetId(tab);
+
+    if (explicitId) {
+      const exact = panels.find(
+        panel => panel.id === explicitId
+      );
+
+      if (exact) return exact;
+    }
+
+    const index = Math.max(0, tabs.indexOf(tab));
+    return panels[index] || panels[0] || null;
+  }
+
+  function normalizeTabNavigation(root, tabs) {
+    const navs = new Set();
+
+    for (const tab of tabs) {
+      const nav =
+        tab.closest(TAB_NAV_SELECTOR) ||
+        tab.parentElement?.closest("ul, ol, nav");
+
+      if (nav && root.contains(nav)) {
+        navs.add(nav);
+      }
+    }
+
+    for (const nav of navs) {
+      nav.setAttribute("role", "tablist");
+      nav.classList.add("weekly-tab-list");
+    }
+
+    for (const tab of tabs) {
+      tab.classList.add("weekly-tab-button");
+
+      const listItem = tab.closest("li");
+
+      if (
+        listItem &&
+        root.contains(listItem)
+      ) {
+        listItem.classList.add(
+          "weekly-tab-item"
+        );
+      }
+    }
   }
 
   function activateTab(root, tab) {
     const { tabs, panels } = tabParts(root);
 
-    if (tabs.length < 2 || panels.length < 2) return;
-
-    const explicitId = tabTargetId(tab);
-    const tabIndex = Math.max(0, tabs.indexOf(tab));
-
-    let activePanel = explicitId
-      ? panels.find(panel => panel.id === explicitId)
-      : null;
-
-    if (!activePanel) {
-      activePanel = panels[tabIndex] || panels[0];
+    if (tabs.length < 2 || panels.length < 2) {
+      return;
     }
+
+    const activePanel =
+      findPanelForTab(tab, tabs, panels);
+
+    if (!activePanel) return;
+
+    normalizeTabNavigation(root, tabs);
 
     tabs.forEach((item, index) => {
       const active = item === tab;
 
       item.setAttribute("role", "tab");
-      item.setAttribute("aria-selected", String(active));
+      item.setAttribute(
+        "aria-selected",
+        String(active)
+      );
       item.tabIndex = active ? 0 : -1;
-      item.classList.toggle("is-active", active);
+
+      item.classList.toggle(
+        "is-active",
+        active
+      );
+      item.classList.toggle(
+        "active",
+        active
+      );
 
       const panel = panels[index];
 
@@ -787,16 +930,30 @@
         !item.hasAttribute("aria-controls") &&
         panel.id
       ) {
-        item.setAttribute("aria-controls", panel.id);
+        item.setAttribute(
+          "aria-controls",
+          panel.id
+        );
       }
     });
 
     panels.forEach(panel => {
       const active = panel === activePanel;
 
-      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute(
+        "role",
+        "tabpanel"
+      );
       panel.hidden = !active;
-      panel.classList.toggle("is-active", active);
+
+      panel.classList.toggle(
+        "is-active",
+        active
+      );
+      panel.classList.toggle(
+        "active",
+        active
+      );
     });
   }
 
@@ -805,88 +962,153 @@
 
     const { tabs, panels } = tabParts(root);
 
-    if (tabs.length < 2 || panels.length < 2) return;
+    if (tabs.length < 2 || panels.length < 2) {
+      return;
+    }
 
-    root.setAttribute("data-weekly-tabs-ready", "true");
+    root.setAttribute(
+      "data-weekly-tabs-ready",
+      "true"
+    );
+
+    normalizeTabNavigation(root, tabs);
 
     const selected =
-      tabs.find(tab => tab.getAttribute("aria-selected") === "true") ||
-      tabs.find(tab => tab.classList.contains("active")) ||
-      tabs.find(tab => tab.classList.contains("is-active")) ||
+      tabs.find(
+        tab =>
+          tab.getAttribute("aria-selected") === "true"
+      ) ||
+      tabs.find(
+        tab => tab.classList.contains("is-active")
+      ) ||
+      tabs.find(
+        tab => tab.classList.contains("active")
+      ) ||
       tabs[0];
 
     activateTab(root, selected);
   }
 
-  function enhanceTabs(scope = document) {
-    if (!scope?.querySelectorAll) return;
+  function collectTabRoots(scope = document) {
+    const roots = new Set();
 
     if (
       scope instanceof Element &&
       scope.matches(TAB_ROOT_SELECTOR)
     ) {
-      initializeTabRoot(scope);
+      const resolved = resolveTabRoot(scope);
+
+      if (resolved) roots.add(resolved);
     }
 
-    for (const root of scope.querySelectorAll(
+    for (const candidate of scope.querySelectorAll(
       TAB_ROOT_SELECTOR
     )) {
+      const resolved = resolveTabRoot(candidate);
+
+      if (resolved) roots.add(resolved);
+    }
+
+    for (const tab of scope.querySelectorAll(
+      TAB_BUTTON_SELECTOR
+    )) {
+      const resolved = resolveTabRoot(tab);
+
+      if (resolved) roots.add(resolved);
+    }
+
+    return [...roots];
+  }
+
+  function enhanceTabs(scope = document) {
+    if (!scope?.querySelectorAll) return;
+
+    for (const root of collectTabRoots(scope)) {
       initializeTabRoot(root);
     }
   }
 
   function scheduleTabEnhancement(scope = document) {
-    requestAnimationFrame(() => enhanceTabs(scope));
+    requestAnimationFrame(
+      () => enhanceTabs(scope)
+    );
   }
 
-  document.addEventListener("click", event => {
-    const tab = event.target.closest(TAB_BUTTON_SELECTOR);
-    if (!tab) return;
+  document.addEventListener(
+    "click",
+    event => {
+      const tab =
+        event.target.closest(TAB_BUTTON_SELECTOR);
 
-    const root = tab.closest(TAB_ROOT_SELECTOR);
-    if (!root) return;
+      if (!tab) return;
 
-    const { tabs, panels } = tabParts(root);
-    if (tabs.length < 2 || panels.length < 2) return;
+      const root = resolveTabRoot(tab);
 
-    event.preventDefault();
-    activateTab(root, tab);
-  });
+      if (!root) return;
 
-  document.addEventListener("keydown", event => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
-      return;
+      const { tabs, panels } = tabParts(root);
+
+      if (tabs.length < 2 || panels.length < 2) {
+        return;
+      }
+
+      event.preventDefault();
+      activateTab(root, tab);
     }
+  );
 
-    const tab = event.target.closest('[role="tab"]');
-    if (!tab) return;
+  document.addEventListener(
+    "keydown",
+    event => {
+      if (
+        ![
+          "ArrowLeft",
+          "ArrowRight",
+          "Home",
+          "End"
+        ].includes(event.key)
+      ) {
+        return;
+      }
 
-    const root = tab.closest(TAB_ROOT_SELECTOR);
-    if (!root) return;
+      const tab =
+        event.target.closest('[role="tab"]');
 
-    const { tabs } = tabParts(root);
-    const index = tabs.indexOf(tab);
+      if (!tab) return;
 
-    if (index < 0 || tabs.length < 2) return;
+      const root = resolveTabRoot(tab);
+      if (!root) return;
 
-    let nextIndex = index;
+      const { tabs } = tabParts(root);
+      const index = tabs.indexOf(tab);
 
-    if (event.key === "ArrowRight") {
-      nextIndex = (index + 1) % tabs.length;
-    } else if (event.key === "ArrowLeft") {
-      nextIndex = (index - 1 + tabs.length) % tabs.length;
-    } else if (event.key === "Home") {
-      nextIndex = 0;
-    } else if (event.key === "End") {
-      nextIndex = tabs.length - 1;
+      if (index < 0 || tabs.length < 2) {
+        return;
+      }
+
+      let nextIndex = index;
+
+      if (event.key === "ArrowRight") {
+        nextIndex =
+          (index + 1) % tabs.length;
+      } else if (event.key === "ArrowLeft") {
+        nextIndex =
+          (index - 1 + tabs.length) %
+          tabs.length;
+      } else if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = tabs.length - 1;
+      }
+
+      event.preventDefault();
+
+      const next = tabs[nextIndex];
+
+      activateTab(root, next);
+      next.focus();
     }
-
-    event.preventDefault();
-
-    const next = tabs[nextIndex];
-    activateTab(root, next);
-    next.focus();
-  });
+  );
 
   if (document.readyState === "loading") {
     document.addEventListener(
@@ -898,22 +1120,26 @@
     scheduleTabEnhancement(document);
   }
 
-  const tabObserver = new MutationObserver(records => {
-    for (const record of records) {
-      if (record.addedNodes.length) {
-        scheduleTabEnhancement(document);
-        break;
+  const tabObserver =
+    new MutationObserver(records => {
+      for (const record of records) {
+        if (record.addedNodes.length) {
+          scheduleTabEnhancement(document);
+          break;
+        }
       }
-    }
-  });
+    });
 
   const observeTabs = () => {
     if (!document.body) return;
 
-    tabObserver.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
+    tabObserver.observe(
+      document.body,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
   };
 
   if (document.body) {

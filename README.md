@@ -170,3 +170,26 @@ Sửa HTML đăng lên bị chuyển thành giao diện dọc:
   sẽ điều khiển các tab phổ biến theo target hoặc theo thứ tự.
 
 Không thay đổi database, RLS hoặc Edge Function.
+
+
+## V3.15.3 — Tab Compatibility Fix
+
+Sửa tab dạng danh sách bị hiện thành các dòng dọc có dấu bullet.
+
+Hỗ trợ thêm:
+
+- `<ul class="tabs"><li><a href="#panel">...</a></li></ul>`
+- `.nav-tabs`
+- `.tab-links`
+- `.tab-menu`
+- `.tab-nav`
+- `.tab-pane`
+- `.tabs-content`
+- anchor `href="#id"` dùng làm tab
+- panel nằm cùng wrapper nhưng không nhất thiết nằm bên trong `<ul class="tabs">`
+
+Editor tự thêm class nội bộ `weekly-tab-list`, `weekly-tab-item`,
+`weekly-tab-button` để bỏ bullet và hiển thị thanh tab ngang.
+
+JavaScript tùy ý trong HTML vẫn bị chặn; hệ thống tab nội bộ xử lý
+click và bàn phím thay cho `onclick`.

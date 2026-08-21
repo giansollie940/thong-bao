@@ -247,3 +247,163 @@
     transition: none !important;
   }
 }
+
+
+/* =========================================================
+   V3.15.3 — UL/LI/A tab compatibility
+   Fixes list-style tabs that were rendered vertically.
+   ========================================================= */
+
+.announcement-content.html-content
+.weekly-tab-list,
+.announcement-content.html-content
+:is(
+  ul.tabs,
+  ol.tabs,
+  .tab-links,
+  .tab-menu,
+  .nav-tabs
+) {
+  display: flex !important;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.announcement-content.html-content
+.weekly-tab-item,
+.announcement-content.html-content
+:is(
+  ul.tabs,
+  ol.tabs,
+  .tab-links,
+  .tab-menu,
+  .nav-tabs
+) > li {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.announcement-content.html-content
+.weekly-tab-item::marker,
+.announcement-content.html-content
+:is(
+  ul.tabs,
+  ol.tabs,
+  .tab-links,
+  .tab-menu,
+  .nav-tabs
+) > li::marker {
+  content: "";
+}
+
+.announcement-content.html-content
+.weekly-tab-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  width: auto;
+  max-width: 100%;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--surface-solid);
+  font: inherit;
+  font-weight: 800;
+  line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.announcement-content.html-content
+.weekly-tab-button:is(:hover, :focus-visible) {
+  border-color:
+    color-mix(in srgb, var(--brand) 30%, var(--line));
+  color: var(--brand-strong);
+  background:
+    color-mix(
+      in srgb,
+      var(--brand-soft) 68%,
+      var(--surface-solid)
+    );
+}
+
+.announcement-content.html-content
+.weekly-tab-button.is-active,
+.announcement-content.html-content
+.weekly-tab-button[aria-selected="true"] {
+  border-color:
+    color-mix(in srgb, var(--brand) 42%, var(--line));
+  color: var(--brand-strong);
+  background:
+    linear-gradient(
+      135deg,
+      var(--brand-soft),
+      color-mix(
+        in srgb,
+        #edf6ff 58%,
+        var(--surface-solid)
+      )
+    );
+  box-shadow:
+    0 5px 14px rgba(50, 118, 96, .08);
+}
+
+.announcement-content.html-content
+.weekly-tab-button:focus-visible {
+  outline:
+    3px solid
+    color-mix(
+      in srgb,
+      var(--brand) 24%,
+      transparent
+    );
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .announcement-content.html-content
+  .weekly-tab-list,
+  .announcement-content.html-content
+  :is(
+    ul.tabs,
+    ol.tabs,
+    .tab-links,
+    .tab-menu,
+    .nav-tabs
+  ) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .announcement-content.html-content
+  .weekly-tab-item,
+  .announcement-content.html-content
+  :is(
+    ul.tabs,
+    ol.tabs,
+    .tab-links,
+    .tab-menu,
+    .nav-tabs
+  ) > li {
+    flex: 0 0 auto;
+  }
+
+  .announcement-content.html-content
+  .weekly-tab-button {
+    white-space: nowrap;
+  }
+}
