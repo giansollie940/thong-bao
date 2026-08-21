@@ -31,7 +31,7 @@
   const TAG_ATTRIBUTES = {
     a: new Set(["href", "target", "rel"]),
     button: new Set(["type", "disabled"]),
-    details: new Set(["open"]),
+    details: new Set(["open", "name"]),
     img: new Set(["src", "alt", "width", "height", "loading", "decoding"]),
     th: new Set(["colspan", "rowspan", "scope"]),
     td: new Set(["colspan", "rowspan"])
@@ -698,362 +698,685 @@
       : markdownToPlainText(source);
   }
 
-  const TAB_ROOT_SELECTOR = [
-    ".notice-tabs",
-    ".tabs",
-    ".tabs-container",
-    ".tab-container",
-    ".tabs-wrapper",
-    ".tab-wrapper",
-    ".tabbed-content",
-    "[data-tabs]",
-    "[data-notice-tabs]"
-  ].join(", ");
+  /* =======================================================
+     V3.15.5 — Universal Tabs Adapter
+     Canvas LMS / Bootstrap / Foundation / WAI-ARIA /
+     generic target-based tabs.
+     ======================================================= */
 
-  const TAB_NAV_SELECTOR = [
-    ".notice-tab-list",
-    ".tab-buttons",
-    ".tabs-nav",
-    ".tab-nav",
-    ".tab-list",
-    ".tab-links",
-    ".tab-menu",
-    ".nav-tabs",
-    '[role="tablist"]',
-    "ul.tabs",
-    "ol.tabs"
-  ].join(", ");
-
-  const TAB_BUTTON_SELECTOR = [
-    '[role="tab"]',
+  const UNIVERSAL_TAB_TRIGGER = [
+    "a[href^='#']",
+    "button[aria-controls]",
     "[data-tab-target]",
-    "[data-tab]",
-    ".notice-tab-button",
-    ".tab-button",
-    ".tab-btn",
-    ".tab-link",
-    ".tab-buttons button",
-    ".tabs-nav button",
-    ".tab-nav button",
-    ".tab-list button",
-    ".tab-menu button",
-    ".nav-tabs button",
-    ".tab-buttons a[href^='#']",
-    ".tabs-nav a[href^='#']",
-    ".tab-nav a[href^='#']",
-    ".tab-list a[href^='#']",
-    ".tab-links a[href^='#']",
-    ".tab-menu a[href^='#']",
-    ".nav-tabs a[href^='#']",
-    "ul.tabs a[href^='#']",
-    "ol.tabs a[href^='#']",
-    '[role="tablist"] a[href^="#"]'
+    "[data-target]",
+    "[data-bs-target]",
+    "[data-tab]"
   ].join(", ");
 
-  const TAB_PANEL_SELECTOR = [
+  const UNIVERSAL_TAB_PANEL = [
     '[role="tabpanel"]',
     "[data-tab-panel]",
     ".notice-tab-panel",
     ".tab-panel",
     ".tab-pane",
-    ".tab-content",
-    ".tabs-content",
-    ".tab-section"
+    ".tabs-panel",
+    ".tab-section",
+    ".ui.tab"
   ].join(", ");
 
-  function tabTargetId(tab) {
+  const tabGroups = new Map();
+  let tabGroupUid = 0;
+  let tabElementUid = 0;
+
+  function nextUniversalId(prefix) {
+    tabElementUid += 1;
+    return `${prefix}-${tabElementUid}`;
+  }
+
+  function nextTabGroupId() {
+    tabGroupUid += 1;
+    return `weekly-tab-group-${tabGroupUid}`;
+  }
+
+  function normalizeTarget(value = "") {
+    const raw = String(value).trim();
+    if (!raw) return "";
+
+    const hashIndex = raw.indexOf("#");
+
+    if (hashIndex >= 0) {
+      return raw.slice(hashIndex + 1);
+    }
+
+    return raw;
+  }
+
+  function triggerTarget(trigger) {
+    if (!(trigger instanceof Element)) return "";
+
     const direct =
-      tab.getAttribute("aria-controls") ||
-      tab.getAttribute("data-tab-target") ||
-      tab.getAttribute("data-tab") ||
+      trigger.getAttribute("aria-controls") ||
+      trigger.getAttribute("data-tab-target") ||
+      trigger.getAttribute("data-bs-target") ||
+      trigger.getAttribute("data-target") ||
       "";
 
     if (direct) {
-      return direct.replace(/^#/, "");
+      return normalizeTarget(direct);
     }
 
-    const href = tab.getAttribute("href") || "";
-
-    return href.startsWith("#")
-      ? href.slice(1)
-      : "";
+    return normalizeTarget(
+      trigger.getAttribute("href") || ""
+    );
   }
 
-  function candidateHasTabsAndPanels(candidate) {
-    if (!(candidate instanceof Element)) return false;
+  function triggerKey(trigger) {
+    if (!(trigger instanceof Element)) return "";
 
-    const tabs =
-      candidate.querySelectorAll(TAB_BUTTON_SELECTOR);
-    const panels =
-      candidate.querySelectorAll(TAB_PANEL_SELECTOR);
-
-    return tabs.length >= 2 && panels.length >= 2;
+    return (
+      trigger.getAttribute("data-tab") ||
+      trigger.getAttribute("data-tab-key") ||
+      ""
+    ).trim();
   }
 
-  function resolveTabRoot(source) {
-    if (!(source instanceof Element)) return null;
+  function panelKey(panel) {
+    if (!(panel instanceof Element)) return "";
 
-    const closestDeclared =
-      source.closest(TAB_ROOT_SELECTOR);
-
-    if (
-      closestDeclared &&
-      candidateHasTabsAndPanels(closestDeclared)
-    ) {
-      return closestDeclared;
-    }
-
-    let current =
-      closestDeclared?.parentElement ||
-      source.parentElement;
-
-    for (let depth = 0; current && depth < 4; depth += 1) {
-      if (candidateHasTabsAndPanels(current)) {
-        return current;
-      }
-
-      current = current.parentElement;
-    }
-
-    return closestDeclared || null;
+    return (
+      panel.getAttribute("data-tab") ||
+      panel.getAttribute("data-tab-panel") ||
+      panel.getAttribute("data-tab-key") ||
+      ""
+    ).trim();
   }
 
-  function tabParts(root) {
-    if (!(root instanceof Element)) {
-      return { tabs: [], panels: [] };
-    }
+  function idTargetWithin(root, id) {
+    if (!(root instanceof Element) || !id) return null;
 
-    const tabs = [...root.querySelectorAll(
-      TAB_BUTTON_SELECTOR
-    )].filter(tab => resolveTabRoot(tab) === root);
+    const target = document.getElementById(id);
 
-    const panels = [...root.querySelectorAll(
-      TAB_PANEL_SELECTOR
-    )].filter(panel => {
-      const nested = panel.closest(TAB_ROOT_SELECTOR);
+    return target && root.contains(target)
+      ? target
+      : null;
+  }
 
-      if (!nested) return true;
+  function likelyPanelPool(root, nav) {
+    if (!(root instanceof Element)) return [];
 
-      const resolved = resolveTabRoot(nested);
-      return resolved === root;
+    const panels = [
+      ...root.querySelectorAll(UNIVERSAL_TAB_PANEL)
+    ].filter(panel => {
+      if (nav?.contains(panel)) return false;
+
+      const existingGroup =
+        panel.getAttribute("data-weekly-tab-group");
+
+      return !existingGroup;
     });
 
-    return { tabs, panels };
+    return panels;
   }
 
-  function findPanelForTab(tab, tabs, panels) {
-    const explicitId = tabTargetId(tab);
+  function panelForTrigger(
+    root,
+    trigger,
+    panelPool,
+    index
+  ) {
+    const targetId = triggerTarget(trigger);
 
-    if (explicitId) {
-      const exact = panels.find(
-        panel => panel.id === explicitId
-      );
+    if (targetId) {
+      const target = idTargetWithin(root, targetId);
 
-      if (exact) return exact;
-    }
-
-    const index = Math.max(0, tabs.indexOf(tab));
-    return panels[index] || panels[0] || null;
-  }
-
-  function normalizeTabNavigation(root, tabs) {
-    const navs = new Set();
-
-    for (const tab of tabs) {
-      const nav =
-        tab.closest(TAB_NAV_SELECTOR) ||
-        tab.parentElement?.closest("ul, ol, nav");
-
-      if (nav && root.contains(nav)) {
-        navs.add(nav);
+      if (
+        target &&
+        target !== trigger &&
+        !trigger.contains(target)
+      ) {
+        return target;
       }
     }
 
-    for (const nav of navs) {
-      nav.setAttribute("role", "tablist");
-      nav.classList.add("weekly-tab-list");
+    const key = triggerKey(trigger);
+
+    if (key) {
+      const byKey = panelPool.find(
+        panel => panelKey(panel) === key
+      );
+
+      if (byKey) return byKey;
     }
 
-    for (const tab of tabs) {
-      tab.classList.add("weekly-tab-button");
+    return panelPool[index] || null;
+  }
 
-      const listItem = tab.closest("li");
+  function uniqueElements(elements) {
+    const seen = new Set();
+
+    return elements.filter(element => {
+      if (!element || seen.has(element)) {
+        return false;
+      }
+
+      seen.add(element);
+      return true;
+    });
+  }
+
+  function createTabGroup({
+    root,
+    nav,
+    triggers
+  }) {
+    if (
+      !(root instanceof Element) ||
+      !(nav instanceof Element)
+    ) {
+      return null;
+    }
+
+    const cleanTriggers = uniqueElements(
+      triggers
+        .filter(trigger => root.contains(trigger))
+        .filter(trigger => !trigger.hasAttribute(
+          "data-weekly-tab-group"
+        ))
+    );
+
+    if (cleanTriggers.length < 2) return null;
+
+    const panelPool = likelyPanelPool(root, nav);
+
+    const mappedPanels = cleanTriggers.map(
+      (trigger, index) =>
+        panelForTrigger(
+          root,
+          trigger,
+          panelPool,
+          index
+        )
+    );
+
+    const uniquePanels = uniqueElements(
+      mappedPanels.filter(Boolean)
+    );
+
+    if (uniquePanels.length < 2) return null;
+
+    const groupId = nextTabGroupId();
+
+    root.classList.add("weekly-tabs-root");
+    nav.classList.add("weekly-tab-list");
+    nav.setAttribute("role", "tablist");
+    nav.setAttribute(
+      "data-weekly-tab-group",
+      groupId
+    );
+
+    const pairs = [];
+
+    cleanTriggers.forEach((trigger, index) => {
+      const panel = mappedPanels[index];
+
+      if (!panel) return;
+
+      trigger.classList.add(
+        "weekly-tab-button"
+      );
+      trigger.setAttribute(
+        "data-weekly-tab-group",
+        groupId
+      );
+      trigger.setAttribute("role", "tab");
+
+      if (!trigger.id) {
+        trigger.id =
+          nextUniversalId("weekly-tab");
+      }
+
+      const item = trigger.closest("li");
 
       if (
-        listItem &&
-        root.contains(listItem)
+        item &&
+        nav.contains(item)
       ) {
-        listItem.classList.add(
+        item.classList.add(
           "weekly-tab-item"
         );
       }
-    }
-  }
 
-  function activateTab(root, tab) {
-    const { tabs, panels } = tabParts(root);
-
-    if (tabs.length < 2 || panels.length < 2) {
-      return;
-    }
-
-    const activePanel =
-      findPanelForTab(tab, tabs, panels);
-
-    if (!activePanel) return;
-
-    normalizeTabNavigation(root, tabs);
-
-    tabs.forEach((item, index) => {
-      const active = item === tab;
-
-      item.setAttribute("role", "tab");
-      item.setAttribute(
-        "aria-selected",
-        String(active)
+      panel.classList.add(
+        "weekly-tab-panel"
       );
-      item.tabIndex = active ? 0 : -1;
-
-      item.classList.toggle(
-        "is-active",
-        active
+      panel.setAttribute(
+        "data-weekly-tab-group",
+        groupId
       );
-      item.classList.toggle(
-        "active",
-        active
-      );
-
-      const panel = panels[index];
-
-      if (
-        panel &&
-        !item.hasAttribute("aria-controls") &&
-        panel.id
-      ) {
-        item.setAttribute(
-          "aria-controls",
-          panel.id
-        );
-      }
-    });
-
-    panels.forEach(panel => {
-      const active = panel === activePanel;
-
       panel.setAttribute(
         "role",
         "tabpanel"
       );
-      panel.hidden = !active;
 
-      panel.classList.toggle(
+      if (!panel.id) {
+        panel.id =
+          nextUniversalId("weekly-panel");
+      }
+
+      trigger.setAttribute(
+        "aria-controls",
+        panel.id
+      );
+      panel.setAttribute(
+        "aria-labelledby",
+        trigger.id
+      );
+
+      pairs.push({
+        trigger,
+        panel
+      });
+    });
+
+    if (pairs.length < 2) return null;
+
+    const group = {
+      id: groupId,
+      root,
+      nav,
+      pairs
+    };
+
+    tabGroups.set(groupId, group);
+
+    const initialPair =
+      pairs.find(({ trigger, panel }) =>
+        trigger.getAttribute(
+          "aria-selected"
+        ) === "true" ||
+        trigger.classList.contains("active") ||
+        trigger.classList.contains("is-active") ||
+        panel.classList.contains("active") ||
+        panel.classList.contains("show") ||
+        panel.classList.contains("is-active")
+      ) ||
+      pairs[0];
+
+    activateUniversalTab(
+      group,
+      initialPair.trigger
+    );
+
+    return group;
+  }
+
+  function activateUniversalTab(
+    group,
+    activeTrigger
+  ) {
+    if (!group) return;
+
+    for (const { trigger, panel } of group.pairs) {
+      const active =
+        trigger === activeTrigger;
+
+      trigger.setAttribute(
+        "aria-selected",
+        String(active)
+      );
+      trigger.tabIndex = active ? 0 : -1;
+
+      trigger.classList.toggle(
+        "active",
+        active
+      );
+      trigger.classList.toggle(
+        "show",
+        active
+      );
+      trigger.classList.toggle(
         "is-active",
         active
       );
+
+      const item = trigger.closest("li");
+
+      if (
+        item &&
+        group.nav.contains(item)
+      ) {
+        item.classList.toggle(
+          "active",
+          active
+        );
+        item.classList.toggle(
+          "is-active",
+          active
+        );
+      }
+
+      panel.hidden = !active;
+
       panel.classList.toggle(
         "active",
         active
       );
-    });
+      panel.classList.toggle(
+        "show",
+        active
+      );
+      panel.classList.toggle(
+        "is-active",
+        active
+      );
+    }
   }
 
-  function initializeTabRoot(root) {
-    if (!(root instanceof Element)) return;
+  function triggersInside(nav, selector) {
+    if (!(nav instanceof Element)) return [];
 
-    const { tabs, panels } = tabParts(root);
-
-    if (tabs.length < 2 || panels.length < 2) {
-      return;
-    }
-
-    root.setAttribute(
-      "data-weekly-tabs-ready",
-      "true"
-    );
-
-    normalizeTabNavigation(root, tabs);
-
-    const selected =
-      tabs.find(
-        tab =>
-          tab.getAttribute("aria-selected") === "true"
-      ) ||
-      tabs.find(
-        tab => tab.classList.contains("is-active")
-      ) ||
-      tabs.find(
-        tab => tab.classList.contains("active")
-      ) ||
-      tabs[0];
-
-    activateTab(root, selected);
+    return uniqueElements([
+      ...nav.querySelectorAll(selector)
+    ]);
   }
 
-  function collectTabRoots(scope = document) {
-    const roots = new Set();
+  function discoverCanvasTabs(scope) {
+    const roots = [
+      ...scope.querySelectorAll(
+        ".enhanceable_content.tabs, " +
+        ".tabs:not(ul):not(ol)"
+      )
+    ];
 
-    if (
-      scope instanceof Element &&
-      scope.matches(TAB_ROOT_SELECTOR)
-    ) {
-      const resolved = resolveTabRoot(scope);
+    for (const root of roots) {
+      if (
+        root.hasAttribute(
+          "data-weekly-tabs-scanned"
+        )
+      ) {
+        continue;
+      }
 
-      if (resolved) roots.add(resolved);
+      const nav =
+        [...root.children].find(
+          child =>
+            child.matches?.("ul, ol") &&
+            child.querySelectorAll(
+              "a[href^='#'], button[aria-controls]"
+            ).length >= 2
+        );
+
+      if (!nav) continue;
+
+      const triggers = triggersInside(
+        nav,
+        "a[href^='#'], button[aria-controls]"
+      );
+
+      const group = createTabGroup({
+        root,
+        nav,
+        triggers
+      });
+
+      if (group) {
+        root.setAttribute(
+          "data-weekly-tabs-scanned",
+          "true"
+        );
+      }
     }
+  }
 
-    for (const candidate of scope.querySelectorAll(
-      TAB_ROOT_SELECTOR
-    )) {
-      const resolved = resolveTabRoot(candidate);
+  function discoverBootstrapTabs(scope) {
+    const navs = [
+      ...scope.querySelectorAll(
+        ".nav-tabs, .nav-pills"
+      )
+    ];
 
-      if (resolved) roots.add(resolved);
+    for (const nav of navs) {
+      if (
+        nav.hasAttribute(
+          "data-weekly-tab-group"
+        )
+      ) {
+        continue;
+      }
+
+      const root =
+        nav.closest(
+          ".tabs-container, .tab-container, .tabs-wrapper, .tab-wrapper, [data-tabs]"
+        ) ||
+        nav.parentElement;
+
+      if (!root) continue;
+
+      const triggers = triggersInside(
+        nav,
+        [
+          "[data-bs-target]",
+          "[data-target]",
+          '[data-bs-toggle="tab"]',
+          '[data-bs-toggle="pill"]',
+          '[data-toggle="tab"]',
+          '[data-toggle="pill"]',
+          "a[href^='#']",
+          "button[aria-controls]"
+        ].join(", ")
+      );
+
+      createTabGroup({
+        root,
+        nav,
+        triggers
+      });
     }
+  }
 
-    for (const tab of scope.querySelectorAll(
-      TAB_BUTTON_SELECTOR
-    )) {
-      const resolved = resolveTabRoot(tab);
+  function discoverAriaTabs(scope) {
+    const navs = [
+      ...scope.querySelectorAll(
+        '[role="tablist"]'
+      )
+    ];
 
-      if (resolved) roots.add(resolved);
+    for (const nav of navs) {
+      if (
+        nav.hasAttribute(
+          "data-weekly-tab-group"
+        )
+      ) {
+        continue;
+      }
+
+      const root =
+        nav.closest(
+          ".tabs-container, .tab-container, .tabs-wrapper, .tab-wrapper, [data-tabs]"
+        ) ||
+        nav.parentElement;
+
+      if (!root) continue;
+
+      const triggers = triggersInside(
+        nav,
+        '[role="tab"], [aria-controls]'
+      );
+
+      createTabGroup({
+        root,
+        nav,
+        triggers
+      });
     }
+  }
 
-    return [...roots];
+  function discoverFoundationTabs(scope) {
+    const navs = [
+      ...scope.querySelectorAll(
+        "ul.tabs, ol.tabs"
+      )
+    ];
+
+    for (const nav of navs) {
+      if (
+        nav.hasAttribute(
+          "data-weekly-tab-group"
+        )
+      ) {
+        continue;
+      }
+
+      const root = nav.parentElement;
+      if (!root) continue;
+
+      const triggers = triggersInside(
+        nav,
+        ".tabs-title > a[href^='#'], a[href^='#']"
+      );
+
+      createTabGroup({
+        root,
+        nav,
+        triggers
+      });
+    }
+  }
+
+  function discoverGenericTabs(scope) {
+    const navs = [
+      ...scope.querySelectorAll(
+        [
+          ".tab-buttons",
+          ".tabs-nav",
+          ".tab-nav",
+          ".tab-list",
+          ".tab-links",
+          ".tab-menu",
+          ".notice-tab-list"
+        ].join(", ")
+      )
+    ];
+
+    for (const nav of navs) {
+      if (
+        nav.hasAttribute(
+          "data-weekly-tab-group"
+        )
+      ) {
+        continue;
+      }
+
+      const root =
+        nav.closest(
+          ".tabs-container, .tab-container, .tabs-wrapper, .tab-wrapper, .tabbed-content, [data-tabs], [data-notice-tabs]"
+        ) ||
+        nav.parentElement;
+
+      if (!root) continue;
+
+      const triggers = triggersInside(
+        nav,
+        [
+          "[data-tab-target]",
+          "[data-target]",
+          "[data-bs-target]",
+          "[data-tab]",
+          "a[href^='#']",
+          "button[aria-controls]"
+        ].join(", ")
+      );
+
+      createTabGroup({
+        root,
+        nav,
+        triggers
+      });
+    }
+  }
+
+  function discoverSemanticTabs(scope) {
+    const navs = [
+      ...scope.querySelectorAll(
+        ".ui.tabular.menu"
+      )
+    ];
+
+    for (const nav of navs) {
+      if (
+        nav.hasAttribute(
+          "data-weekly-tab-group"
+        )
+      ) {
+        continue;
+      }
+
+      const root = nav.parentElement;
+      if (!root) continue;
+
+      const triggers = triggersInside(
+        nav,
+        ".item[data-tab]"
+      );
+
+      createTabGroup({
+        root,
+        nav,
+        triggers
+      });
+    }
   }
 
   function enhanceTabs(scope = document) {
     if (!scope?.querySelectorAll) return;
 
-    for (const root of collectTabRoots(scope)) {
-      initializeTabRoot(root);
-    }
+    discoverCanvasTabs(scope);
+    discoverBootstrapTabs(scope);
+    discoverAriaTabs(scope);
+    discoverFoundationTabs(scope);
+    discoverGenericTabs(scope);
+    discoverSemanticTabs(scope);
   }
 
-  function scheduleTabEnhancement(scope = document) {
+  function scheduleTabEnhancement(
+    scope = document
+  ) {
     requestAnimationFrame(
       () => enhanceTabs(scope)
     );
   }
 
+  function groupForTrigger(trigger) {
+    const groupId =
+      trigger?.getAttribute(
+        "data-weekly-tab-group"
+      );
+
+    return groupId
+      ? tabGroups.get(groupId) || null
+      : null;
+  }
+
   document.addEventListener(
     "click",
     event => {
-      const tab =
-        event.target.closest(TAB_BUTTON_SELECTOR);
+      const trigger =
+        event.target.closest(
+          ".weekly-tab-button"
+        );
 
-      if (!tab) return;
+      if (!trigger) return;
 
-      const root = resolveTabRoot(tab);
+      const group = groupForTrigger(trigger);
 
-      if (!root) return;
-
-      const { tabs, panels } = tabParts(root);
-
-      if (tabs.length < 2 || panels.length < 2) {
-        return;
-      }
+      if (!group) return;
 
       event.preventDefault();
-      activateTab(root, tab);
+
+      activateUniversalTab(
+        group,
+        trigger
+      );
     }
   );
 
@@ -1071,41 +1394,58 @@
         return;
       }
 
-      const tab =
-        event.target.closest('[role="tab"]');
+      const trigger =
+        event.target.closest(
+          ".weekly-tab-button"
+        );
 
-      if (!tab) return;
+      if (!trigger) return;
 
-      const root = resolveTabRoot(tab);
-      if (!root) return;
+      const group = groupForTrigger(trigger);
 
-      const { tabs } = tabParts(root);
-      const index = tabs.indexOf(tab);
+      if (!group) return;
 
-      if (index < 0 || tabs.length < 2) {
-        return;
-      }
+      const triggers =
+        group.pairs.map(
+          pair => pair.trigger
+        );
 
-      let nextIndex = index;
+      const currentIndex =
+        triggers.indexOf(trigger);
+
+      if (currentIndex < 0) return;
+
+      let nextIndex = currentIndex;
 
       if (event.key === "ArrowRight") {
         nextIndex =
-          (index + 1) % tabs.length;
+          (currentIndex + 1) %
+          triggers.length;
       } else if (event.key === "ArrowLeft") {
         nextIndex =
-          (index - 1 + tabs.length) %
-          tabs.length;
+          (
+            currentIndex -
+            1 +
+            triggers.length
+          ) %
+          triggers.length;
       } else if (event.key === "Home") {
         nextIndex = 0;
       } else if (event.key === "End") {
-        nextIndex = tabs.length - 1;
+        nextIndex =
+          triggers.length - 1;
       }
 
       event.preventDefault();
 
-      const next = tabs[nextIndex];
+      const next =
+        triggers[nextIndex];
 
-      activateTab(root, next);
+      activateUniversalTab(
+        group,
+        next
+      );
+
       next.focus();
     }
   );
@@ -1113,14 +1453,15 @@
   if (document.readyState === "loading") {
     document.addEventListener(
       "DOMContentLoaded",
-      () => scheduleTabEnhancement(document),
+      () =>
+        scheduleTabEnhancement(document),
       { once: true }
     );
   } else {
     scheduleTabEnhancement(document);
   }
 
-  const tabObserver =
+  const universalTabObserver =
     new MutationObserver(records => {
       for (const record of records) {
         if (record.addedNodes.length) {
@@ -1130,10 +1471,10 @@
       }
     });
 
-  const observeTabs = () => {
+  const observeUniversalTabs = () => {
     if (!document.body) return;
 
-    tabObserver.observe(
+    universalTabObserver.observe(
       document.body,
       {
         childList: true,
@@ -1143,11 +1484,494 @@
   };
 
   if (document.body) {
-    observeTabs();
+    observeUniversalTabs();
   } else {
     document.addEventListener(
       "DOMContentLoaded",
-      observeTabs,
+      observeUniversalTabs,
+      { once: true }
+    );
+  }
+
+  /* =======================================================
+     V3.15.6 — Universal Accordion Adapter
+     Native details / WAI-ARIA / Bootstrap / Foundation /
+     generic target-based collapse.
+     ======================================================= */
+
+  const ACCORDION_ROOT_SELECTOR = [
+    ".accordion",
+    ".notice-accordion",
+    ".accordion-group",
+    ".accordion-container",
+    ".collapse-group",
+    "[data-accordion]",
+    "[data-notice-accordion]"
+  ].join(", ");
+
+  const ACCORDION_TRIGGER_SELECTOR = [
+    ".accordion-button",
+    ".accordion-title",
+    ".accordion-trigger",
+    ".accordion-header button",
+    ".accordion-header a",
+    '[data-bs-toggle="collapse"]',
+    '[data-toggle="collapse"]',
+    "[data-collapse-target]",
+    "[data-accordion-target]",
+    "[aria-controls][aria-expanded]"
+  ].join(", ");
+
+  const ACCORDION_PANEL_SELECTOR = [
+    ".accordion-collapse",
+    ".accordion-content",
+    ".accordion-panel",
+    ".collapse",
+    "[data-accordion-panel]",
+    '[role="region"]'
+  ].join(", ");
+
+  const accordionGroups = new Map();
+  let accordionGroupUid = 0;
+  let accordionElementUid = 0;
+
+  function nextAccordionId(prefix) {
+    accordionElementUid += 1;
+    return `${prefix}-${accordionElementUid}`;
+  }
+
+  function nextAccordionGroupId() {
+    accordionGroupUid += 1;
+    return `weekly-accordion-group-${accordionGroupUid}`;
+  }
+
+  function accordionTargetToken(trigger) {
+    if (!(trigger instanceof Element)) return "";
+
+    const direct =
+      trigger.getAttribute("aria-controls") ||
+      trigger.getAttribute("data-bs-target") ||
+      trigger.getAttribute("data-target") ||
+      trigger.getAttribute("data-collapse-target") ||
+      trigger.getAttribute("data-accordion-target") ||
+      "";
+
+    if (direct) {
+      return normalizeTarget(direct);
+    }
+
+    const href = trigger.getAttribute("href") || "";
+
+    return href.includes("#")
+      ? normalizeTarget(href)
+      : "";
+  }
+
+  function accordionTriggersWithin(root) {
+    if (!(root instanceof Element)) return [];
+
+    return uniqueElements(
+      [...root.querySelectorAll(ACCORDION_TRIGGER_SELECTOR)]
+        .filter(trigger => {
+          if (
+            trigger.closest("details") ||
+            trigger.closest(".weekly-tabs-root")
+          ) {
+            return false;
+          }
+
+          const nested =
+            trigger.closest(ACCORDION_ROOT_SELECTOR);
+
+          return !nested || nested === root;
+        })
+    );
+  }
+
+  function accordionPanelsWithin(root) {
+    if (!(root instanceof Element)) return [];
+
+    return uniqueElements(
+      [...root.querySelectorAll(ACCORDION_PANEL_SELECTOR)]
+        .filter(panel => {
+          if (
+            panel.closest("details") ||
+            panel.closest(".weekly-tabs-root")
+          ) {
+            return false;
+          }
+
+          const nested =
+            panel.closest(ACCORDION_ROOT_SELECTOR);
+
+          return !nested || nested === root;
+        })
+    );
+  }
+
+  function accordionPanelForTrigger(root, trigger, panels, index) {
+    const id = accordionTargetToken(trigger);
+
+    if (id) {
+      const panel = idTargetWithin(root, id);
+
+      if (
+        panel &&
+        panel !== trigger &&
+        !trigger.contains(panel)
+      ) {
+        return panel;
+      }
+    }
+
+    return panels[index] || null;
+  }
+
+  function normalizeAccordionPair(groupId, root, trigger, panel) {
+    trigger.classList.add("weekly-accordion-trigger");
+    trigger.setAttribute("data-weekly-accordion-group", groupId);
+
+    if (trigger.tagName === "A") {
+      trigger.setAttribute("role", "button");
+    }
+
+    if (trigger.tagName === "BUTTON") {
+      trigger.setAttribute("type", "button");
+    }
+
+    if (!trigger.id) {
+      trigger.id = nextAccordionId("weekly-accordion-trigger");
+    }
+
+    panel.classList.add("weekly-accordion-panel");
+    panel.setAttribute("data-weekly-accordion-group", groupId);
+    panel.setAttribute("role", "region");
+
+    if (!panel.id) {
+      panel.id = nextAccordionId("weekly-accordion-panel");
+    }
+
+    trigger.setAttribute("aria-controls", panel.id);
+    panel.setAttribute("aria-labelledby", trigger.id);
+
+    const initiallyOpen =
+      trigger.getAttribute("aria-expanded") === "true" ||
+      trigger.classList.contains("active") ||
+      panel.classList.contains("show") ||
+      panel.classList.contains("active") ||
+      panel.classList.contains("is-active");
+
+    trigger.setAttribute(
+      "aria-expanded",
+      String(initiallyOpen)
+    );
+
+    trigger.classList.toggle("is-open", initiallyOpen);
+    panel.classList.toggle("is-open", initiallyOpen);
+    panel.hidden = !initiallyOpen;
+
+    return { trigger, panel };
+  }
+
+  function createAccordionGroup(root) {
+    if (!(root instanceof Element)) return null;
+
+    const existingId =
+      root.getAttribute("data-weekly-accordion-group");
+
+    if (existingId && accordionGroups.has(existingId)) {
+      return accordionGroups.get(existingId);
+    }
+
+    const triggers = accordionTriggersWithin(root);
+    const panels = accordionPanelsWithin(root);
+
+    if (triggers.length < 1 || panels.length < 1) {
+      return null;
+    }
+
+    const groupId = nextAccordionGroupId();
+    const usedPanels = new Set();
+    const pairs = [];
+
+    triggers.forEach((trigger, index) => {
+      const panel =
+        accordionPanelForTrigger(
+          root,
+          trigger,
+          panels,
+          index
+        );
+
+      if (!panel || usedPanels.has(panel)) return;
+
+      usedPanels.add(panel);
+      pairs.push(
+        normalizeAccordionPair(
+          groupId,
+          root,
+          trigger,
+          panel
+        )
+      );
+    });
+
+    if (!pairs.length) return null;
+
+    root.classList.add("weekly-accordion-root");
+    root.setAttribute("data-weekly-accordion-ready", "true");
+    root.setAttribute("data-weekly-accordion-group", groupId);
+
+    const exclusive =
+      root.hasAttribute("data-accordion-single") ||
+      root.getAttribute("data-accordion-mode") === "single" ||
+      root.classList.contains("accordion-single");
+
+    const group = {
+      id: groupId,
+      root,
+      pairs,
+      exclusive
+    };
+
+    accordionGroups.set(groupId, group);
+    return group;
+  }
+
+  function setAccordionPairOpen(group, pair, open) {
+    if (!group || !pair) return;
+
+    if (open && group.exclusive) {
+      for (const other of group.pairs) {
+        if (other === pair) continue;
+
+        other.trigger.setAttribute("aria-expanded", "false");
+        other.trigger.classList.remove("is-open", "active", "show");
+        other.panel.hidden = true;
+        other.panel.classList.remove("is-open", "active", "show");
+      }
+    }
+
+    pair.trigger.setAttribute("aria-expanded", String(open));
+    pair.trigger.classList.toggle("is-open", open);
+    pair.trigger.classList.toggle("active", open);
+
+    pair.panel.hidden = !open;
+    pair.panel.classList.toggle("is-open", open);
+    pair.panel.classList.toggle("active", open);
+    pair.panel.classList.toggle("show", open);
+  }
+
+  function groupForAccordionTrigger(trigger) {
+    const id =
+      trigger?.getAttribute("data-weekly-accordion-group");
+
+    return id
+      ? accordionGroups.get(id) || null
+      : null;
+  }
+
+  function enhanceNativeDetails(scope = document) {
+    if (!scope?.querySelectorAll) return;
+
+    for (const details of scope.querySelectorAll("details")) {
+      const summary =
+        details.querySelector(":scope > summary");
+
+      if (!summary) continue;
+
+      details.classList.add("weekly-native-details");
+      summary.classList.add("weekly-native-summary");
+
+      if (!summary.id) {
+        summary.id =
+          nextAccordionId("weekly-summary");
+      }
+    }
+  }
+
+  function enforceNamedDetails(details) {
+    if (!(details instanceof HTMLDetailsElement)) return;
+
+    const name = details.getAttribute("name");
+
+    if (!name || !details.open) return;
+
+    for (const peer of document.querySelectorAll("details[name]")) {
+      if (
+        peer !== details &&
+        peer.getAttribute("name") === name
+      ) {
+        peer.open = false;
+      }
+    }
+  }
+
+  function enhanceAccordionRoots(scope = document) {
+    if (!scope?.querySelectorAll) return;
+
+    const roots = new Set();
+
+    if (
+      scope instanceof Element &&
+      scope.matches(ACCORDION_ROOT_SELECTOR)
+    ) {
+      roots.add(scope);
+    }
+
+    for (const root of scope.querySelectorAll(
+      ACCORDION_ROOT_SELECTOR
+    )) {
+      if (
+        root.closest("details") ||
+        root.closest(".weekly-tabs-root")
+      ) {
+        continue;
+      }
+
+      roots.add(root);
+    }
+
+    for (const trigger of scope.querySelectorAll(
+      ACCORDION_TRIGGER_SELECTOR
+    )) {
+      if (
+        trigger.closest("details") ||
+        trigger.closest(".weekly-tabs-root")
+      ) {
+        continue;
+      }
+
+      let root =
+        trigger.closest(ACCORDION_ROOT_SELECTOR);
+
+      if (!root) {
+        let current = trigger.parentElement;
+
+        for (
+          let depth = 0;
+          current && depth < 4;
+          depth += 1
+        ) {
+          if (accordionPanelsWithin(current).length) {
+            root = current;
+            break;
+          }
+
+          current = current.parentElement;
+        }
+      }
+
+      if (root) roots.add(root);
+    }
+
+    for (const root of roots) {
+      createAccordionGroup(root);
+    }
+  }
+
+  function enhanceAccordions(scope = document) {
+    enhanceNativeDetails(scope);
+    enhanceAccordionRoots(scope);
+  }
+
+  function scheduleAccordionEnhancement(scope = document) {
+    requestAnimationFrame(
+      () => enhanceAccordions(scope)
+    );
+  }
+
+  document.addEventListener("click", event => {
+    const trigger =
+      event.target.closest(".weekly-accordion-trigger");
+
+    if (!trigger) return;
+
+    const group =
+      groupForAccordionTrigger(trigger);
+
+    if (!group) return;
+
+    const pair =
+      group.pairs.find(
+        item => item.trigger === trigger
+      );
+
+    if (!pair) return;
+
+    event.preventDefault();
+
+    const open =
+      trigger.getAttribute("aria-expanded") !== "true";
+
+    setAccordionPairOpen(group, pair, open);
+  });
+
+  document.addEventListener("keydown", event => {
+    const trigger =
+      event.target.closest(".weekly-accordion-trigger");
+
+    if (!trigger) return;
+
+    if (
+      trigger.tagName === "A" &&
+      (event.key === "Enter" || event.key === " ")
+    ) {
+      event.preventDefault();
+      trigger.click();
+    }
+  });
+
+  document.addEventListener(
+    "toggle",
+    event => {
+      if (
+        event.target instanceof HTMLDetailsElement
+      ) {
+        enforceNamedDetails(event.target);
+      }
+    },
+    true
+  );
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => scheduleAccordionEnhancement(document),
+      { once: true }
+    );
+  } else {
+    scheduleAccordionEnhancement(document);
+  }
+
+  const universalAccordionObserver =
+    new MutationObserver(records => {
+      for (const record of records) {
+        if (record.addedNodes.length) {
+          scheduleAccordionEnhancement(document);
+          break;
+        }
+      }
+    });
+
+  const observeUniversalAccordions = () => {
+    if (!document.body) return;
+
+    universalAccordionObserver.observe(
+      document.body,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+  };
+
+  if (document.body) {
+    observeUniversalAccordions();
+  } else {
+    document.addEventListener(
+      "DOMContentLoaded",
+      observeUniversalAccordions,
       { once: true }
     );
   }
@@ -1163,6 +1987,7 @@
     getEditorContent,
     serializeEditorContent,
     toPlainText,
-    enhanceTabs
+    enhanceTabs,
+    enhanceAccordions
   });
 })();

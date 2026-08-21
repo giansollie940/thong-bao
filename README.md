@@ -193,3 +193,67 @@ Editor tự thêm class nội bộ `weekly-tab-list`, `weekly-tab-item`,
 
 JavaScript tùy ý trong HTML vẫn bị chặn; hệ thống tab nội bộ xử lý
 click và bàn phím thay cho `onclick`.
+
+
+## V3.15.4 — Canvas LMS Tabs
+
+Hỗ trợ trực tiếp cấu trúc tab Canvas LMS legacy:
+
+```html
+<div class="enhanceable_content tabs">
+  <ul>
+    <li><a href="#fragment-1">Tab 1</a></li>
+    <li><a href="#fragment-2">Tab 2</a></li>
+  </ul>
+
+  <div id="fragment-1">Nội dung 1</div>
+  <div id="fragment-2">Nội dung 2</div>
+</div>
+```
+
+Khác Canvas LMS legacy, app không phụ thuộc jQuery UI:
+
+- tự nhận `href="#fragment-id"` để liên kết tab/panel;
+- panel có thể chỉ là `<div id="...">` trơn;
+- tự thêm role/ARIA và keyboard navigation;
+- mobile cuộn ngang;
+- JavaScript/onclick trong nội dung vẫn bị chặn.
+
+
+## V3.15.5 — Universal Tabs Adapter
+
+Bộ tab được chuyển sang kiến trúc nhóm độc lập để các chuẩn khác nhau
+không tranh selector với Canvas LMS.
+
+Đã kiểm thử trong Chromium:
+
+- Canvas LMS legacy (`enhanceable_content tabs`)
+- Bootstrap 5 (`nav-tabs`, `data-bs-target`, `tab-pane`)
+- WAI-ARIA (`role=tablist`, `role=tab`, `aria-controls`)
+- Foundation (`tabs-title`, `tabs-panel`)
+- Generic (`data-tab-target`, `tab-buttons`, `tab-panel`)
+- Semantic-style (`data-tab`)
+
+Mỗi nhóm được chuẩn hóa về:
+
+- `weekly-tabs-root`
+- `weekly-tab-list`
+- `weekly-tab-button`
+- `weekly-tab-panel`
+
+JavaScript tùy ý trong thông báo vẫn bị chặn.
+
+
+## V3.15.6 — Universal Accordion Adapter
+
+Hỗ trợ:
+
+- Native `details > summary`
+- `details name="..."` cho nhóm chỉ mở một mục
+- WAI-ARIA: `aria-expanded` + `aria-controls`
+- Bootstrap: `.accordion-button`, `data-bs-target`, `.accordion-collapse`
+- Foundation: `.accordion-title`, `.accordion-content`
+- Generic: `data-collapse-target`, `data-accordion-target`, `data-target`
+- Single-open custom: `data-accordion-single` hoặc `data-accordion-mode="single"`
+
+HTML nhúng vẫn không được chạy JavaScript tùy ý.
