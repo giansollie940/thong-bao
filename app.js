@@ -1357,6 +1357,17 @@
     }).join("");
   }
 
+  function enhanceRenderedContent() {
+    /*
+     * Interactive HTML (tabs/accordion) có thể xuất hiện nhiều lần
+     * ở dashboard, chuyên mục, năm học hoặc lưu trữ.
+     * Chạy enhancer trực tiếp sau render để không phụ thuộc timing
+     * của MutationObserver.
+     */
+    contentRenderer.enhanceTabs?.(document);
+    contentRenderer.enhanceAccordions?.(document);
+  }
+
   function renderAll() {
     renderAdmin();
     renderConnection();
@@ -1364,6 +1375,7 @@
     renderSchoolYearSelectors();
     renderYearStrip();
     renderArchives();
+    enhanceRenderedContent();
   }
 
   let renderFrame = 0;

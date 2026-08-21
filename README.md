@@ -257,3 +257,19 @@ Hỗ trợ:
 - Single-open custom: `data-accordion-single` hoặc `data-accordion-mode="single"`
 
 HTML nhúng vẫn không được chạy JavaScript tùy ý.
+
+
+## V3.15.7 — Scoped Interactions Fix
+
+Sửa trường hợp tab nhìn đúng giao diện nhưng bấm không chuyển:
+
+- Dashboard có thể render cùng một thông báo ở nhiều khu vực.
+- HTML của thông báo thường dùng lại các id như `fragment-1`, `fragment-2`.
+- Trước đây adapter dùng `document.getElementById()`, vì vậy card thứ hai
+  có thể trỏ nhầm panel của card thứ nhất.
+- V3.15.7 tìm target id bên trong từng tab/accordion root.
+- Sau mỗi `renderAll()` app gọi `enhanceTabs()` và `enhanceAccordions()`
+  trực tiếp, ngoài MutationObserver.
+- Click handler có cơ chế tự khởi tạo lại nếu runtime group map bị stale.
+
+Không thay đổi database hoặc Supabase.

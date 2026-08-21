@@ -794,11 +794,22 @@
   function idTargetWithin(root, id) {
     if (!(root instanceof Element) || !id) return null;
 
-    const target = document.getElementById(id);
+    /*
+     * IMPORTANT:
+     * Một thông báo có thể xuất hiện ở nhiều vùng dashboard.
+     * Khi đó cùng một HTML có thể tạo duplicate id như #fragment-1.
+     * document.getElementById() sẽ luôn lấy bản đầu tiên trên toàn trang,
+     * khiến tab ở card thứ hai không tìm thấy panel của chính nó.
+     *
+     * Vì vậy luôn tìm id BÊN TRONG root hiện tại.
+     */
+    for (const element of root.querySelectorAll("[id]")) {
+      if (element.id === id) {
+        return element;
+      }
+    }
 
-    return target && root.contains(target)
-      ? target
-      : null;
+    return null;
   }
 
   function likelyPanelPool(root, nav) {
@@ -1352,8 +1363,33 @@
         "data-weekly-tab-group"
       );
 
-    return groupId
+    const existing = groupId
       ? tabGroups.get(groupId) || null
+      : null;
+
+    if (existing) {
+      return existing;
+    }
+
+    /*
+     * DOM có thể vừa được app render lại.
+     * Nếu class/attribute còn tồn tại nhưng Map runtime không còn pair,
+     * khởi tạo lại đúng vùng thông báo rồi thử lại.
+     */
+    const scope =
+      trigger?.closest(".announcement-content") ||
+      trigger?.closest(".weekly-tabs-root") ||
+      document;
+
+    enhanceTabs(scope);
+
+    const refreshedId =
+      trigger?.getAttribute(
+        "data-weekly-tab-group"
+      );
+
+    return refreshedId
+      ? tabGroups.get(refreshedId) || null
       : null;
   }
 
@@ -1766,8 +1802,28 @@
     const id =
       trigger?.getAttribute("data-weekly-accordion-group");
 
-    return id
+    const existing = id
       ? accordionGroups.get(id) || null
+      : null;
+
+    if (existing) {
+      return existing;
+    }
+
+    const scope =
+      trigger?.closest(".announcement-content") ||
+      trigger?.closest(".weekly-accordion-root") ||
+      document;
+
+    enhanceAccordions(scope);
+
+    const refreshedId =
+      trigger?.getAttribute(
+        "data-weekly-accordion-group"
+      );
+
+    return refreshedId
+      ? accordionGroups.get(refreshedId) || null
       : null;
   }
 
