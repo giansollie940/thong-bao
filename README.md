@@ -170,3 +170,26 @@ chuẩn hóa sang khung responsive `aspect-ratio:16/9`.
 
 Iframe được chuẩn hóa thêm `loading="lazy"`, `allowfullscreen`,
 `referrerpolicy="strict-origin-when-cross-origin"` và danh sách quyền media an toàn.
+
+
+## V3.16.4 — Rich Formatting Toolbar
+
+Trình **Soạn thảo** được bổ sung:
+
+- Phông chữ: mặc định, Arial, Verdana, Trebuchet MS, Georgia,
+  Times New Roman, Courier New.
+- Cỡ chữ: 12–36 px.
+- In đậm, in nghiêng, gạch chân, gạch ngang.
+- Canh trái, giữa, phải, đều hai bên.
+- Màu chữ.
+- Màu nền/highlight chữ.
+- Xóa định dạng.
+- Giữ các chức năng tiêu đề, danh sách, trích dẫn, liên kết,
+  tìm & thay thế.
+
+Các định dạng mới sử dụng HTML/CSS an toàn mà sanitizer hiện có
+đã cho phép (`font-family`, `font-size`, `color`,
+`background-color`, `text-align`, `text-decoration`).
+
+Phần điều khiển nâng cao được tách thành
+`editor-formatting.js` và `editor-formatting.css`.

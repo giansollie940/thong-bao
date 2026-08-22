@@ -212,6 +212,322 @@
       syncVisualToSource();
     }
 
+    function cssTextFromObject(styles = {}) {
+      return Object.entries(styles)
+        .filter(([, value]) => String(value || "").trim())
+        .map(([property, value]) =>
+          `${property}: ${String(value).trim()}`
+        )
+        .join("; ");
+    }
+
+    function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      const wrapper = document.createElement("span");
+      const cssText = cssTextFromObject(styles);
+
+      if (!cssText) return;
+
+      wrapper.setAttribute("style", cssText);
+
+      if (range.collapsed) {
+        wrapper.textContent = placeholder;
+        range.insertNode(wrapper);
+      } else {
+        wrapper.append(range.extractContents());
+        range.insertNode(wrapper);
+      }
+
+      selectContents(wrapper);
+      syncVisualToSource();
+    }
+
+    function closestTextBlock(node) {
+      const element =
+        node?.nodeType === Node.ELEMENT_NODE
+          ? node
+          : node?.parentElement;
+
+      if (!element) return null;
+
+      const block = element.closest(
+        "p, h2, h3, h4, h5, li, blockquote, figcaption, td, th"
+      );
+
+      return block && visual.contains(block)
+        ? block
+        : null;
+    }
+
+    function blocksForVisualRange(range) {
+      if (!range) return [];
+
+      if (range.collapsed) {
+        const block = closestTextBlock(
+          range.startContainer
+        );
+
+        return block ? [block] : [];
+      }
+
+      const blocks = new Set();
+      const walker = document.createTreeWalker(
+        visual,
+        NodeFilter.SHOW_TEXT
+      );
+
+      let node = walker.nextNode();
+
+      while (node) {
+        try {
+          if (
+            node.nodeValue?.trim() &&
+            range.intersectsNode(node)
+          ) {
+            const block = closestTextBlock(node);
+
+            if (block) {
+              blocks.add(block);
+            }
+          }
+        } catch {
+          // Ignore detached nodes.
+        }
+
+        node = walker.nextNode();
+      }
+
+      if (!blocks.size) {
+        const startBlock = closestTextBlock(
+          range.startContainer
+        );
+        const endBlock = closestTextBlock(
+          range.endContainer
+        );
+
+        if (startBlock) blocks.add(startBlock);
+        if (endBlock) blocks.add(endBlock);
+      }
+
+      return [...blocks];
+    }
+
+    function applyVisualBlockStyle(styles = {}) {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      const blocks = blocksForVisualRange(range);
+
+      if (!blocks.length) {
+        wrapVisualStyle(styles);
+        return;
+      }
+
+      for (const block of blocks) {
+        for (const [property, value] of Object.entries(styles)) {
+          block.style.setProperty(
+            property,
+            String(value || "").trim()
+          );
+        }
+      }
+
+      savedVisualRange = range.cloneRange();
+      syncVisualToSource();
+    }
+
+    function replaceSourceWithStyle(
+      styles = {},
+      {
+        block = false,
+        placeholder = "nội dung"
+      } = {}
+    ) {
+      const cssText = cssTextFromObject(styles);
+      if (!cssText) return;
+
+      const start = source.selectionStart;
+      const end = source.selectionEnd;
+      const selected =
+        source.value.slice(start, end) || placeholder;
+
+      const tag = block ? "div" : "span";
+      const html =
+        `<${tag} style="${cssText}">${selected}</${tag}>`;
+
+      source.setRangeText(
+        html,
+        start,
+        end,
+        "select"
+      );
+
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
+
+    function applyInlineStyle(styles = {}) {
+      if (currentView === "visual") {
+        wrapVisualStyle(styles);
+      } else {
+        replaceSourceWithStyle(styles);
+      }
+    }
+
+    function applyBlockStyle(styles = {}) {
+      if (currentView === "visual") {
+        applyVisualBlockStyle(styles);
+      } else {
+        replaceSourceWithStyle(
+          styles,
+          {
+            block: true,
+            placeholder: "Nội dung căn chỉnh"
+          }
+        );
+      }
+    }
+
+    function unwrapElement(element) {
+      if (!element?.parentNode) return;
+
+      while (element.firstChild) {
+        element.parentNode.insertBefore(
+          element.firstChild,
+          element
+        );
+      }
+
+      element.remove();
+    }
+
+    function clearVisualFormatting() {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      if (range.collapsed) {
+        const element =
+          range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? range.startContainer
+            : range.startContainer.parentElement;
+
+        const inline = element?.closest(
+          "strong, b, em, i, u, s, mark, span"
+        );
+
+        if (
+          inline &&
+          inline !== visual &&
+          visual.contains(inline)
+        ) {
+          unwrapElement(inline);
+          syncVisualToSource();
+        }
+
+        return;
+      }
+
+      const fragment = range.extractContents();
+
+      for (const element of [
+        ...fragment.querySelectorAll("*")
+      ]) {
+        for (const property of [
+          "font-family",
+          "font-size",
+          "font-weight",
+          "font-style",
+          "color",
+          "background",
+          "background-color",
+          "text-decoration",
+          "text-decoration-line",
+          "text-align"
+        ]) {
+          element.style.removeProperty(property);
+        }
+
+        if (!element.getAttribute("style")?.trim()) {
+          element.removeAttribute("style");
+        }
+      }
+
+      for (const element of [
+        ...fragment.querySelectorAll(
+          "strong, b, em, i, u, s, mark"
+        )
+      ].reverse()) {
+        unwrapElement(element);
+      }
+
+      const wrapper = document.createElement("span");
+      wrapper.append(fragment);
+      range.insertNode(wrapper);
+
+      selectContents(wrapper);
+      syncVisualToSource();
+    }
+
+    function clearSourceFormatting() {
+      const start = source.selectionStart;
+      const end = source.selectionEnd;
+
+      if (start === end) {
+        onToast(
+          "Trong HTML, hãy chọn đoạn mã cần xóa định dạng."
+        );
+        return;
+      }
+
+      let selected = source.value.slice(start, end);
+
+      selected = selected
+        .replace(
+          /<\/?(?:strong|b|em|i|u|s|mark)\b[^>]*>/gi,
+          ""
+        )
+        .replace(
+          /(<[^>]+)\sstyle=(["'])[\s\S]*?\2([^>]*>)/gi,
+          "$1$3"
+        );
+
+      source.setRangeText(
+        selected,
+        start,
+        end,
+        "select"
+      );
+
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
+
+    function clearFormatting() {
+      if (currentView === "visual") {
+        clearVisualFormatting();
+      } else {
+        clearSourceFormatting();
+      }
+    }
+
     function formatVisualBlock(tag, placeholder) {
       const range = currentVisualRange();
 
@@ -448,6 +764,10 @@
           wrapVisual("strong", "nội dung đậm");
         } else if (format === "italic") {
           wrapVisual("em", "nội dung nghiêng");
+        } else if (format === "underline") {
+          wrapVisual("u", "nội dung gạch chân");
+        } else if (format === "strike") {
+          wrapVisual("s", "nội dung gạch ngang");
         } else if (format === "heading") {
           formatVisualBlock("h3", "Tiêu đề");
         } else if (format === "bullet") {
@@ -477,6 +797,18 @@
           "<em>",
           "</em>",
           "nội dung nghiêng"
+        );
+      } else if (format === "underline") {
+        replaceSourceSelection(
+          "<u>",
+          "</u>",
+          "nội dung gạch chân"
+        );
+      } else if (format === "strike") {
+        replaceSourceSelection(
+          "<s>",
+          "</s>",
+          "nội dung gạch ngang"
         );
       } else if (format === "heading") {
         replaceSourceSelection(
@@ -548,6 +880,9 @@
       } else if (key === "i") {
         event.preventDefault();
         wrapVisual("em", "nội dung nghiêng");
+      } else if (key === "u") {
+        event.preventDefault();
+        wrapVisual("u", "nội dung gạch chân");
       }
     }
 
@@ -592,6 +927,14 @@
           "<em>",
           "</em>",
           "nội dung nghiêng"
+        );
+      } else if (key === "u") {
+        event.preventDefault();
+
+        replaceSourceSelection(
+          "<u>",
+          "</u>",
+          "nội dung gạch chân"
         );
       }
     }
@@ -751,6 +1094,9 @@
       clear,
       setView,
       getView: () => currentView,
+      applyInlineStyle,
+      applyBlockStyle,
+      clearFormatting,
       focus: () => {
         if (currentView === "html") {
           source.focus();

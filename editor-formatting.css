@@ -1,0 +1,157 @@
+/* =========================================================
+   V3.16.4 — Advanced Rich Formatting Toolbar
+   ========================================================= */
+
+.canvas-format-toolbar {
+  align-items: center;
+}
+
+.format-control,
+.format-color-control {
+  flex: 0 0 auto;
+}
+
+.format-select {
+  height: 34px;
+  min-width: 0;
+  padding: 0 28px 0 9px;
+  border: 1px solid
+    color-mix(in srgb, var(--brand) 14%, var(--line));
+  border-radius: 9px;
+  background: var(--surface-solid);
+  color: var(--text);
+  font: inherit;
+  font-size: .76rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.format-font-select {
+  width: 132px;
+}
+
+.format-size-select {
+  width: 76px;
+}
+
+.format-select:hover {
+  border-color:
+    color-mix(in srgb, var(--brand) 34%, var(--line));
+}
+
+.format-select:focus-visible {
+  outline:
+    3px solid
+    color-mix(in srgb, var(--brand) 22%, transparent);
+  outline-offset: 1px;
+}
+
+.format-button-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+/* Distinguish the three visually similar alignment icons. */
+.format-button-group
+[data-editor-align="left"] {
+  justify-content: flex-start;
+  padding-left: 9px;
+}
+
+.format-button-group
+[data-editor-align="center"] {
+  justify-content: center;
+}
+
+.format-button-group
+[data-editor-align="right"] {
+  justify-content: flex-end;
+  padding-right: 9px;
+}
+
+.format-color-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 34px;
+  overflow: hidden;
+  border: 1px solid
+    color-mix(in srgb, var(--brand) 14%, var(--line));
+  border-radius: 9px;
+  background: var(--surface-solid);
+  cursor: pointer;
+}
+
+.format-color-control:hover {
+  border-color:
+    color-mix(in srgb, var(--brand) 34%, var(--line));
+}
+
+.format-color-icon {
+  position: relative;
+  z-index: 1;
+  color: var(--text);
+  font-size: .78rem;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.format-color-control input[type="color"] {
+  position: absolute;
+  inset: auto 4px 3px;
+  width: 30px;
+  height: 6px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.format-color-control
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.format-color-control
+input[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: 999px;
+}
+
+.format-highlight-control
+.format-color-icon {
+  color: #6d5b16;
+}
+
+.visual-rich-editor span[style] {
+  border-radius: 2px;
+}
+
+html[data-theme="dark"] .format-select,
+html[data-theme="dark"] .format-color-control {
+  border-color: #3b574e;
+  background: #20322d;
+  color: #d6e6e0;
+}
+
+@media (max-width: 720px) {
+  .format-font-select {
+    width: 118px;
+  }
+
+  .format-size-select {
+    width: 70px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .format-select,
+  .format-color-control {
+    transition: none !important;
+  }
+}

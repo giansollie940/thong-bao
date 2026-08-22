@@ -52,6 +52,7 @@
   const appLoader = window.WeeklyLoader;
 
   let announcementEditor = null;
+  let announcementFormatting = null;
   let announcementFindReplace = null;
 
   const state = {
@@ -1528,6 +1529,7 @@
       }
     );
 
+    announcementFormatting?.reset();
     announcementFindReplace?.reset();
     $("#announcement-image-alt").value = item?.image_alt || item?.title || "";
     $("#announcement-remove-image").checked = false;
@@ -2347,6 +2349,19 @@
 
     if (!announcementEditor) {
       throw new Error("Không khởi tạo được rich editor.");
+    }
+
+    announcementFormatting =
+      window.WeeklyEditorFormatting?.create({
+        root: $("#announcement-rich-editor"),
+        editor: announcementEditor,
+        onToast: showToast
+      });
+
+    if (!announcementFormatting) {
+      throw new Error(
+        "Không khởi tạo được Formatting Toolbar."
+      );
     }
 
     announcementFindReplace =
