@@ -30,6 +30,11 @@
 
     let currentView = "visual";
     let savedVisualRange = null;
+    let savedSourceSelection = {
+      start: 0,
+      end: 0,
+      direction: "none"
+    };
 
     const sanitize = value => renderer.sanitizeHtml(value || "");
 
@@ -58,6 +63,12 @@
 
       source.value = clean;
       visual.innerHTML = clean;
+      savedVisualRange = null;
+      savedSourceSelection = {
+        start: 0,
+        end: 0,
+        direction: "none"
+      };
 
       updateLineNumbers();
       updateCounter();
@@ -126,19 +137,123 @@
       });
     }
 
+    function rangeBelongsToVisual(range) {
+      if (!range) return false;
+
+      const node = range.commonAncestorContainer;
+      const element =
+        node.nodeType === Node.ELEMENT_NODE
+          ? node
+          : node.parentElement;
+
+      return Boolean(
+        element &&
+        (element === visual || visual.contains(element))
+      );
+    }
+
     function saveVisualSelection() {
       const selection = window.getSelection();
-      if (!selection?.rangeCount) return;
+      if (!selection?.rangeCount) return false;
 
       const range = selection.getRangeAt(0);
-      const node = range.commonAncestorContainer;
-      const element = node.nodeType === Node.ELEMENT_NODE
-        ? node
-        : node.parentElement;
 
-      if (element && visual.contains(element)) {
-        savedVisualRange = range.cloneRange();
+      if (!rangeBelongsToVisual(range)) {
+        return false;
       }
+
+      savedVisualRange = range.cloneRange();
+      return true;
+    }
+
+    function saveSourceSelection() {
+      savedSourceSelection = {
+        start: source.selectionStart ?? 0,
+        end: source.selectionEnd ?? 0,
+        direction:
+          source.selectionDirection || "none"
+      };
+
+      return savedSourceSelection;
+    }
+
+    function captureSelection() {
+      if (currentView === "visual") {
+        saveVisualSelection();
+        return;
+      }
+
+      saveSourceSelection();
+    }
+
+    function restoreVisualSelection({
+      focus = true
+    } = {}) {
+      if (!savedVisualRange) return null;
+
+      try {
+        if (!rangeBelongsToVisual(savedVisualRange)) {
+          return null;
+        }
+
+        const selection = window.getSelection();
+        if (!selection) return null;
+
+        if (focus) {
+          try {
+            visual.focus({ preventScroll: true });
+          } catch {
+            visual.focus();
+          }
+        }
+
+        selection.removeAllRanges();
+        selection.addRange(savedVisualRange);
+
+        return savedVisualRange;
+      } catch {
+        savedVisualRange = null;
+        return null;
+      }
+    }
+
+    function restoreSourceSelection({
+      focus = true
+    } = {}) {
+      const start = Math.min(
+        savedSourceSelection.start,
+        source.value.length
+      );
+      const end = Math.min(
+        savedSourceSelection.end,
+        source.value.length
+      );
+
+      if (focus) {
+        try {
+          source.focus({ preventScroll: true });
+        } catch {
+          source.focus();
+        }
+      }
+
+      source.setSelectionRange(
+        start,
+        end,
+        savedSourceSelection.direction
+      );
+
+      return {
+        start,
+        end,
+        direction: savedSourceSelection.direction
+      };
+    }
+
+    function restoreSelection(options = {}) {
+      return currentView === "visual"
+        ? restoreVisualSelection(options)
+        : restoreSourceSelection(options);
     }
 
     function currentVisualRange() {
@@ -146,21 +261,26 @@
 
       if (selection?.rangeCount) {
         const range = selection.getRangeAt(0);
-        const node = range.commonAncestorContainer;
-        const element = node.nodeType === Node.ELEMENT_NODE
-          ? node
-          : node.parentElement;
 
-        if (element && visual.contains(element)) {
+        if (rangeBelongsToVisual(range)) {
+          savedVisualRange = range.cloneRange();
           return range;
         }
       }
 
-      if (!savedVisualRange || !selection) return null;
+      return restoreVisualSelection({
+        focus: false
+      });
+    }
 
-      selection.removeAllRanges();
-      selection.addRange(savedVisualRange);
-      return savedVisualRange;
+    function currentSourceSelection() {
+      if (document.activeElement === source) {
+        saveSourceSelection();
+      }
+
+      return restoreSourceSelection({
+        focus: false
+      });
     }
 
     function selectContents(node) {
@@ -356,8 +476,10 @@
       const cssText = cssTextFromObject(styles);
       if (!cssText) return;
 
-      const start = source.selectionStart;
-      const end = source.selectionEnd;
+      const {
+        start,
+        end
+      } = currentSourceSelection();
       const selected =
         source.value.slice(start, end) || placeholder;
 
@@ -485,8 +607,10 @@
     }
 
     function clearSourceFormatting() {
-      const start = source.selectionStart;
-      const end = source.selectionEnd;
+      const {
+        start,
+        end
+      } = currentSourceSelection();
 
       if (start === end) {
         onToast(
@@ -674,8 +798,10 @@
       after,
       placeholder
     ) {
-      const start = source.selectionStart;
-      const end = source.selectionEnd;
+      const {
+        start,
+        end
+      } = currentSourceSelection();
       const selected =
         source.value.slice(start, end) || placeholder;
 
@@ -700,8 +826,10 @@
     }
 
     function makeSourceList(tag) {
-      const start = source.selectionStart;
-      const end = source.selectionEnd;
+      const {
+        start,
+        end
+      } = currentSourceSelection();
       const selected =
         source.value.slice(start, end).trim();
 
@@ -732,8 +860,10 @@
     }
 
     function makeSourceLink() {
-      const start = source.selectionStart;
-      const end = source.selectionEnd;
+      const {
+        start,
+        end
+      } = currentSourceSelection();
       const selected =
         source.value.slice(start, end) ||
         "tên liên kết";
@@ -980,6 +1110,8 @@
     toolbar.addEventListener(
       "pointerdown",
       event => {
+        captureSelection();
+
         if (event.target.closest("[data-format]")) {
           event.preventDefault();
         }
@@ -1037,6 +1169,19 @@
       { passive: true }
     );
 
+    for (const eventName of [
+      "select",
+      "keyup",
+      "mouseup",
+      "focus",
+      "input"
+    ]) {
+      source.addEventListener(
+        eventName,
+        saveSourceSelection
+      );
+    }
+
     source.addEventListener(
       "keydown",
       handleSourceKeydown
@@ -1079,6 +1224,11 @@
       source.value = "";
       visual.innerHTML = "";
       savedVisualRange = null;
+      savedSourceSelection = {
+        start: 0,
+        end: 0,
+        direction: "none"
+      };
 
       updateLineNumbers();
       syncLineNumberScroll();
@@ -1097,6 +1247,8 @@
       applyInlineStyle,
       applyBlockStyle,
       clearFormatting,
+      captureSelection,
+      restoreSelection,
       focus: () => {
         if (currentView === "html") {
           source.focus();

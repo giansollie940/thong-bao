@@ -193,3 +193,24 @@ Các định dạng mới sử dụng HTML/CSS an toàn mà sanitizer hiện có
 
 Phần điều khiển nâng cao được tách thành
 `editor-formatting.js` và `editor-formatting.css`.
+
+
+## V3.16.5 — Stable Selection Formatting
+
+Sửa lỗi định dạng lúc được lúc không sau khi bôi đen:
+
+- Editor lưu `selection snapshot` trước khi toolbar/select/color nhận focus.
+- Sau khi áp dụng định dạng, selection được khôi phục để có thể bấm tiếp
+  màu chữ → highlight → canh lề mà không phải bôi đen lại.
+- Áp dụng cho cả Visual và source HTML selection.
+- Font/cỡ chữ cũng dùng selection snapshot mới.
+
+UI mới cho Màu & căn:
+
+- Nút `🎨 Màu & căn` mở bảng rõ ràng bên dưới toolbar.
+- 4 nút canh lề có icon + chữ: Trái / Giữa / Phải / Đều.
+- Palette màu chữ có màu dùng nhanh + màu tùy chọn.
+- Palette highlight có màu dùng nhanh + `Bỏ highlight` + màu tùy chọn.
+- Mobile chuyển panel thành 1 cột.
+
+Không thay đổi sanitizer, database hoặc Supabase.

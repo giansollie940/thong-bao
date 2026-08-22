@@ -6,16 +6,16 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.16.4">
-  <link rel="stylesheet" href="controls.css?v=3.16.4">
-  <link rel="stylesheet" href="content-renderer.css?v=3.16.4">
-  <link rel="stylesheet" href="content-interactions.css?v=3.16.4">
-  <link rel="stylesheet" href="rich-editor.css?v=3.16.4">
-  <link rel="stylesheet" href="editor-formatting.css?v=3.16.4">
-  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.4">
-  <link rel="stylesheet" href="loading-diamond.css?v=3.16.4">
-  <link rel="stylesheet" href="announcement-form.css?v=3.16.4">
-  <link rel="stylesheet" href="pet-companion.css?v=3.16.4">
+  <link rel="stylesheet" href="styles.css?v=3.16.5">
+  <link rel="stylesheet" href="controls.css?v=3.16.5">
+  <link rel="stylesheet" href="content-renderer.css?v=3.16.5">
+  <link rel="stylesheet" href="content-interactions.css?v=3.16.5">
+  <link rel="stylesheet" href="rich-editor.css?v=3.16.5">
+  <link rel="stylesheet" href="editor-formatting.css?v=3.16.5">
+  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.5">
+  <link rel="stylesheet" href="loading-diamond.css?v=3.16.5">
+  <link rel="stylesheet" href="announcement-form.css?v=3.16.5">
+  <link rel="stylesheet" href="pet-companion.css?v=3.16.5">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -456,38 +456,17 @@
 
               <span class="format-separator" aria-hidden="true"></span>
 
-              <div class="format-button-group" role="group" aria-label="Canh lề">
-                <button class="format-button" type="button" data-editor-align="left" title="Canh trái" aria-label="Canh trái">≡</button>
-                <button class="format-button" type="button" data-editor-align="center" title="Canh giữa" aria-label="Canh giữa">≡</button>
-                <button class="format-button" type="button" data-editor-align="right" title="Canh phải" aria-label="Canh phải">≡</button>
-                <button class="format-button format-button-wide" type="button" data-editor-align="justify" title="Canh đều hai bên" aria-label="Canh đều hai bên">☰</button>
-              </div>
-
-              <span class="format-separator" aria-hidden="true"></span>
-
-              <label class="format-color-control" title="Màu chữ">
-                <span aria-hidden="true" class="format-color-icon">A</span>
-                <span class="sr-only">Màu chữ</span>
-                <input
-                  id="announcement-text-color"
-                  type="color"
-                  value="#243a33"
-                  aria-label="Màu chữ"
-                  data-editor-color="color"
-                >
-              </label>
-
-              <label class="format-color-control format-highlight-control" title="Màu nền chữ">
-                <span aria-hidden="true" class="format-color-icon">▰</span>
-                <span class="sr-only">Màu nền chữ</span>
-                <input
-                  id="announcement-highlight-color"
-                  type="color"
-                  value="#fff2a8"
-                  aria-label="Màu nền chữ"
-                  data-editor-color="background-color"
-                >
-              </label>
+              <button
+                class="format-button format-button-wide format-more-button"
+                id="announcement-format-more"
+                type="button"
+                data-editor-format-toggle
+                aria-controls="announcement-format-panel"
+                aria-expanded="false"
+                title="Màu chữ, highlight và canh lề"
+              >
+                🎨 Màu &amp; căn
+              </button>
 
               <button
                 class="format-button format-button-wide"
@@ -532,6 +511,89 @@
                 🔎
               </button>
             </div>
+
+            <section
+              class="editor-format-panel"
+              id="announcement-format-panel"
+              aria-label="Màu chữ, highlight và canh lề"
+              hidden
+            >
+              <div class="editor-format-panel-group">
+                <span class="editor-format-panel-label">Canh lề</span>
+                <div class="editor-align-grid" role="group" aria-label="Canh lề đoạn văn">
+                  <button type="button" class="editor-align-button" data-editor-align="left">
+                    <span class="align-icon align-left" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <span>Trái</span>
+                  </button>
+                  <button type="button" class="editor-align-button" data-editor-align="center">
+                    <span class="align-icon align-center" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <span>Giữa</span>
+                  </button>
+                  <button type="button" class="editor-align-button" data-editor-align="right">
+                    <span class="align-icon align-right" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <span>Phải</span>
+                  </button>
+                  <button type="button" class="editor-align-button" data-editor-align="justify">
+                    <span class="align-icon align-justify" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <span>Đều</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="editor-format-panel-group">
+                <span class="editor-format-panel-label">Màu chữ</span>
+                <div class="editor-color-palette" role="group" aria-label="Chọn màu chữ">
+                  <button type="button" class="editor-color-swatch editor-color-reset" data-editor-text-color="inherit" aria-label="Màu chữ mặc định" title="Mặc định">A</button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#243a33" data-editor-text-color="#243a33" aria-label="Xanh đen"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#1565c0" data-editor-text-color="#1565c0" aria-label="Xanh dương"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#2e7d32" data-editor-text-color="#2e7d32" aria-label="Xanh lá"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#c62828" data-editor-text-color="#c62828" aria-label="Đỏ"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#6a1b9a" data-editor-text-color="#6a1b9a" aria-label="Tím"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#ef6c00" data-editor-text-color="#ef6c00" aria-label="Cam"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#546e7a" data-editor-text-color="#546e7a" aria-label="Xám"></button>
+
+                  <label class="editor-custom-color" title="Chọn màu chữ khác">
+                    <span>Tùy chọn</span>
+                    <input
+                      id="announcement-text-color"
+                      type="color"
+                      value="#243a33"
+                      aria-label="Chọn màu chữ khác"
+                      data-editor-color="color"
+                    >
+                  </label>
+                </div>
+              </div>
+
+              <div class="editor-format-panel-group">
+                <span class="editor-format-panel-label">Highlight</span>
+                <div class="editor-color-palette" role="group" aria-label="Chọn màu highlight">
+                  <button type="button" class="editor-color-swatch editor-no-highlight" data-editor-highlight-color="transparent" aria-label="Bỏ highlight" title="Bỏ highlight">×</button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#fff2a8" data-editor-highlight-color="#fff2a8" aria-label="Vàng nhạt"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#d8f5e8" data-editor-highlight-color="#d8f5e8" aria-label="Xanh mint"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#dceeff" data-editor-highlight-color="#dceeff" aria-label="Xanh trời nhạt"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#ffdce8" data-editor-highlight-color="#ffdce8" aria-label="Hồng nhạt"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#eadcff" data-editor-highlight-color="#eadcff" aria-label="Tím nhạt"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#ffe3c2" data-editor-highlight-color="#ffe3c2" aria-label="Cam nhạt"></button>
+                  <button type="button" class="editor-color-swatch" style="--swatch:#eceff1" data-editor-highlight-color="#eceff1" aria-label="Xám nhạt"></button>
+
+                  <label class="editor-custom-color" title="Chọn màu highlight khác">
+                    <span>Tùy chọn</span>
+                    <input
+                      id="announcement-highlight-color"
+                      type="color"
+                      value="#fff2a8"
+                      aria-label="Chọn màu highlight khác"
+                      data-editor-color="background-color"
+                    >
+                  </label>
+                </div>
+              </div>
+
+              <p class="editor-format-panel-hint">
+                Bôi đen nội dung trước, sau đó chọn định dạng. Vùng chọn được giữ lại khi bạn thao tác trên bảng này.
+              </p>
+            </section>
 
             <section
               class="editor-find-panel"
@@ -1133,13 +1195,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="content-renderer.js?v=3.16.4"></script>
-  <script src="content-interactions.js?v=3.16.4"></script>
-  <script src="rich-editor.js?v=3.16.4"></script>
-  <script src="editor-formatting.js?v=3.16.4"></script>
-  <script src="editor-find-replace.js?v=3.16.4"></script>
-  <script src="loading-diamond.js?v=3.16.4"></script>
-  <script src="app.js?v=3.16.4"></script>
-  <script src="pet-companion.js?v=3.16.4"></script>
+  <script src="content-renderer.js?v=3.16.5"></script>
+  <script src="content-interactions.js?v=3.16.5"></script>
+  <script src="rich-editor.js?v=3.16.5"></script>
+  <script src="editor-formatting.js?v=3.16.5"></script>
+  <script src="editor-find-replace.js?v=3.16.5"></script>
+  <script src="loading-diamond.js?v=3.16.5"></script>
+  <script src="app.js?v=3.16.5"></script>
+  <script src="pet-companion.js?v=3.16.5"></script>
 </body>
 </html>
