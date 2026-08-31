@@ -1,0 +1,285 @@
+name: Fix editor multiblock formatting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-editor-multiblock.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch rich editor multiblock formatting
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('rich-editor.js')
+          text = path.read_text(encoding='utf-8')
+
+          old_wrap = '''    function wrapVisual(tag, placeholder) {
+              const range = currentVisualRange();
+
+              if (!range) {
+                visual.focus();
+                return;
+              }
+
+              const wrapper = document.createElement(tag);
+
+              if (range.collapsed) {
+                wrapper.textContent = placeholder;
+                range.insertNode(wrapper);
+              } else {
+                wrapper.append(range.extractContents());
+                range.insertNode(wrapper);
+              }
+
+              selectContents(wrapper);
+              syncVisualToSource();
+            }
+          '''
+
+          new_wrap = '''    function visualTextSegments(range) {
+              if (!range || range.collapsed) return [];
+
+              const walker = document.createTreeWalker(
+                visual,
+                NodeFilter.SHOW_TEXT
+              );
+              const segments = [];
+              let node = walker.nextNode();
+
+              while (node) {
+                const parent = node.parentElement;
+
+                if (
+                  node.nodeValue?.length &&
+                  parent &&
+                  !parent.closest("style, script")
+                ) {
+                  try {
+                    if (range.intersectsNode(node)) {
+                      let start = 0;
+                      let end = node.nodeValue.length;
+
+                      if (node === range.startContainer) {
+                        start = range.startOffset;
+                      }
+
+                      if (node === range.endContainer) {
+                        end = range.endOffset;
+                      }
+
+                      if (start < end) {
+                        segments.push({ node, start, end });
+                      }
+                    }
+                  } catch {
+                    // Ignore detached nodes while the DOM is changing.
+                  }
+                }
+
+                node = walker.nextNode();
+              }
+
+              return segments;
+            }
+
+            function wrapVisualSegments(range, createWrapper) {
+              const segments = visualTextSegments(range);
+              const wrappers = [];
+
+              for (const segment of [...segments].reverse()) {
+                const { node, start, end } = segment;
+                let selectedNode = node;
+
+                if (end < selectedNode.nodeValue.length) {
+                  selectedNode.splitText(end);
+                }
+
+                if (start > 0) {
+                  selectedNode = selectedNode.splitText(start);
+                }
+
+                const wrapper = createWrapper();
+                selectedNode.parentNode.insertBefore(
+                  wrapper,
+                  selectedNode
+                );
+                wrapper.append(selectedNode);
+                wrappers.push(wrapper);
+              }
+
+              wrappers.reverse();
+              return wrappers;
+            }
+
+            function selectWrapperRange(wrappers) {
+              if (!wrappers.length) return;
+
+              const selection = window.getSelection();
+              if (!selection) return;
+
+              const range = document.createRange();
+              range.setStartBefore(wrappers[0]);
+              range.setEndAfter(wrappers[wrappers.length - 1]);
+
+              selection.removeAllRanges();
+              selection.addRange(range);
+              savedVisualRange = range.cloneRange();
+            }
+
+            function wrapVisual(tag, placeholder) {
+              const range = currentVisualRange();
+
+              if (!range) {
+                visual.focus();
+                return;
+              }
+
+              if (range.collapsed) {
+                const wrapper = document.createElement(tag);
+                wrapper.textContent = placeholder;
+                range.insertNode(wrapper);
+                selectContents(wrapper);
+                syncVisualToSource();
+                return;
+              }
+
+              const wrappers = wrapVisualSegments(
+                range,
+                () => document.createElement(tag)
+              );
+
+              if (!wrappers.length) return;
+
+              selectWrapperRange(wrappers);
+              syncVisualToSource();
+            }
+          '''
+
+          old_style = '''    function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
+              const range = currentVisualRange();
+
+              if (!range) {
+                visual.focus();
+                return;
+              }
+
+              const wrapper = document.createElement("span");
+              const cssText = cssTextFromObject(styles);
+
+              if (!cssText) return;
+
+              wrapper.setAttribute("style", cssText);
+
+              if (range.collapsed) {
+                wrapper.textContent = placeholder;
+                range.insertNode(wrapper);
+              } else {
+                wrapper.append(range.extractContents());
+                range.insertNode(wrapper);
+              }
+
+              selectContents(wrapper);
+              syncVisualToSource();
+            }
+          '''
+
+          new_style = '''    function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
+              const range = currentVisualRange();
+
+              if (!range) {
+                visual.focus();
+                return;
+              }
+
+              const cssText = cssTextFromObject(styles);
+              if (!cssText) return;
+
+              if (range.collapsed) {
+                const wrapper = document.createElement("span");
+                wrapper.setAttribute("style", cssText);
+                wrapper.textContent = placeholder;
+                range.insertNode(wrapper);
+                selectContents(wrapper);
+                syncVisualToSource();
+                return;
+              }
+
+              const wrappers = wrapVisualSegments(
+                range,
+                () => {
+                  const wrapper = document.createElement("span");
+                  wrapper.setAttribute("style", cssText);
+                  return wrapper;
+                }
+              );
+
+              if (!wrappers.length) return;
+
+              selectWrapperRange(wrappers);
+              syncVisualToSource();
+            }
+          '''
+
+          if old_wrap not in text:
+              raise SystemExit('Expected wrapVisual block not found')
+          if old_style not in text:
+              raise SystemExit('Expected wrapVisualStyle block not found')
+
+          text = text.replace(old_wrap, new_wrap).replace(old_style, new_style)
+          path.write_text(text, encoding='utf-8')
+
+          index = Path('index.html')
+          index_text = index.read_text(encoding='utf-8')
+          index_text = index_text.replace('?v=3.16.7', '?v=3.16.8')
+          index.write_text(index_text, encoding='utf-8')
+          PY
+
+          node --check rich-editor.js
+          git diff --check
+
+      - name: Run multiblock browser regression
+        shell: bash
+        run: |
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$BROWSER" ]; then
+            echo "No Chromium browser found on runner" >&2
+            exit 1
+          fi
+
+          timeout 25s "$BROWSER" \
+            --headless \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --allow-file-access-from-files \
+            --virtual-time-budget=4000 \
+            --dump-dom \
+            "file://$PWD/tests/editor-multiblock-regression.html" \
+            > /tmp/editor-regression.html
+
+          cat /tmp/editor-regression.html | grep 'data-test-status="pass"'
+          cat /tmp/editor-regression.html | grep 'PASS: multiblock inline formatting covers every selected block'
+
+      - name: Commit verified fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rich-editor.js index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Fix formatting across multiple editor blocks"
+            git push
+          fi
