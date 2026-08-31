@@ -342,29 +342,122 @@
       savedVisualRange = range.cloneRange();
     }
 
-    function wrapVisual(tag, placeholder) {
-      const range = currentVisualRange();
+    function visualTextSegments(range) {
+    if (!range || range.collapsed) return [];
 
-      if (!range) {
-        visual.focus();
-        return;
+    const walker = document.createTreeWalker(
+      visual,
+      NodeFilter.SHOW_TEXT
+    );
+    const segments = [];
+    let node = walker.nextNode();
+
+    while (node) {
+      const parent = node.parentElement;
+
+      if (
+        node.nodeValue?.length &&
+        parent &&
+        !parent.closest("style, script")
+      ) {
+        try {
+          if (range.intersectsNode(node)) {
+            let start = 0;
+            let end = node.nodeValue.length;
+
+            if (node === range.startContainer) {
+              start = range.startOffset;
+            }
+
+            if (node === range.endContainer) {
+              end = range.endOffset;
+            }
+
+            if (start < end) {
+              segments.push({ node, start, end });
+            }
+          }
+        } catch {
+          // Ignore detached nodes while the DOM is changing.
+        }
       }
 
-      const wrapper = document.createElement(tag);
-
-      if (range.collapsed) {
-        wrapper.textContent = placeholder;
-        range.insertNode(wrapper);
-      } else {
-        wrapper.append(range.extractContents());
-        range.insertNode(wrapper);
-      }
-
-      selectContents(wrapper);
-      syncVisualToSource();
+      node = walker.nextNode();
     }
 
-    function cssTextFromObject(styles = {}) {
+    return segments;
+  }
+
+  function wrapVisualSegments(range, createWrapper) {
+    const segments = visualTextSegments(range);
+    const wrappers = [];
+
+    for (const segment of [...segments].reverse()) {
+      const { node, start, end } = segment;
+      let selectedNode = node;
+
+      if (end < selectedNode.nodeValue.length) {
+        selectedNode.splitText(end);
+      }
+
+      if (start > 0) {
+        selectedNode = selectedNode.splitText(start);
+      }
+
+      const wrapper = createWrapper();
+      selectedNode.parentNode.insertBefore(wrapper, selectedNode);
+      wrapper.append(selectedNode);
+      wrappers.push(wrapper);
+    }
+
+    wrappers.reverse();
+    return wrappers;
+  }
+
+  function selectWrapperRange(wrappers) {
+    if (!wrappers.length) return;
+
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const range = document.createRange();
+    range.setStartBefore(wrappers[0]);
+    range.setEndAfter(wrappers[wrappers.length - 1]);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+    savedVisualRange = range.cloneRange();
+  }
+
+  function wrapVisual(tag, placeholder) {
+    const range = currentVisualRange();
+
+    if (!range) {
+      visual.focus();
+      return;
+    }
+
+    if (range.collapsed) {
+      const wrapper = document.createElement(tag);
+      wrapper.textContent = placeholder;
+      range.insertNode(wrapper);
+      selectContents(wrapper);
+      syncVisualToSource();
+      return;
+    }
+
+    const wrappers = wrapVisualSegments(
+      range,
+      () => document.createElement(tag)
+    );
+
+    if (!wrappers.length) return;
+
+    selectWrapperRange(wrappers);
+    syncVisualToSource();
+  }
+
+  function cssTextFromObject(styles = {}) {
       return Object.entries(styles)
         .filter(([, value]) => String(value || "").trim())
         .map(([property, value]) =>
@@ -374,33 +467,42 @@
     }
 
     function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
-      const range = currentVisualRange();
+    const range = currentVisualRange();
 
-      if (!range) {
-        visual.focus();
-        return;
-      }
-
-      const wrapper = document.createElement("span");
-      const cssText = cssTextFromObject(styles);
-
-      if (!cssText) return;
-
-      wrapper.setAttribute("style", cssText);
-
-      if (range.collapsed) {
-        wrapper.textContent = placeholder;
-        range.insertNode(wrapper);
-      } else {
-        wrapper.append(range.extractContents());
-        range.insertNode(wrapper);
-      }
-
-      selectContents(wrapper);
-      syncVisualToSource();
+    if (!range) {
+      visual.focus();
+      return;
     }
 
-    function closestTextBlock(node) {
+    const cssText = cssTextFromObject(styles);
+    if (!cssText) return;
+
+    if (range.collapsed) {
+      const wrapper = document.createElement("span");
+      wrapper.setAttribute("style", cssText);
+      wrapper.textContent = placeholder;
+      range.insertNode(wrapper);
+      selectContents(wrapper);
+      syncVisualToSource();
+      return;
+    }
+
+    const wrappers = wrapVisualSegments(
+      range,
+      () => {
+        const wrapper = document.createElement("span");
+        wrapper.setAttribute("style", cssText);
+        return wrapper;
+      }
+    );
+
+    if (!wrappers.length) return;
+
+    selectWrapperRange(wrappers);
+    syncVisualToSource();
+  }
+
+  function closestTextBlock(node) {
       const element =
         node?.nodeType === Node.ELEMENT_NODE
           ? node
