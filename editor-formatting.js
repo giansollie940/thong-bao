@@ -18,9 +18,135 @@
     const panel = root.querySelector(
       "#announcement-format-panel"
     );
-    const panelToggle = root.querySelector(
-      "#announcement-format-more"
-    );
+
+    function enhanceLegacyToolbar() {
+      if (!toolbar || !panel) return;
+
+      const legacyToggle = root.querySelector(
+        "#announcement-format-more"
+      );
+      let colorToggle = root.querySelector(
+        "#announcement-color-more"
+      );
+      let alignToggle = root.querySelector(
+        "#announcement-align-more"
+      );
+
+      if (!colorToggle && legacyToggle) {
+        colorToggle = legacyToggle;
+        colorToggle.id = "announcement-color-more";
+        colorToggle.dataset.editorFormatToggle = "color";
+        colorToggle.title = "Màu chữ và highlight";
+        colorToggle.setAttribute(
+          "aria-label",
+          "Màu chữ và highlight"
+        );
+        colorToggle.textContent = "🎨 Màu";
+      }
+
+      if (!alignToggle && colorToggle) {
+        alignToggle = document.createElement("button");
+        alignToggle.className =
+          "format-button format-button-wide format-more-button";
+        alignToggle.id = "announcement-align-more";
+        alignToggle.type = "button";
+        alignToggle.dataset.editorFormatToggle = "align";
+        alignToggle.setAttribute(
+          "aria-controls",
+          "announcement-format-panel"
+        );
+        alignToggle.setAttribute("aria-expanded", "false");
+        alignToggle.setAttribute(
+          "aria-label",
+          "Căn lề đoạn văn"
+        );
+        alignToggle.title = "Căn lề đoạn văn";
+        alignToggle.textContent = "☰ Căn";
+        colorToggle.after(alignToggle);
+      }
+
+      const groups = [
+        ...panel.querySelectorAll(
+          ".editor-format-panel-group"
+        )
+      ];
+
+      if (groups.length >= 3) {
+        groups[0].dataset.editorFormatSection = "align";
+        groups[1].dataset.editorFormatSection = "color";
+        groups[2].dataset.editorFormatSection = "color";
+      }
+
+      const heading = toolbar.querySelector(
+        '[data-format="heading"]'
+      );
+      const link = toolbar.querySelector(
+        '[data-format="link"]'
+      );
+      const clear = toolbar.querySelector(
+        "[data-editor-clear-format]"
+      );
+      const bold = toolbar.querySelector(
+        '[data-format="bold"]'
+      );
+      const find = toolbar.querySelector(
+        "#announcement-find-toggle"
+      );
+
+      if (heading && colorToggle) {
+        heading.before(colorToggle);
+        colorToggle.after(alignToggle);
+        alignToggle.after(heading);
+      }
+
+      if (link && clear) {
+        link.after(clear);
+      }
+
+      for (const separator of [
+        ...toolbar.querySelectorAll(
+          ".format-separator"
+        )
+      ]) {
+        separator.remove();
+      }
+
+      for (const target of [
+        bold,
+        colorToggle,
+        heading,
+        link,
+        find
+      ]) {
+        if (!target) continue;
+
+        const separator = document.createElement("span");
+        separator.className = "format-separator";
+        separator.setAttribute("aria-hidden", "true");
+        target.before(separator);
+      }
+
+      const hint = panel.querySelector(
+        ".editor-format-panel-hint"
+      );
+      if (hint) {
+        hint.textContent =
+          "Bôi đen nội dung trước, sau đó chọn Màu hoặc Căn. " +
+          "Vùng chọn được giữ lại để áp dụng nhiều định dạng liên tiếp.";
+      }
+    }
+
+    enhanceLegacyToolbar();
+    const panelToggles = [
+      ...root.querySelectorAll(
+        "[data-editor-format-toggle]"
+      )
+    ];
+    const panelSections = [
+      ...root.querySelectorAll(
+        "[data-editor-format-section]"
+      )
+    ];
     const fontSelect = root.querySelector(
       "#announcement-font-family"
     );
@@ -51,7 +177,8 @@
     if (
       !toolbar ||
       !panel ||
-      !panelToggle ||
+      !panelToggles.length ||
+      !panelSections.length ||
       !fontSelect ||
       !sizeSelect ||
       !textColor ||
@@ -77,41 +204,67 @@
     }
 
     function runWithSelection(action) {
+      /*
+       * Restore the snapshot BEFORE formatting. A focus-taking
+       * select/color control can leave a collapsed caret inside the
+       * editor; without this step that caret can replace the real
+       * highlighted range.
+       */
+      restoreSelection();
+
       try {
         action();
+        rememberSelection();
       } finally {
-        /*
-         * Giữ vùng bôi đen sau khi định dạng,
-         * để người dùng có thể bấm tiếp màu/highlight/căn lề
-         * mà không phải chọn lại.
-         */
-        requestAnimationFrame(
-          restoreSelection
-        );
+        /* Keep the updated selection available for the next command. */
+        requestAnimationFrame(restoreSelection);
       }
     }
 
-    function setPanelOpen(open) {
+    let activePanelMode = null;
+
+    function setPanelOpen(open, mode = activePanelMode) {
+      const nextMode =
+        mode ||
+        panelToggles[0].dataset.editorFormatToggle;
+
       panel.hidden = !open;
-      panelToggle.setAttribute(
-        "aria-expanded",
-        String(open)
-      );
-      panelToggle.classList.toggle(
-        "active",
-        open
-      );
+      activePanelMode = open ? nextMode : null;
+
+      if (open) {
+        panel.dataset.mode = nextMode;
+      } else {
+        delete panel.dataset.mode;
+      }
+
+      for (const section of panelSections) {
+        section.hidden =
+          open &&
+          section.dataset.editorFormatSection !== nextMode;
+      }
+
+      for (const toggle of panelToggles) {
+        const active =
+          open &&
+          toggle.dataset.editorFormatToggle === nextMode;
+
+        toggle.setAttribute(
+          "aria-expanded",
+          String(active)
+        );
+        toggle.classList.toggle("active", active);
+      }
     }
 
-    panelToggle.addEventListener(
-      "pointerdown",
-      rememberSelection,
-      true
-    );
+    for (const toggle of panelToggles) {
+      toggle.addEventListener("click", () => {
+        const mode = toggle.dataset.editorFormatToggle;
+        const samePanelOpen =
+          !panel.hidden && activePanelMode === mode;
 
-    panelToggle.addEventListener("click", () => {
-      setPanelOpen(panel.hidden);
-    });
+        setPanelOpen(!samePanelOpen, mode);
+      });
+    }
 
     /*
      * Capture phase rất quan trọng:
