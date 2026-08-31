@@ -311,7 +311,7 @@
       }
 
       return restoreSourceSelection({
-      focus: false
+        focus: false
       });
     }
 
@@ -369,7 +369,8 @@
         .filter(([, value]) => String(value || "").trim())
         .map(([property, value]) =>
           `${property}: ${String(value).trim()}`
-        ).join("; ");
+        )
+        .join("; ");
     }
 
     function wrapVisualStyle(styles = {}, placeholder = "ná»™i dung") {
@@ -516,322 +517,781 @@
 
       const tag = block ? "div" : "span";
       const html =
-        `<$µ¨İ[OH‰ØÜÜÕ^H‰ÜÙ[XİYOÉİYßO˜Â‚ˆÛİ\˜ÙKœÙ]˜[™ÙU^
-ˆ[ˆİ\ˆ[™ˆœÙ[Xİ‚ˆ
-NÂ‚ˆÛİ\˜ÙK™›Øİ\Ê
-NÂˆÛİ\˜ÙK™\Ü]Ú]™[
-ˆ™]È]™[
-š[œ]‹ÈX˜›\ÎˆYHJBˆ
-NÂˆB‚ˆ[˜İ[Ûˆ\R[›[™Tİ[Jİ[\ÈHßJHÂˆYˆ
-İ\œ™[šY]ÈOOHš\İX[ŠHÂˆÜ˜\š\İX[İ[Jİ[\ÊNÂˆH[ÙHÂˆ™\XÙTÛİ\˜ÙUÚ]İ[Jİ[\ÊNÂˆBˆB‚ˆ[˜İ[Ûˆ\P›ØÚÔİ[Jİ[\ÈHßJHÂˆYˆ
-İ\œ™[šY]ÈOOHš\İX[ŠHÂˆ\Uš\İX[›ØÚÔİ[Jİ[\ÊNÂˆH[ÙHÂˆ™\XÙTÛİ\˜ÙUÚ]İ[Jˆİ[\ËˆÂˆ›ØÚÎˆYKˆXÙZÛ\ˆ“¸næZH[™Èñ ÛˆÚ8nâ[š‚ˆBˆ
-NÂˆBˆB‚ˆ[˜İ[Ûˆ[Ü˜\[[Y[
-[[Y[
-HÂˆYˆ
-Y[[Y[Ëœ\™[›ÙJH™]\›Â‚ˆÚ[H
-[[Y[™š\œİÚ[
-HÂˆ[[Y[œ\™[›ÙKš[œÙ\™Y›Ü™Jˆ[[Y[™š\œİÚ[ˆ[[Y[ˆ
-NÂˆB‚ˆ[[Y[œ™[[İ™J
-NÂˆB‚ˆ[˜İ[ÛˆÛX\•š\İX[›Ü›X][™Ê
-HÂˆÛÛœİ˜[™ÙHHİ\œ™[š\İX[˜[™ÙJ
-NÂ‚ˆYˆ
-\˜[™ÙJHÂˆš\İX[™›Øİ\Ê
-NÂˆ™]\›ÂˆB‚ˆYˆ
-˜[™ÙK˜ÛÛ\ÙY
-HÂˆÛÛœİ[[Y[Bˆ˜[™ÙKœİ\ÛÛZ[™\‹››ÙU\HOOH›ÙK‘SSQS•Ó“ÑBˆÈ˜[™ÙKœİ\ÛÛZ[™\‚ˆˆ˜[™ÙKœİ\ÛÛZ[™\‹œ\™[[[Y[Â‚ˆÛÛœİ[›[™HH[[Y[Ë˜ÛÜÙ\İ
-ˆœİ›Û™Ë‹[KKKËX\šËÜ[ˆ‚ˆ
-NÂ‚ˆYˆ
-ˆ[›[™H	‰‚ˆ[›[™HOOHš\İX[	‰‚ˆš\İX[˜ÛÛZ[œÊ[›[™JBˆ
-HÂˆ[Ü˜\[[Y[
-[›[™JNÂˆŞ[˜Õš\İX[ÔÛİ\˜ÙJ
-NÂˆB‚ˆ™]\›ÂˆB‚ˆÛÛœİœ˜YÛY[H˜[™ÙK™^˜XİÛÛ[Ê
-NÂ‚ˆ›Üˆ
-ÛÛœİ[[Y[ÙˆÂˆ‹‹™œ˜YÛY[œ]Y\TÙ[XİÜ[
-ŠˆŠBˆJHÂˆ›Üˆ
-ÛÛœİ›Ü\HÙˆÂˆ™›ÛY˜[Z[H‹ˆ™›Û\Ú^™H‹ˆ™›Û]ÙZYÚ‹ˆ™›Û\İ[H‹ˆ˜ÛÛÜˆ‹ˆ˜˜XÚÙÜ›İ[™‹ˆ˜˜XÚÙÜ›İ[™XÛÛÜˆ‹ˆ^YXÛÜ˜][Ûˆ‹ˆ^YXÛÜ˜][Û‹[[™H‹ˆ^X[YÛˆ‚ˆJHÂˆ[[Y[œİ[Kœ™[[İ™T›Ü\J›Ü\JNÂˆB‚ˆYˆ
-Y[[Y[™Ù]]šX]Jœİ[HŠOËš[J
-JHÂˆ[[Y[œ™[[İ™P]šX]Jœİ[HŠNÂˆBˆB‚ˆ›Üˆ
-ÛÛœİ[[Y[ÙˆÂˆ‹‹™œ˜YÛY[œ]Y\TÙ[XİÜ[
-ˆœİ›Û™Ë‹[KKKËX\šÈ‚ˆ
-BˆKœ™]™\œÙJ
-JHÂˆ[Ü˜\[[Y[
-[[Y[
-NÂˆB‚ˆÛÛœİÜ˜\\ˆHØİ[Y[˜Ü™X]Q[[Y[
-œÜ[ˆŠNÂˆÜ˜\\‹˜\[™
-œ˜YÛY[
-NÂˆ˜[™ÙKš[œÙ\›ÙJÜ˜\\ŠNÂ‚ˆÙ[XİÛÛ[ÊÜ˜\\ŠNÂˆŞ[˜Õš\İX[ÔÛİ\˜ÙJ
-NÂˆB‚ˆ[˜İ[ÛˆÛX\”Ûİ\˜ÙQ›Ü›X][™Ê
-HÂˆÛÛœİÂˆİ\ˆ[™ˆHHİ\œ™[Ûİ\˜ÙTÙ[Xİ[ÛŠ
-NÂ‚ˆYˆ
-İ\OOH[™
-HÂˆÛ•Ø\İ
-ˆ•›Û™ÈS0èŞHÚ8nã[ˆ1$[øn¨[ˆpèÈøn©Ûˆ0ìØH1$xnâÛš8n¨[™Ëˆ‚ˆ
-NÂˆ™]\›ÂˆB‚ˆ]Ù[XİYHÛİ\˜ÙK˜[YKœÛXÙJİ\[™
-NÂ‚ˆÙ[XİYHÙ[XİYˆœ™\XÙJˆÏÏÊÎœİ›Û™ßŸ[___ßX\šÊW–×—J‹ÙÚKˆˆ‚ˆ
-Bˆœ™\XÙJˆÊ×—JÊWÜİ[OJÈ‰×JV×××J×Š×—JŠKÙÚKˆ‰IÈ‚ˆ
-NÂ‚ˆÛİ\˜ÙKœÙ]˜[™ÙU^
-ˆÙ[XİYˆİ\ˆ[™ˆœÙ[Xİ‚ˆ
-NÂ‚ˆÛİ\˜ÙK™›Øİ\Ê
-NÂˆÛİ\˜ÙK™\Ü]Ú]™[
-ˆ™]È]™[
-š[œ]‹ÈX˜›\ÎˆYHJBˆ
-NÂˆB‚ˆ[˜İ[ÛˆÛX\‘›Ü›X][™Ê
-HÂˆYˆ
-İ\œ™[šY]ÈOOHš\İX[ŠHÂˆÛX\•š\İX[›Ü›X][™Ê
-NÂˆH[ÙHÂˆÛX\”Ûİ\˜ÙQ›Ü›X][™Ê
-NÂˆB‚ˆB‚ˆ[˜İ[Ûˆ›Ü›X]š\İX[›ØÚÊYËXÙZÛ\ŠHÂˆÛÛœİ˜[™ÙHHİ\œ™[š\İX[˜[™ÙJ
-NÂ‚ˆYˆ
-\˜[™ÙJHÂˆš\İX[™›Øİ\Ê
-NÂˆ™]\›ÂˆB‚ˆÛÛœİ›ØÚÈHÛÜÙ\İ^›ØÚÊ˜[™ÙKœİ\ÛÛZ[™\ŠNÂ‚ˆYˆ
-›ØÚÊHÂˆÛÛœİ™\XÙ[Y[HØİ[Y[˜Ü™X]Q[[Y[
-YÊNÂ‚ˆÚ[H
-›ØÚË™š\œİÚ[
-HÂˆ™\XÙ[Y[˜\[™
-›ØÚË™š\œİÚ[
-NÂˆB‚ˆ›ØÚËœ™\XÙUÚ]
-™\XÙ[Y[
-NÂˆÙ[XİÛÛ[Ê™\XÙ[Y[
-NÂˆŞ[˜Õš\İX[ÔÛİ\˜ÙJ
-NÂˆ™]\›ÂˆB‚ˆÜ˜\š\İX[
-YËXÙZÛ\ŠNÂˆB‚ˆ[˜İ[Ûˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠ™Y›Ü™KY\‹XÙZÛ\ŠHÂˆÛÛœİÂˆİ\ˆ[™ˆHHİ\œ™[Ûİ\˜ÙTÙ[Xİ[ÛŠ
-NÂˆÛÛœİÙ[XİYHÛİ\˜ÙK˜[YKœÛXÙJİ\[™
-HXÙZÛ\ÂˆÛÛœİ[H	Ø™Y›Ü™_IÜÙ[XİYIØY\ŸXÂ‚ˆÛİ\˜ÙKœÙ]˜[™ÙU^
-[İ\[™œÙ[XİŠNÂˆÛİ\˜ÙK™›Øİ\Ê
-NÂˆÛİ\˜ÙK™\Ü]Ú]™[
-ˆ™]È]™[
-š[œ]‹ÈX˜›\ÎˆYHJBˆ
-NÂˆB‚ˆ[˜İ[ÛˆXZÙUš\İX[\İ
-YÊHÂˆÛÛœİ˜[™ÙHHİ\œ™[š\İX[˜[™ÙJ
-NÂ‚ˆYˆ
-\˜[™ÙJHÂˆš\İX[™›Øİ\Ê
-NÂˆ™]\›ÂˆB‚ˆÛÛœİ^H˜[™ÙKÔİš[™Ê
-Kš[J
-H“]á»¥XÈ[šğèXÚÂˆÛÛœİ[™\ÈH^ˆœÜ]
-×ŠËÊBˆ›X\
-[™HOˆ[™Kš[J
-JBˆ™š[\Š›ÛÛX[ŠNÂ‚ˆÛÛœİ\İHØİ[Y[˜Ü™X]Q[[Y[
-YÊNÂ‚ˆ›Üˆ
-ÛÛœİ[™HÙˆ[™\ÊHÂˆÛÛœİ][HHØİ[Y[˜Ü™X]Q[[Y[
-›HŠNÂˆ][K^ÛÛ[H[™NÂˆ\İ˜\[™
-][JNÂˆB‚ˆ˜[™ÙK™[]PÛÛ[Ê
-NÂˆ˜[™ÙKš[œÙ\›ÙJ\İ
-NÂˆÙ[XİÛÛ[Ê\İ
-NÂˆŞ[˜Õš\İX[ÔÛİ\˜ÙJ
-NÂˆB‚ˆ[˜İ[ÛˆXZÙTÛİ\˜ÙS\İ
-YÊHÂˆÛÛœİÂˆİ\ˆ[™ˆHHİ\œ™[Ûİ\˜ÙTÙ[Xİ[ÛŠ
-NÂ‚ˆÛÛœİ^HÛİ\˜ÙK˜[YKœÛXÙJİ\[™
-Kš[J
-H“xnéXÈ[šğèXÚÂˆÛÛœİ[™\ÈH^ˆœÜ]
-×ŠËÊBˆ›X\
-[™HOˆ[™Kš[J
-JBˆ™š[\Š›ÛÛX[ŠNÂˆÛÛœİ[H	İYßO‰Û[™\Ë›X\
-[™HOˆO‰Ü™[™\™\‹™\ØØ\R[
-[™J_OÛO˜
-Kš›Ú[ŠˆŠ_OÉİYßO˜Â‚ˆÛİ\˜ÙKœÙ]˜[™ÙU^
-[İ\[™œÙ[XİŠNÂˆÛİ\˜ÙK™›Øİ\Ê
-NÂˆÛİ\˜ÙK™\Ü]Ú]™[
-ˆ™]È]™[
-š[œ]‹ÈX˜›\ÎˆYHJBˆ
-NÂˆB‚ˆ[˜İ[Ûˆ˜[Y]S[šÊ˜[YJHÂˆÛÛœİ˜]ÈHİš[™Ê˜[YHˆŠKš[J
-NÂˆYˆ
-\˜]ÊH™]\›ˆˆÂ‚ˆHÂˆYˆ
-ˆ˜]Ëœİ\ÕÚ]
-ˆÈŠHˆ˜]Ëœİ\ÕÚ]
-‹ÈŠHˆ˜]Ëœİ\ÕÚ]
-‹‹ÈŠHˆ˜]Ëœİ\ÕÚ]
-‹‹‹ÈŠBˆ
-HÂˆ™]\›ˆ˜]ÎÂˆB‚ˆÛÛœİ\›H™]ÈT“
-˜]ÊNÂ‚ˆ™]\›ˆÈšˆ‹šÎˆ‹›XZ[Îˆ‹[ˆ—Kš[˜ÛY\Ê\›œ›İØÛÛ
-BˆÈ˜]ÂˆˆˆÂˆHØ]ÚÂˆ™]\›ˆˆÂˆBˆB‚ˆ[˜İ[ÛˆXZÙUš\İX[[šÊ
-HÂˆÛÛœİ˜[™ÙHHİ\œ™[š\İX[˜[™ÙJ
-NÂˆYˆ
-\˜[™ÙJH™]\›Â‚ˆÛÛœİÙ[XİYH˜[™ÙKÔİš[™Ê
-H›pê›ˆøn¯İÂˆÛÛœİ™YˆH˜[Y]S[šÊ›Û\
-“š8n«\0ê›ˆøn¯İ8nçÈ1$pè›È
-Î‹ËË‹‹ŠNˆŠJNÂ‚ˆYˆ
-Z™YŠHÂˆÛ•Ø\İ
-“pê›ˆøn¯İÚpí™È8nèÜ8náËˆŠNÂˆ™]\›ÂˆB‚ˆÛÛœİ[šÈHØİ[Y[˜Ü™X]Q[[Y[
-˜HŠNÂˆ[šËš™YˆH™YÂˆ[šË^ÛÛ[HÙ[XİYÂˆ[šËœ™[H››ÛÜ[™\ˆ›Ü™Y™\œ™\ˆÂˆ[šË\™Ù]H—Ø›[šÈÂ‚ˆ˜[™ÙK™[]PÛÛ[Ê
-NÂˆ˜[™ÙKš[œÙ\›ÙJ[šÊNÂˆÙ[XİÛÛ[Ê[šÊNÂˆŞ[˜Õš\İX[ÔÛİ\˜ÙJ
-NÂˆB‚ˆ[˜İ[ÛˆXZÙTÛİ\˜ÙS[šÊ
-HÂˆÛÛœİÂˆİ\ˆ[™ˆHHİ\œ™[Ûİ\˜ÙTÙ[Xİ[ÛŠ
-NÂˆÛÛœİÙ[XİYHÛİ\˜ÙK˜[YKœÛXÙJİ\[™
-H›pê›ˆøn¯İÂˆÛÛœİ™YˆH˜[Y]S[šÊ›Û\
-“š8n«\0ê›ˆøn¯İ8nçÈ1$pè›È
-Î‹ËË‹‹ŠNˆŠJNÂ‚ˆYˆ
-Z™YŠHÂˆÛ•Ø\İ
-“pê›ˆøn¯İÚpí™È8nèÜ8náËˆŠNÂˆ™]\›ÂˆB‚ˆÛÛœİ[HH™YH‰Ü™[™\™\‹™\ØØ\R[
-™YŠ_Hˆ\™Ù]H—Ø›[šÈˆ™[H››ÛÜ[™\ˆ›Ü™Y™\œ™\ˆ‰ÜÙ[XİYOØO˜Â‚ˆÛİ\˜ÙKœÙ]˜[™ÙU^
-[İ\[™œÙ[XİŠNÂˆÛİ\˜ÙK™›Øİ\Ê
-NÂˆÛİ\˜ÙK™\Ü]Ú]™[
-ˆ™]È]™[
-š[œ]‹ÈX˜›\ÎˆYHJBˆ
-NÂˆB‚ˆ[˜İ[Ûˆ\Q›Ü›X]
-›Ü›X]
-HÂˆYˆ
-İ\œ™[šY]ÈOOHš\İX[ŠHÂˆYˆ
-›Ü›X]OOH˜›ÛŠHÂˆÜ˜\š\İX[
-œİ›Û™È‹›¸næZH[™È1$xn«[HŠNÂˆH[ÙHYˆ
-›Ü›X]OOHš][XÈŠHÂˆÜ˜\š\İX[
-™[H‹›¸næZH[™È™Úpê›™ÈŠNÂˆH[ÙHYˆ
-›Ü›X]OOH[™\›[™HŠHÂˆÜ˜\š\İX[
-H‹›¸næZH[™Èøn¨XÚÚ0è›ˆŠNÂˆH[ÙHYˆ
-›Ü›X]OOHœİšZÙHŠHÂˆÜ˜\š\İX[
-œÈ‹›¸næZH[™Èøn¨XÚ™Ø[™ÈŠNÂˆH[ÙHYˆ
-›Ü›X]OOHšXY[™ÈŠHÂˆ›Ü›X]š\İX[›ØÚÊšÈ‹•pêH1$xnàHŠNÂˆH[ÙHYˆ
-›Ü›X]OOH˜[]ŠHÂˆXZÙUš\İX[\İ
-[ŠNÂˆH[ÙHYˆ
-›Ü›X]OOH›[X™\™YŠHÂˆXZÙUš\İX[\İ
-›ÛŠNÂˆH[ÙHYˆ
-›Ü›X]OOHœ][İHŠHÂˆÜ˜\š\İX[
-ˆ˜›ØÚÜ][İH‹ˆ“¸næZH[™È°ëXÚ8nªÛˆ‚ˆ
-NÂˆH[ÙHYˆ
-›Ü›X]OOH›[šÈŠHÂˆXZÙUš\İX[[šÊ
-NÂˆB‚ˆ™]\›ÂˆB‚ˆYˆ
-›Ü›X]OOH˜›ÛŠHÂˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆİ›Û™Ïˆ‹ˆÜİ›Û™Ïˆ‹ˆ›¸næZH[™È1$xn«[H‚ˆ
-NÂˆH[ÙHYˆ
-›Ü›X]OOHš][XÈŠHÂˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆ[Oˆ‹ˆÙ[Oˆ‹ˆ›¸næZH[™È™Úpê›™È‚ˆ
-NÂˆH[ÙHYˆ
-›Ü›X]OOH[™\›[™HŠHÂˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆOˆ‹ˆİOˆ‹ˆ›¸næZH[™Èøn¨XÚÚ0è›ˆ‚ˆ
-NÂˆH[ÙHYˆ
-›Ü›X]OOHœİšZÙHŠHÂˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆÏˆ‹ˆÜÏˆ‹ˆ›¸næZH[™Èøn¨XÚ™Ø[™È‚ˆ
-NÂˆH[ÙHYˆ
-›Ü›X]OOHšXY[™ÈŠHÂˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆÏˆ‹ˆÚÏˆ‹ˆ•0êH1$xnàH‚ˆ
-NÂˆH[ÙHYˆ
-›Ü›X]OOH˜[]ŠHÂˆXZÙTÛİ\˜ÙS\İ
-[ŠNÂˆH[ÙHYˆ
-›Ü›X]OOH›[X™\™YŠHÂˆXZÙTÛİ\˜ÙS\İ
-›ÛŠNÂˆH[ÙHYˆ
-›Ü›X]OOHœ][İHŠHÂˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆ›ØÚÜ][İOˆ‹ˆØ›ØÚÜ][İOˆ‹ˆ“¸næZH[™È°ëXÚ8nªÛˆ‚ˆ
-NÂˆH[ÙHYˆ
-›Ü›X]OOH›[šÈŠHÂˆXZÙTÛİ\˜ÙS[šÊ
-NÂˆBˆB‚ˆ[˜İ[Ûˆ\İUš\İX[
-]™[
-HÂˆ]™[œ™]™[Y˜][
+        `<${tag} style="${cssText}">${selected}</${tag}>`;
 
-NÂ‚ˆÛÛœİÛ\›Ø\™H]™[˜Û\›Ø\™]NÂˆÛÛœİ\İY[BˆÛ\›Ø\™Ë™Ù]]J^Ú[ŠHˆÂˆÛÛœİ\İY^BˆÛ\›Ø\™Ë™Ù]]J^ÜZ[ˆŠHˆÂˆÛÛœİ˜[™ÙHHİ\œ™[š\İX[˜[™ÙJ
-NÂ‚ˆYˆ
-\˜[™ÙJH™]\›Â‚ˆ˜[™ÙK™[]PÛÛ[Ê
-NÂ‚ˆYˆ
-\İY[
-HÂˆÛÛœİœ˜YÛY[Bˆ˜[™ÙK˜Ü™X]PÛÛ^X[œ˜YÛY[
-ˆØ[š]^™J\İY[
-Bˆ
-NÂˆÛÛœİ\İ›ÙHHœ˜YÛY[›\İÚ[Â‚ˆ˜[™ÙKš[œÙ\›ÙJœ˜YÛY[
-NÂ‚ˆYˆ
-\İ›ÙJHÂˆXÙPØ\™]Y\Š\İ›ÙJNÂˆBˆH[ÙHÂˆÛÛœİ^›ÙHBˆØİ[Y[˜Ü™X]U^›ÙJ\İY^
-NÂ‚ˆ˜[™ÙKš[œÙ\›ÙJ^›ÙJNÂˆXÙPØ\™]Y\Š^›ÙJNÂˆB‚ˆŞ[˜Õš\İX[ÔÛİ\˜ÙJ
-NÂˆB‚ˆ[˜İ[Ûˆ[™Uš\İX[Ù^YİÛŠ]™[
-HÂˆYˆ
-J]™[˜İ›Ù^H]™[›Y]RÙ^JJH™]\›Â‚ˆÛÛœİÙ^HH]™[šÙ^KÓİÙ\Ø\ÙJ
-NÂ‚ˆYˆ
-Ù^HOOH˜ˆŠHÂˆ]™[œ™]™[Y˜][
+      source.setRangeText(
+        html,
+        start,
+        end,
+        "select"
+      );
 
-NÂˆÜ˜\š\İX[
-œİ›Û™È‹›¸næZH[™È1$xn«[HŠNÂˆH[ÙHYˆ
-Ù^HOOHšHŠHÂˆ]™[œ™]™[Y˜][
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
 
-NÂˆÜ˜\š\İX[
-™[H‹›¸næZH[™È™Úpê›™ÈŠNÂˆH[ÙHYˆ
-Ù^HOOHHŠHÂˆ]™[œ™]™[Y˜][
+    function applyInlineStyle(styles = {}) {
+      if (currentView === "visual") {
+        wrapVisualStyle(styles);
+      } else {
+        replaceSourceWithStyle(styles);
+      }
+    }
 
-NÂˆÜ˜\š\İX[
-H‹›¸næZH[™Èøn¨XÚÚ0è›ˆŠNÂˆBˆB‚ˆ[˜İ[Ûˆ[™TÛİ\˜ÙRÙ^YİÛŠ]™[
-HÂˆYˆ
-ˆ]™[šÙ^HOOH•Xˆˆ	‰‚ˆY]™[˜İ›Ù^H	‰‚ˆY]™[›Y]RÙ^Bˆ
-HÂˆ]™[œ™]™[Y˜][
+    function applyBlockStyle(styles = {}) {
+      if (currentView === "visual") {
+        applyVisualBlockStyle(styles);
+      } else {
+        replaceSourceWithStyle(
+          styles,
+          {
+            block: true,
+            placeholder: "Ná»™i dung cÄƒn chá»‰nh"
+          }
+        );
+      }
+    }
 
-NÂ‚ˆÛİ\˜ÙKœÙ]˜[™ÙU^
-ˆˆ‹ˆÛİ\˜ÙKœÙ[Xİ[Û”İ\ˆÛİ\˜ÙKœÙ[Xİ[Û‘[™ˆ™[™‚ˆ
-NÂ‚ˆÛİ\˜ÙK™\Ü]Ú]™[
-ˆ™]È]™[
-š[œ]‹ÈX˜›\ÎˆYHJBˆ
-NÂ‚ˆ™]\›ÂˆB‚ˆYˆ
-J]™[˜İ›Ù^H]™[›Y]RÙ^JJH™]\›Â‚ˆÛÛœİÙ^HH]™[šÙ^KÓİÙ\Ø\ÙJ
-NÂ‚ˆYˆ
-Ù^HOOH˜ˆŠHÂˆ]™[œ™]™[Y˜][
+    function unwrapElement(element) {
+      if (!element?.parentNode) return;
 
-NÂ‚ˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆİ›Û™Ïˆ‹ˆÜİ›Û™Ïˆ‹ˆ›¸næZH[™È1$xn«[H‚ˆ
-NÂˆH[ÙHYˆ
-Ù^HOOHšHŠHÂˆ]™[œ™]™[Y˜][
+      while (element.firstChild) {
+        element.parentNode.insertBefore(
+          element.firstChild,
+          element
+        );
+      }
 
-NÂ‚ˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆ[Oˆ‹ˆÙ[Oˆ‹ˆ›¸næZH[™È™Úpê›™È‚ˆ
-NÂˆH[ÙHYˆ
-Ù^HOOHHŠHÂˆ]™[œ™]™[Y˜][
+      element.remove();
+    }
 
-NÂ‚ˆ™\XÙTÛİ\˜ÙTÙ[Xİ[ÛŠˆOˆ‹ˆİOˆ‹ˆ›¸næZH[™Èøn¨XÚÚ0è›ˆ‚ˆ
-NÂˆBˆB‚ˆ[˜İ[Ûˆ[™UX’Ù^YİÛŠ]™[
-HÂˆÛÛœİ[™^HXœËš[™^ÙŠ]™[˜İ\œ™[\™Ù]
-NÂˆYˆ
-[™^
-H™]\›Â‚ˆ]™^H[™^Â‚ˆYˆ
-]™[šÙ^HOOH\œ›İÔšYÚŠHÂˆ™^H
-[™^
-ÈJH	HXœË›[™İÂˆH[ÙHYˆ
-]™[šÙ^HOOH\œ›İÓYŠHÂˆ™^Bˆ
-[™^HH
-ÈXœË›[™İ
-H	BˆXœË›[™İÂˆH[ÙHYˆ
-]™[šÙ^HOOH’ÛYHŠHÂˆ™^HÂˆH[ÙHYˆ
-]™[šÙ^HOOH‘[™ŠHÂˆ™^HXœË›[™İHNÂˆH[ÙHÂˆ™]\›ÂˆB‚ˆ]™[œ™]™[Y˜][
+    function clearVisualFormatting() {
+      const range = currentVisualRange();
 
-NÂ‚ˆÙ]šY]ÊXœÖÛ™^K™]\Ù]™Y]Ü•šY]ÊNÂˆXœÖÛ™^K™›Øİ\Ê
-NÂˆB‚ˆ›Üˆ
-ÛÛœİXˆÙˆXœÊHÂˆX‹˜Y]™[\İ[™\Šˆ˜ÛXÚÈ‹ˆ
+      if (!range) {
+        visual.focus();
+        return;
+      }
 
-HOˆÙ]šY]ÊX‹™]\Ù]™Y]Ü•šY]ÊBˆ
-NÂ‚ˆX‹˜Y]™[\İ[™\ŠˆšÙ^YİÛˆ‹ˆ[™UX’Ù^YİÛ‚ˆ
-NÂˆB‚ˆÛÛ˜\‹˜Y]™[\İ[™\ŠˆœÚ[\™İÛˆ‹ˆ]™[OˆÂˆØ\\™TÙ[Xİ[ÛŠ
-NÂ‚ˆYˆ
-]™[\™Ù]˜ÛÜÙ\İ
-–Ù]KY›Ü›X]HŠJHÂˆ]™[œ™]™[Y˜][
+      if (range.collapsed) {
+        const element =
+          range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? range.startContainer
+            : range.startContainer.parentElement;
 
-NÂˆBˆBˆ
-NÂ‚ˆÛÛ˜\‹˜Y]™[\İ[™\Šˆ˜ÛXÚÈ‹ˆ]™[OˆÂˆÛÛœİ]ÛˆBˆ]™[\™Ù]˜ÛÜÙ\İ
-–Ù]KY›Ü›X]HŠNÂ‚ˆYˆ
-]ÛŠHÂˆ\Q›Ü›X]
-]Û‹™]\Ù]™›Ü›X]
-NÂˆBˆBˆ
-NÂ‚ˆš\İX[˜Y]™[\İ[™\Šˆš[œ]‹ˆŞ[˜Õš\İX[ÔÛİ\˜ÙBˆ
-NÂˆš\İX[˜Y]™[\İ[™\Šˆœ\İH‹ˆ\İUš\İX[ˆ
-NÂˆš\İX[˜Y]™[\İ[™\ŠˆšÙ^YİÛˆ‹ˆ[™Uš\İX[Ù^YİÛ‚ˆ
-NÂ‚ˆ›Üˆ
-ÛÛœİ]™[˜[YHÙˆÂˆšÙ^]\‹ˆ›[İ\Ù]\‹ˆ™›Øİ\È‹ˆš[œ]‚ˆJHÂˆš\İX[˜Y]™[\İ[™\Šˆ]™[˜[YKˆØ]™Uš\İX[Ù[Xİ[Û‚ˆ
-NÂˆB‚ˆÛİ\˜ÙK˜Y]™[\İ[™\Šˆš[œ]‹ˆ
+        const inline = element?.closest(
+          "strong, b, em, i, u, s, mark, span"
+        );
 
-HOˆÂˆ\]S[™S[X™\œÊ
-NÂˆ\]PÛİ[\Š
-NÂˆBˆ
-NÂ‚ˆÛİ\˜ÙK˜Y]™[\İ[™\ŠˆœØÜ›Û‹ˆŞ[˜Ó[™S[X™\”ØÜ›ÛˆÈ\ÜÚ]™NˆYHBˆ
-NÂ‚ˆ›Üˆ
-ÛÛœİ]™[˜[YHÙˆÂˆœÙ[Xİ‹ˆšÙ^]\‹ˆ›[İ\Ù]\‹ˆ™›Øİ\È‹ˆš[œ]‚ˆJHÂˆÛİ\˜ÙK˜Y]™[\İ[™\Šˆ]™[˜[YKˆØ]™TÛİ\˜ÙTÙ[Xİ[Û‚ˆ
-NÂˆB‚ˆÛİ\˜ÙK˜Y]™[\İ[™\ŠˆšÙ^YİÛˆ‹ˆ[™TÛİ\˜ÙRÙ^YİÛ‚ˆ
-NÂ‚ˆ[˜İ[ÛˆÙ][
-ˆ˜[YHHˆ‹ˆÈšY]ÈHš\İX[‹›Øİ\ÈH˜[ÙHHHßBˆ
-HÂˆÛÛœİÛX[ˆHØ[š]^™J˜[YJNÂ‚ˆÛİ\˜ÙK˜[YHHÛX[Âˆš\İX[š[›™\’SHÛX[Â‚ˆ\]S[™S[X™\œÊ
-NÂˆŞ[˜Ó[™S[X™\”ØÜ›Û
+        if (
+          inline &&
+          inline !== visual &&
+          visual.contains(inline)
+        ) {
+          unwrapElement(inline);
+          syncVisualToSource();
+        }
 
-NÂˆ\]PÛİ[\Š
-NÂˆÙ]šY]ÊšY]ËÈ›Øİ\ÈJNÂˆB‚ˆ[˜İ[ÛˆÙ][
+        return;
+      }
 
-HÂˆYˆ
-İ\œ™[šY]ÈOOHš\İX[ŠHÂˆŞ[˜Õš\İX[ÔÛİ\˜ÙJ
-NÂˆH[ÙHÂˆŞ[˜ÔÛİ\˜ÙUÕš\İX[
+      const fragment = range.extractContents();
 
-NÂˆB‚ˆÛÛœİÛX[ˆHØ[š]^™JÛİ\˜ÙK˜[YJNÂ‚ˆÛİ\˜ÙK˜[YHHÛX[Âˆš\İX[š[›™\’SHÛX[Â‚ˆ\]S[™S[X™\œÊ
-NÂˆ\]PÛİ[\Š
-NÂ‚ˆ™]\›ˆÛX[ÂˆB‚ˆ[˜İ[ÛˆÛX\Š
-HÂˆÛİ\˜ÙK˜[YHHˆÂˆš\İX[š[›™\’SHˆÂˆØ]™Yš\İX[˜[™ÙHH[ÂˆØ]™YÛİ\˜ÙTÙ[Xİ[ÛˆHÂˆİ\ˆˆ[™ˆˆ\™Xİ[Ûˆ››Û™H‚ˆNÂ‚ˆ\]S[™S[X™\œÊ
-NÂˆŞ[˜Ó[™S[X™\”ØÜ›Û
+      for (const element of [
+        ...fragment.querySelectorAll("*")
+      ]) {
+        for (const property of [
+          "font-family",
+          "font-size",
+          "font-weight",
+          "font-style",
+          "color",
+          "background",
+          "background-color",
+          "text-decoration",
+          "text-decoration-line",
+          "text-align"
+        ]) {
+          element.style.removeProperty(property);
+        }
 
-NÂˆÙ]šY]Êš\İX[‹È›Øİ\Îˆ˜[ÙHJNÂˆ\]PÛİ[\Š
-NÂˆB‚ˆÛX\Š
-NÂ‚ˆ™]\›ˆØš™Xİ™œ™Y^™JÂˆÙ][ˆÙ][ˆÛX\‹ˆÙ]šY]ËˆÙ]šY]Îˆ
+        if (!element.getAttribute("style")?.trim()) {
+          element.removeAttribute("style");
+        }
+      }
 
-HOˆİ\œ™[šY]Ëˆ\R[›[™Tİ[Kˆ\P›ØÚÔİ[KˆÛX\‘›Ü›X][™ËˆØ\\™TÙ[Xİ[Û‹ˆ™\İÜ™TÙ[Xİ[Û‹ˆ›Øİ\Îˆ
+      for (const element of [
+        ...fragment.querySelectorAll(
+          "strong, b, em, i, u, s, mark"
+        )
+      ].reverse()) {
+        unwrapElement(element);
+      }
 
-HOˆÂˆYˆ
-İ\œ™[šY]ÈOOHš[ŠHÂˆÛİ\˜ÙK™›Øİ\Ê
-NÂˆH[ÙHÂˆš\İX[™›Øİ\Ê
-NÂˆBˆBˆJNÂˆB‚ˆÚ[™İË•ÙYZÛTšXÚY]ÜˆHØš™Xİ™œ™Y^™JÂˆÜ™X]BˆJNÂŸJJ
-NÂ
+      const wrapper = document.createElement("span");
+      wrapper.append(fragment);
+      range.insertNode(wrapper);
+
+      selectContents(wrapper);
+      syncVisualToSource();
+    }
+
+    function clearSourceFormatting() {
+      const {
+        start,
+        end
+      } = currentSourceSelection();
+
+      if (start === end) {
+        onToast(
+          "Trong HTML, hÃ£y chá»n Ä‘oáº¡n mÃ£ cáº§n xÃ³a Ä‘á»‹nh dáº¡ng."
+        );
+        return;
+      }
+
+      let selected = source.value.slice(start, end);
+
+      selected = selected
+        .replace(
+          /<\/?(?:strong|b|em|i|u|s|mark)\b[^>]*>/gi,
+          ""
+        )
+        .replace(
+          /(<[^>]+)\sstyle=(["'])[\s\S]*?\2([^>]*>)/gi,
+          "$1$3"
+        );
+
+      source.setRangeText(
+        selected,
+        start,
+        end,
+        "select"
+      );
+
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
+
+    function clearFormatting() {
+      if (currentView === "visual") {
+        clearVisualFormatting();
+      } else {
+        clearSourceFormatting();
+      }
+    }
+
+    function formatVisualBlock(tag, placeholder) {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      const startNode = range.startContainer;
+      const endNode = range.endContainer;
+
+      const startElement =
+        startNode.nodeType === Node.ELEMENT_NODE
+          ? startNode
+          : startNode.parentElement;
+
+      const endElement =
+        endNode.nodeType === Node.ELEMENT_NODE
+          ? endNode
+          : endNode.parentElement;
+
+      const selector = "p, h2, h3, h4, h5";
+
+      const startBlock =
+        startElement?.closest(selector);
+      const endBlock =
+        endElement?.closest(selector);
+
+      if (
+        startBlock &&
+        startBlock === endBlock &&
+        startBlock !== visual &&
+        visual.contains(startBlock)
+      ) {
+        const replacement =
+          document.createElement(tag);
+
+        while (startBlock.firstChild) {
+          replacement.append(
+            startBlock.firstChild
+          );
+        }
+
+        if (!replacement.textContent.trim()) {
+          replacement.textContent = placeholder;
+        }
+
+        startBlock.replaceWith(replacement);
+        selectContents(replacement);
+        syncVisualToSource();
+        return;
+      }
+
+      wrapVisual(tag, placeholder);
+    }
+
+    function makeVisualList(tag) {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      const selected = range.toString().trim();
+      const items = selected
+        ? selected
+            .split(/\n+/)
+            .map(value => value.trim())
+            .filter(Boolean)
+        : ["Má»¥c thá»© nháº¥t", "Má»¥c thá»© hai"];
+
+      const list = document.createElement(tag);
+
+      for (const text of items) {
+        const item = document.createElement("li");
+        item.textContent = text;
+        list.append(item);
+      }
+
+      range.deleteContents();
+      range.insertNode(list);
+
+      const first = list.querySelector("li");
+      first
+        ? selectContents(first)
+        : placeCaretAfter(list);
+
+      syncVisualToSource();
+    }
+
+    function promptSafeUrl() {
+      const url = prompt(
+        "Nháº­p Ä‘á»‹a chá»‰ liÃªn káº¿t (https://...):",
+        "https://"
+      );
+
+      if (!url) return "";
+
+      const safeUrl = renderer.safeLinkUrl(url);
+
+      if (!safeUrl) {
+        onToast("LiÃªn káº¿t khÃ´ng há»£p lá»‡.");
+        return "";
+      }
+
+      return safeUrl;
+    }
+
+    function makeVisualLink() {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      const safeUrl = promptSafeUrl();
+      if (!safeUrl) return;
+
+      const anchor = document.createElement("a");
+
+      anchor.href = safeUrl;
+
+      if (/^https?:\/\//i.test(safeUrl)) {
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+      }
+
+      if (range.collapsed) {
+        anchor.textContent = "tÃªn liÃªn káº¿t";
+        range.insertNode(anchor);
+      } else {
+        anchor.append(range.extractContents());
+        range.insertNode(anchor);
+      }
+
+      selectContents(anchor);
+      syncVisualToSource();
+    }
+
+    function replaceSourceSelection(
+      before,
+      after,
+      placeholder
+    ) {
+      const {
+        start,
+        end
+      } = currentSourceSelection();
+      const selected =
+        source.value.slice(start, end) || placeholder;
+
+      source.setRangeText(
+        `${before}${selected}${after}`,
+        start,
+        end,
+        "select"
+      );
+
+      if (start === end) {
+        source.setSelectionRange(
+          start + before.length,
+          start + before.length + selected.length
+        );
+      }
+
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
+
+    function makeSourceList(tag) {
+      const {
+        start,
+        end
+      } = currentSourceSelection();
+      const selected =
+        source.value.slice(start, end).trim();
+
+      const items = selected
+        ? selected
+            .split("\n")
+            .map(value => value.trim())
+            .filter(Boolean)
+        : ["Má»¥c thá»© nháº¥t", "Má»¥c thá»© hai"];
+
+      const block = [
+        `<${tag}>`,
+        ...items.map(item => `  <li>${item}</li>`),
+        `</${tag}>`
+      ].join("\n");
+
+      source.setRangeText(
+        block,
+        start,
+        end,
+        "end"
+      );
+
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
+
+    function makeSourceLink() {
+      const {
+        start,
+        end
+      } = currentSourceSelection();
+      const selected =
+        source.value.slice(start, end) ||
+        "tÃªn liÃªn káº¿t";
+
+      const safeUrl = promptSafeUrl();
+      if (!safeUrl) return;
+
+      const escapedUrl = safeUrl
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;");
+
+      source.setRangeText(
+        `<a href="${escapedUrl}">${selected}</a>`,
+        start,
+        end,
+        "end"
+      );
+
+      source.focus();
+      source.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
+
+    function applyFormat(format) {
+      if (currentView === "visual") {
+        if (format === "bold") {
+          wrapVisual("strong", "ná»™i dung Ä‘áº­m");
+        } else if (format === "italic") {
+          wrapVisual("em", "ná»™i dung nghiÃªng");
+        } else if (format === "underline") {
+          wrapVisual("u", "ná»™i dung gáº¡ch chÃ¢n");
+        } else if (format === "strike") {
+          wrapVisual("s", "ná»™i dung gáº¡ch ngang");
+        } else if (format === "heading") {
+          formatVisualBlock("h3", "TiÃªu Ä‘á»");
+        } else if (format === "bullet") {
+          makeVisualList("ul");
+        } else if (format === "numbered") {
+          makeVisualList("ol");
+        } else if (format === "quote") {
+          wrapVisual(
+            "blockquote",
+            "Ná»™i dung trÃ­ch dáº«n"
+          );
+        } else if (format === "link") {
+          makeVisualLink();
+        }
+
+        return;
+      }
+
+      if (format === "bold") {
+        replaceSourceSelection(
+          "<strong>",
+          "</strong>",
+          "ná»™i dung Ä‘áº­m"
+        );
+      } else if (format === "italic") {
+        replaceSourceSelection(
+          "<em>",
+          "</em>",
+          "ná»™i dung nghiÃªng"
+        );
+      } else if (format === "underline") {
+        replaceSourceSelection(
+          "<u>",
+          "</u>",
+          "ná»™i dung gáº¡ch chÃ¢n"
+        );
+      } else if (format === "strike") {
+        replaceSourceSelection(
+          "<s>",
+          "</s>",
+          "ná»™i dung gáº¡ch ngang"
+        );
+      } else if (format === "heading") {
+        replaceSourceSelection(
+          "<h3>",
+          "</h3>",
+          "TiÃªu Ä‘á»"
+        );
+      } else if (format === "bullet") {
+        makeSourceList("ul");
+      } else if (format === "numbered") {
+        makeSourceList("ol");
+      } else if (format === "quote") {
+        replaceSourceSelection(
+          "<blockquote>",
+          "</blockquote>",
+          "Ná»™i dung trÃ­ch dáº«n"
+        );
+      } else if (format === "link") {
+        makeSourceLink();
+      }
+    }
+
+    function pasteVisual(event) {
+      event.preventDefault();
+
+      const clipboard = event.clipboardData;
+      const pastedHtml =
+        clipboard?.getData("text/html") || "";
+      const pastedText =
+        clipboard?.getData("text/plain") || "";
+      const range = currentVisualRange();
+
+      if (!range) return;
+
+      range.deleteContents();
+
+      if (pastedHtml) {
+        const fragment =
+          range.createContextualFragment(
+            sanitize(pastedHtml)
+          );
+
+        const lastNode = fragment.lastChild;
+
+        range.insertNode(fragment);
+
+        if (lastNode) {
+          placeCaretAfter(lastNode);
+        }
+      } else {
+        const textNode =
+          document.createTextNode(pastedText);
+
+        range.insertNode(textNode);
+        placeCaretAfter(textNode);
+      }
+
+      syncVisualToSource();
+    }
+
+    function handleVisualKeydown(event) {
+      if (!(event.ctrlKey || event.metaKey)) return;
+
+      const key = event.key.toLowerCase();
+
+      if (key === "b") {
+        event.preventDefault();
+        wrapVisual("strong", "ná»™i dung Ä‘áº­m");
+      } else if (key === "i") {
+        event.preventDefault();
+        wrapVisual("em", "ná»™i dung nghiÃªng");
+      } else if (key === "u") {
+        event.preventDefault();
+        wrapVisual("u", "ná»™i dung gáº¡ch chÃ¢n");
+      }
+    }
+
+    function handleSourceKeydown(event) {
+      if (
+        event.key === "Tab" &&
+        !event.ctrlKey &&
+        !event.metaKey
+      ) {
+        event.preventDefault();
+
+        source.setRangeText(
+          "  ",
+          source.selectionStart,
+          source.selectionEnd,
+          "end"
+        );
+
+        source.dispatchEvent(
+          new Event("input", { bubbles: true })
+        );
+
+        return;
+      }
+
+      if (!(event.ctrlKey || event.metaKey)) return;
+
+      const key = event.key.toLowerCase();
+
+      if (key === "b") {
+        event.preventDefault();
+
+        replaceSourceSelection(
+          "<strong>",
+          "</strong>",
+          "ná»™i dung Ä‘áº­m"
+        );
+      } else if (key === "i") {
+        event.preventDefault();
+
+        replaceSourceSelection(
+          "<em>",
+          "</em>",
+          "ná»™i dung nghiÃªng"
+        );
+      } else if (key === "u") {
+        event.preventDefault();
+
+        replaceSourceSelection(
+          "<u>",
+          "</u>",
+          "ná»™i dung gáº¡ch chÃ¢n"
+        );
+      }
+    }
+
+    function handleTabKeydown(event) {
+      const index = tabs.indexOf(event.currentTarget);
+      if (index < 0) return;
+
+      let next = index;
+
+      if (event.key === "ArrowRight") {
+        next = (index + 1) % tabs.length;
+      } else if (event.key === "ArrowLeft") {
+        next =
+          (index - 1 + tabs.length) %
+          tabs.length;
+      } else if (event.key === "Home") {
+        next = 0;
+      } else if (event.key === "End") {
+        next = tabs.length - 1;
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+
+      setView(tabs[next].dataset.editorView);
+      tabs[next].focus();
+    }
+
+    for (const tab of tabs) {
+      tab.addEventListener(
+        "click",
+        () => setView(tab.dataset.editorView)
+      );
+
+      tab.addEventListener(
+        "keydown",
+        handleTabKeydown
+      );
+    }
+
+    toolbar.addEventListener(
+      "pointerdown",
+      event => {
+        captureSelection();
+
+        if (event.target.closest("[data-format]")) {
+          event.preventDefault();
+        }
+      }
+    );
+
+    toolbar.addEventListener(
+      "click",
+      event => {
+        const button =
+          event.target.closest("[data-format]");
+
+        if (button) {
+          applyFormat(button.dataset.format);
+        }
+      }
+    );
+
+    visual.addEventListener(
+      "input",
+      syncVisualToSource
+    );
+    visual.addEventListener(
+      "paste",
+      pasteVisual
+    );
+    visual.addEventListener(
+      "keydown",
+      handleVisualKeydown
+    );
+
+    for (const eventName of [
+      "keyup",
+      "mouseup",
+      "focus",
+      "input"
+    ]) {
+      visual.addEventListener(
+        eventName,
+        saveVisualSelection
+      );
+    }
+
+    source.addEventListener(
+      "input",
+      () => {
+        updateLineNumbers();
+        updateCounter();
+      }
+    );
+
+    source.addEventListener(
+      "scroll",
+      syncLineNumberScroll,
+      { passive: true }
+    );
+
+    for (const eventName of [
+      "select",
+      "keyup",
+      "mouseup",
+      "focus",
+      "input"
+    ]) {
+      source.addEventListener(
+        eventName,
+        saveSourceSelection
+      );
+    }
+
+    source.addEventListener(
+      "keydown",
+      handleSourceKeydown
+    );
+
+    function setHtml(
+      value = "",
+      { view = "visual", focus = false } = {}
+    ) {
+      const clean = sanitize(value);
+
+      source.value = clean;
+      visual.innerHTML = clean;
+
+      updateLineNumbers();
+      syncLineNumberScroll();
+      updateCounter();
+      setView(view, { focus });
+    }
+
+    function getHtml() {
+      if (currentView === "visual") {
+        syncVisualToSource();
+      } else {
+        syncSourceToVisual();
+      }
+
+      const clean = sanitize(source.value);
+
+      source.value = clean;
+      visual.innerHTML = clean;
+
+      updateLineNumbers();
+      updateCounter();
+
+      return clean;
+    }
+
+    function clear() {
+      source.value = "";
+      visual.innerHTML = "";
+      savedVisualRange = null;
+      savedSourceSelection = {
+        start: 0,
+        end: 0,
+        direction: "none"
+      };
+
+      updateLineNumbers();
+      syncLineNumberScroll();
+      setView("visual", { focus: false });
+      updateCounter();
+    }
+
+    clear();
+
+    return Object.freeze({
+      setHtml,
+      getHtml,
+      clear,
+      setView,
+      getView: () => currentView,
+      applyInlineStyle,
+      applyBlockStyle,
+      clearFormatting,
+      captureSelection,
+      restoreSelection,
+      focus: () => {
+        if (currentView === "html") {
+          source.focus();
+        } else {
+          visual.focus();
+        }
+      }
+    });
+  }
+
+  window.WeeklyRichEditor = Object.freeze({
+    create
+  });
+})();
