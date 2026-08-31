@@ -1,0 +1,128 @@
+name: Repair rich editor selection
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/repair-rich-editor.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore clean editor and apply selection guard
+        shell: bash
+        run: |
+          git checkout 577764f8a3df7f05b2b7819167a1485845342641 -- rich-editor.js
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('rich-editor.js')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''    function saveVisualSelection() {
+                const selection = window.getSelection();
+                if (!selection?.rangeCount) return false;
+
+                const range = selection.getRangeAt(0);
+
+                if (!rangeBelongsToVisual(range)) {
+                  return false;
+                }
+
+                savedVisualRange = range.cloneRange();
+                return true;
+              }
+
+              function saveSourceSelection() {
+                savedSourceSelection = {
+                  start: source.selectionStart ?? 0,
+                  end: source.selectionEnd ?? 0,
+                  direction:
+                    source.selectionDirection || "none"
+                };
+
+                return savedSourceSelection;
+              }
+          '''
+
+          new = '''    function visualHasFocus() {
+                const active = document.activeElement;
+                return Boolean(
+                  active &&
+                  (active === visual || visual.contains(active))
+                );
+              }
+
+              function saveVisualSelection() {
+                const selection = window.getSelection();
+                if (!selection?.rangeCount) return false;
+
+                const range = selection.getRangeAt(0);
+
+                if (!rangeBelongsToVisual(range)) {
+                  return false;
+                }
+
+                /*
+                 * Toolbar controls can move focus away from contenteditable and
+                 * leave a collapsed caret behind. Do not let that transient caret
+                 * overwrite a meaningful highlighted range that we already saved.
+                 */
+                if (
+                  range.collapsed &&
+                  savedVisualRange &&
+                  !savedVisualRange.collapsed &&
+                  !visualHasFocus()
+                ) {
+                  return false;
+                }
+
+                savedVisualRange = range.cloneRange();
+                return true;
+              }
+
+              function saveSourceSelection() {
+                const nextSelection = {
+                  start: source.selectionStart ?? 0,
+                  end: source.selectionEnd ?? 0,
+                  direction:
+                    source.selectionDirection || "none"
+                };
+
+                /* Preserve a non-empty HTML selection while a toolbar control owns focus. */
+                if (
+                  nextSelection.start === nextSelection.end &&
+                  savedSourceSelection.start !== savedSourceSelection.end &&
+                  document.activeElement !== source
+                ) {
+                  return savedSourceSelection;
+                }
+
+                savedSourceSelection = nextSelection;
+                return savedSourceSelection;
+              }
+          '''
+
+          if old not in text:
+              raise SystemExit('Expected V3.16.5 selection block not found')
+
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          node --check rich-editor.js
+      - name: Commit repaired editor
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rich-editor.js
+          git diff --cached --check
+          if ! git diff --cached --quiet; then
+            git commit -m "Repair rich editor selection persistence"
+            git push
+          fi
