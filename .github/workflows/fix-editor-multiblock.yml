@@ -22,34 +22,12 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path('rich-editor.js')
           text = path.read_text(encoding='utf-8')
 
-          old_wrap = '''    function wrapVisual(tag, placeholder) {
-              const range = currentVisualRange();
-
-              if (!range) {
-                visual.focus();
-                return;
-              }
-
-              const wrapper = document.createElement(tag);
-
-              if (range.collapsed) {
-                wrapper.textContent = placeholder;
-                range.insertNode(wrapper);
-              } else {
-                wrapper.append(range.extractContents());
-                range.insertNode(wrapper);
-              }
-
-              selectContents(wrapper);
-              syncVisualToSource();
-            }
-          '''
-
-          new_wrap = '''    function visualTextSegments(range) {
+          new_wrap = r'''    function visualTextSegments(range) {
               if (!range || range.collapsed) return [];
 
               const walker = document.createTreeWalker(
@@ -112,10 +90,7 @@ jobs:
                 }
 
                 const wrapper = createWrapper();
-                selectedNode.parentNode.insertBefore(
-                  wrapper,
-                  selectedNode
-                );
+                selectedNode.parentNode.insertBefore(wrapper, selectedNode);
                 wrapper.append(selectedNode);
                 wrappers.push(wrapper);
               }
@@ -166,37 +141,20 @@ jobs:
               selectWrapperRange(wrappers);
               syncVisualToSource();
             }
-          '''
 
-          old_style = '''    function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
-              const range = currentVisualRange();
+            function cssTextFromObject'''
 
-              if (!range) {
-                visual.focus();
-                return;
-              }
+          text, count = re.subn(
+              r'    function wrapVisual\(tag, placeholder\) \{.*?\n    \}\n\n    function cssTextFromObject',
+              new_wrap,
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'wrapVisual replacement count={count}')
 
-              const wrapper = document.createElement("span");
-              const cssText = cssTextFromObject(styles);
-
-              if (!cssText) return;
-
-              wrapper.setAttribute("style", cssText);
-
-              if (range.collapsed) {
-                wrapper.textContent = placeholder;
-                range.insertNode(wrapper);
-              } else {
-                wrapper.append(range.extractContents());
-                range.insertNode(wrapper);
-              }
-
-              selectContents(wrapper);
-              syncVisualToSource();
-            }
-          '''
-
-          new_style = '''    function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
+          new_style = r'''    function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
               const range = currentVisualRange();
 
               if (!range) {
@@ -231,19 +189,23 @@ jobs:
               selectWrapperRange(wrappers);
               syncVisualToSource();
             }
-          '''
 
-          if old_wrap not in text:
-              raise SystemExit('Expected wrapVisual block not found')
-          if old_style not in text:
-              raise SystemExit('Expected wrapVisualStyle block not found')
+            function closestTextBlock'''
 
-          text = text.replace(old_wrap, new_wrap).replace(old_style, new_style)
+          text, count = re.subn(
+              r'    function wrapVisualStyle\(styles = \{\}, placeholder = "nội dung"\) \{.*?\n    \}\n\n    function closestTextBlock',
+              new_style,
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'wrapVisualStyle replacement count={count}')
+
           path.write_text(text, encoding='utf-8')
 
           index = Path('index.html')
-          index_text = index.read_text(encoding='utf-8')
-          index_text = index_text.replace('?v=3.16.7', '?v=3.16.8')
+          index_text = index.read_text(encoding='utf-8').replace('?v=3.16.7', '?v=3.16.8')
           index.write_text(index_text, encoding='utf-8')
           PY
 
@@ -254,10 +216,7 @@ jobs:
         shell: bash
         run: |
           BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
-          if [ -z "$BROWSER" ]; then
-            echo "No Chromium browser found on runner" >&2
-            exit 1
-          fi
+          test -n "$BROWSER"
 
           timeout 25s "$BROWSER" \
             --headless \
@@ -270,8 +229,8 @@ jobs:
             "file://$PWD/tests/editor-multiblock-regression.html" \
             > /tmp/editor-regression.html
 
-          cat /tmp/editor-regression.html | grep 'data-test-status="pass"'
-          cat /tmp/editor-regression.html | grep 'PASS: multiblock inline formatting covers every selected block'
+          grep 'data-test-status="pass"' /tmp/editor-regression.html
+          grep 'PASS: multiblock inline formatting covers every selected block' /tmp/editor-regression.html
 
       - name: Commit verified fix
         shell: bash
