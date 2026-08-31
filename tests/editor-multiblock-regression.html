@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Editor multiblock regression</title>
+</head>
+<body>
+  <div id="announcement-rich-editor">
+    <div id="announcement-format-toolbar"></div>
+    <button type="button" data-editor-view="visual">Visual</button>
+    <button type="button" data-editor-view="html">HTML</button>
+    <div data-editor-panel="visual">
+      <div id="announcement-visual-editor" contenteditable="true"></div>
+    </div>
+    <div data-editor-panel="html" hidden>
+      <textarea id="announcement-content"></textarea>
+      <pre id="announcement-html-lines"></pre>
+    </div>
+    <div id="announcement-editor-status"></div>
+    <div id="announcement-editor-count"></div>
+  </div>
+  <pre id="test-output">RUNNING</pre>
+
+  <script src="../content-renderer.js"></script>
+  <script src="../rich-editor.js"></script>
+  <script>
+    (() => {
+      const sample = `*Thời gian: ****Ngày 04/09/2026 ( tiết 8,9 thứ 6)***
+*Khung chương trình:*
+*14h40-14h50: Học sinh tập trung ở hội trường*
+*14h50-15h30: Tập huấn chung ở hội trường.*
+*15h30-16h20\\:Tập huấn riêng từng chức danh ở các phòng*
+
+- *Phòng Lớp trưởng: A302*
+- *Phòng Lớp phó học tập: B304*
+- *Phòng Lớp phó kỷ luật: B308*
+- *Phòng Cán sự thư viện: Thư viện B209*
+- *Phòng Cán sự tư vấn-y tế: A209-B208*
+- *Phòng Cán sự Văn – Thể - Mỹ: AB10*
+
+*Cán sự khi tập huấn mang theo 1 quyển sổ nhỏ và bút để ghi chép và mang theo ba lô khi kết thúc chương trình thì ra về luôn, không cần quay lại phòng chủ nhiệm*`;
+
+      const root = document.querySelector('#announcement-rich-editor');
+      const visual = document.querySelector('#announcement-visual-editor');
+      const output = document.querySelector('#test-output');
+      const editor = window.WeeklyRichEditor.create({
+        root,
+        renderer: window.WeeklyContent
+      });
+
+      function nonEmptyTextNodes() {
+        const walker = document.createTreeWalker(
+          visual,
+          NodeFilter.SHOW_TEXT
+        );
+        const nodes = [];
+        let node = walker.nextNode();
+        while (node) {
+          if (node.nodeValue && node.nodeValue.trim()) nodes.push(node);
+          node = walker.nextNode();
+        }
+        return nodes;
+      }
+
+      function selectAllEditorText() {
+        const nodes = nonEmptyTextNodes();
+        const range = document.createRange();
+        range.setStart(nodes[0], 0);
+        range.setEnd(nodes[nodes.length - 1], nodes[nodes.length - 1].nodeValue.length);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.captureSelection();
+      }
+
+      function blockCoverage(selector, predicate) {
+        const blocks = [...visual.querySelectorAll('p, li')]
+          .filter(block => block.textContent.trim());
+        const covered = blocks.filter(block =>
+          [...block.querySelectorAll(selector)].some(node =>
+            node.textContent.trim() && predicate(node)
+          )
+        );
+        return { total: blocks.length, covered: covered.length };
+      }
+
+      const failures = [];
+      const initialHtml = window.WeeklyContent.renderMarkdown(sample);
+
+      editor.setHtml(initialHtml, { view: 'visual', focus: false });
+      selectAllEditorText();
+      editor.applyInlineStyle({ 'font-size': '18px' });
+      const sizeCoverage = blockCoverage('span', node => node.style.fontSize === '18px');
+      if (sizeCoverage.covered !== sizeCoverage.total) {
+        failures.push(`font-size ${sizeCoverage.covered}/${sizeCoverage.total} blocks`);
+      }
+
+      editor.setHtml(initialHtml, { view: 'visual', focus: false });
+      selectAllEditorText();
+      const boldButton = document.createElement('button');
+      boldButton.dataset.format = 'bold';
+      document.querySelector('#announcement-format-toolbar').appendChild(boldButton);
+      boldButton.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      boldButton.click();
+      const boldCoverage = blockCoverage('strong', () => true);
+      if (boldCoverage.covered !== boldCoverage.total) {
+        failures.push(`bold ${boldCoverage.covered}/${boldCoverage.total} blocks`);
+      }
+
+      if (failures.length) {
+        output.textContent = `FAIL: ${failures.join('; ')}`;
+        document.body.dataset.testStatus = 'fail';
+      } else {
+        output.textContent = 'PASS: multiblock inline formatting covers every selected block';
+        document.body.dataset.testStatus = 'pass';
+      }
+    })();
+  </script>
+</body>
+</html>
