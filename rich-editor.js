@@ -152,6 +152,14 @@
       );
     }
 
+    function visualHasFocus() {
+      const active = document.activeElement;
+      return Boolean(
+        active &&
+        (active === visual || visual.contains(active))
+      );
+    }
+
     function saveVisualSelection() {
       const selection = window.getSelection();
       if (!selection?.rangeCount) return false;
@@ -162,18 +170,42 @@
         return false;
       }
 
+      /*
+       * Toolbar controls can move focus away from contenteditable and
+       * leave a collapsed caret behind. Do not let that transient caret
+       * overwrite a meaningful highlighted range that we already saved.
+       */
+      if (
+        range.collapsed &&
+        savedVisualRange &&
+        !savedVisualRange.collapsed &&
+        !visualHasFocus()
+      ) {
+        return false;
+      }
+
       savedVisualRange = range.cloneRange();
       return true;
     }
 
     function saveSourceSelection() {
-      savedSourceSelection = {
+      const nextSelection = {
         start: source.selectionStart ?? 0,
         end: source.selectionEnd ?? 0,
         direction:
           source.selectionDirection || "none"
       };
 
+      /* Preserve a non-empty HTML selection while a toolbar control owns focus. */
+      if (
+        nextSelection.start === nextSelection.end &&
+        savedSourceSelection.start !== savedSourceSelection.end &&
+        document.activeElement !== source
+      ) {
+        return savedSourceSelection;
+      }
+
+      savedSourceSelection = nextSelection;
       return savedSourceSelection;
     }
 
@@ -279,7 +311,7 @@
       }
 
       return restoreSourceSelection({
-        focus: false
+      focus: false
       });
     }
 
@@ -337,8 +369,7 @@
         .filter(([, value]) => String(value || "").trim())
         .map(([property, value]) =>
           `${property}: ${String(value).trim()}`
-        )
-        .join("; ");
+        ).join("; ");
     }
 
     function wrapVisualStyle(styles = {}, placeholder = "n·ªôi dung") {
@@ -485,781 +516,322 @@
 
       const tag = block ? "div" : "span";
       const html =
-        `<${tag} style="${cssText}">${selected}</${tag}>`;
-
-      source.setRangeText(
-        html,
-        start,
-        end,
-        "select"
-      );
-
-      source.focus();
-      source.dispatchEvent(
-        new Event("input", { bubbles: true })
-      );
-    }
-
-    function applyInlineStyle(styles = {}) {
-      if (currentView === "visual") {
-        wrapVisualStyle(styles);
-      } else {
-        replaceSourceWithStyle(styles);
-      }
-    }
-
-    function applyBlockStyle(styles = {}) {
-      if (currentView === "visual") {
-        applyVisualBlockStyle(styles);
-      } else {
-        replaceSourceWithStyle(
-          styles,
-          {
-            block: true,
-            placeholder: "N·ªôi dung cƒÉn ch·ªânh"
-          }
-        );
-      }
-    }
-
-    function unwrapElement(element) {
-      if (!element?.parentNode) return;
-
-      while (element.firstChild) {
-        element.parentNode.insertBefore(
-          element.firstChild,
-          element
-        );
-      }
-
-      element.remove();
-    }
-
-    function clearVisualFormatting() {
-      const range = currentVisualRange();
-
-      if (!range) {
-        visual.focus();
-        return;
-      }
-
-      if (range.collapsed) {
-        const element =
-          range.startContainer.nodeType === Node.ELEMENT_NODE
-            ? range.startContainer
-            : range.startContainer.parentElement;
-
-        const inline = element?.closest(
-          "strong, b, em, i, u, s, mark, span"
-        );
-
-        if (
-          inline &&
-          inline !== visual &&
-          visual.contains(inline)
-        ) {
-          unwrapElement(inline);
-          syncVisualToSource();
-        }
-
-        return;
-      }
-
-      const fragment = range.extractContents();
-
-      for (const element of [
-        ...fragment.querySelectorAll("*")
-      ]) {
-        for (const property of [
-          "font-family",
-          "font-size",
-          "font-weight",
-          "font-style",
-          "color",
-          "background",
-          "background-color",
-          "text-decoration",
-          "text-decoration-line",
-          "text-align"
-        ]) {
-          element.style.removeProperty(property);
-        }
-
-        if (!element.getAttribute("style")?.trim()) {
-          element.removeAttribute("style");
-        }
-      }
-
-      for (const element of [
-        ...fragment.querySelectorAll(
-          "strong, b, em, i, u, s, mark"
-        )
-      ].reverse()) {
-        unwrapElement(element);
-      }
-
-      const wrapper = document.createElement("span");
-      wrapper.append(fragment);
-      range.insertNode(wrapper);
-
-      selectContents(wrapper);
-      syncVisualToSource();
-    }
-
-    function clearSourceFormatting() {
-      const {
-        start,
-        end
-      } = currentSourceSelection();
-
-      if (start === end) {
-        onToast(
-          "Trong HTML, h√£y ch·ªçn ƒëo·∫°n m√£ c·∫ßn x√≥a ƒë·ªãnh d·∫°ng."
-        );
-        return;
-      }
-
-      let selected = source.value.slice(start, end);
-
-      selected = selected
-        .replace(
-          /<\/?(?:strong|b|em|i|u|s|mark)\b[^>]*>/gi,
-          ""
-        )
-        .replace(
-          /(<[^>]+)\sstyle=(["'])[\s\S]*?\2([^>]*>)/gi,
-          "$1$3"
-        );
-
-      source.setRangeText(
-        selected,
-        start,
-        end,
-        "select"
-      );
-
-      source.focus();
-      source.dispatchEvent(
-        new Event("input", { bubbles: true })
-      );
-    }
-
-    function clearFormatting() {
-      if (currentView === "visual") {
-        clearVisualFormatting();
-      } else {
-        clearSourceFormatting();
-      }
-    }
-
-    function formatVisualBlock(tag, placeholder) {
-      const range = currentVisualRange();
-
-      if (!range) {
-        visual.focus();
-        return;
-      }
-
-      const startNode = range.startContainer;
-      const endNode = range.endContainer;
-
-      const startElement =
-        startNode.nodeType === Node.ELEMENT_NODE
-          ? startNode
-          : startNode.parentElement;
-
-      const endElement =
-        endNode.nodeType === Node.ELEMENT_NODE
-          ? endNode
-          : endNode.parentElement;
-
-      const selector = "p, h2, h3, h4, h5";
-
-      const startBlock =
-        startElement?.closest(selector);
-      const endBlock =
-        endElement?.closest(selector);
-
-      if (
-        startBlock &&
-        startBlock === endBlock &&
-        startBlock !== visual &&
-        visual.contains(startBlock)
-      ) {
-        const replacement =
-          document.createElement(tag);
-
-        while (startBlock.firstChild) {
-          replacement.append(
-            startBlock.firstChild
-          );
-        }
-
-        if (!replacement.textContent.trim()) {
-          replacement.textContent = placeholder;
-        }
-
-        startBlock.replaceWith(replacement);
-        selectContents(replacement);
-        syncVisualToSource();
-        return;
-      }
-
-      wrapVisual(tag, placeholder);
-    }
-
-    function makeVisualList(tag) {
-      const range = currentVisualRange();
-
-      if (!range) {
-        visual.focus();
-        return;
-      }
-
-      const selected = range.toString().trim();
-      const items = selected
-        ? selected
-            .split(/\n+/)
-            .map(value => value.trim())
-            .filter(Boolean)
-        : ["M·ª•c th·ª© nh·∫•t", "M·ª•c th·ª© hai"];
-
-      const list = document.createElement(tag);
-
-      for (const text of items) {
-        const item = document.createElement("li");
-        item.textContent = text;
-        list.append(item);
-      }
-
-      range.deleteContents();
-      range.insertNode(list);
-
-      const first = list.querySelector("li");
-      first
-        ? selectContents(first)
-        : placeCaretAfter(list);
-
-      syncVisualToSource();
-    }
-
-    function promptSafeUrl() {
-      const url = prompt(
-        "Nh·∫≠p ƒë·ªãa ch·ªâ li√™n k·∫øt (https://...):",
-        "https://"
-      );
-
-      if (!url) return "";
-
-      const safeUrl = renderer.safeLinkUrl(url);
-
-      if (!safeUrl) {
-        onToast("Li√™n k·∫øt kh√¥ng h·ª£p l·ªá.");
-        return "";
-      }
-
-      return safeUrl;
-    }
-
-    function makeVisualLink() {
-      const range = currentVisualRange();
-
-      if (!range) {
-        visual.focus();
-        return;
-      }
-
-      const safeUrl = promptSafeUrl();
-      if (!safeUrl) return;
-
-      const anchor = document.createElement("a");
-
-      anchor.href = safeUrl;
-
-      if (/^https?:\/\//i.test(safeUrl)) {
-        anchor.target = "_blank";
-        anchor.rel = "noopener noreferrer";
-      }
-
-      if (range.collapsed) {
-        anchor.textContent = "t√™n li√™n k·∫øt";
-        range.insertNode(anchor);
-      } else {
-        anchor.append(range.extractContents());
-        range.insertNode(anchor);
-      }
-
-      selectContents(anchor);
-      syncVisualToSource();
-    }
-
-    function replaceSourceSelection(
-      before,
-      after,
-      placeholder
-    ) {
-      const {
-        start,
-        end
-      } = currentSourceSelection();
-      const selected =
-        source.value.slice(start, end) || placeholder;
-
-      source.setRangeText(
-        `${before}${selected}${after}`,
-        start,
-        end,
-        "select"
-      );
-
-      if (start === end) {
-        source.setSelectionRange(
-          start + before.length,
-          start + before.length + selected.length
-        );
-      }
-
-      source.focus();
-      source.dispatchEvent(
-        new Event("input", { bubbles: true })
-      );
-    }
-
-    function makeSourceList(tag) {
-      const {
-        start,
-        end
-      } = currentSourceSelection();
-      const selected =
-        source.value.slice(start, end).trim();
-
-      const items = selected
-        ? selected
-            .split("\n")
-            .map(value => value.trim())
-            .filter(Boolean)
-        : ["M·ª•c th·ª© nh·∫•t", "M·ª•c th·ª© hai"];
-
-      const block = [
-        `<${tag}>`,
-        ...items.map(item => `  <li>${item}</li>`),
-        `</${tag}>`
-      ].join("\n");
-
-      source.setRangeText(
-        block,
-        start,
-        end,
-        "end"
-      );
-
-      source.focus();
-      source.dispatchEvent(
-        new Event("input", { bubbles: true })
-      );
-    }
-
-    function makeSourceLink() {
-      const {
-        start,
-        end
-      } = currentSourceSelection();
-      const selected =
-        source.value.slice(start, end) ||
-        "t√™n li√™n k·∫øt";
-
-      const safeUrl = promptSafeUrl();
-      if (!safeUrl) return;
-
-      const escapedUrl = safeUrl
-        .replaceAll("&", "&amp;")
-        .replaceAll('"', "&quot;");
-
-      source.setRangeText(
-        `<a href="${escapedUrl}">${selected}</a>`,
-        start,
-        end,
-        "end"
-      );
-
-      source.focus();
-      source.dispatchEvent(
-        new Event("input", { bubbles: true })
-      );
-    }
-
-    function applyFormat(format) {
-      if (currentView === "visual") {
-        if (format === "bold") {
-          wrapVisual("strong", "n·ªôi dung ƒë·∫≠m");
-        } else if (format === "italic") {
-          wrapVisual("em", "n·ªôi dung nghi√™ng");
-        } else if (format === "underline") {
-          wrapVisual("u", "n·ªôi dung g·∫°ch ch√¢n");
-        } else if (format === "strike") {
-          wrapVisual("s", "n·ªôi dung g·∫°ch ngang");
-        } else if (format === "heading") {
-          formatVisualBlock("h3", "Ti√™u ƒë·ªÅ");
-        } else if (format === "bullet") {
-          makeVisualList("ul");
-        } else if (format === "numbered") {
-          makeVisualList("ol");
-        } else if (format === "quote") {
-          wrapVisual(
-            "blockquote",
-            "N·ªôi dung tr√≠ch d·∫´n"
-          );
-        } else if (format === "link") {
-          makeVisualLink();
-        }
-
-        return;
-      }
-
-      if (format === "bold") {
-        replaceSourceSelection(
-          "<strong>",
-          "</strong>",
-          "n·ªôi dung ƒë·∫≠m"
-        );
-      } else if (format === "italic") {
-        replaceSourceSelection(
-          "<em>",
-          "</em>",
-          "n·ªôi dung nghi√™ng"
-        );
-      } else if (format === "underline") {
-        replaceSourceSelection(
-          "<u>",
-          "</u>",
-          "n·ªôi dung g·∫°ch ch√¢n"
-        );
-      } else if (format === "strike") {
-        replaceSourceSelection(
-          "<s>",
-          "</s>",
-          "n·ªôi dung g·∫°ch ngang"
-        );
-      } else if (format === "heading") {
-        replaceSourceSelection(
-          "<h3>",
-          "</h3>",
-          "Ti√™u ƒë·ªÅ"
-        );
-      } else if (format === "bullet") {
-        makeSourceList("ul");
-      } else if (format === "numbered") {
-        makeSourceList("ol");
-      } else if (format === "quote") {
-        replaceSourceSelection(
-          "<blockquote>",
-          "</blockquote>",
-          "N·ªôi dung tr√≠ch d·∫´n"
-        );
-      } else if (format === "link") {
-        makeSourceLink();
-      }
-    }
-
-    function pasteVisual(event) {
-      event.preventDefault();
-
-      const clipboard = event.clipboardData;
-      const pastedHtml =
-        clipboard?.getData("text/html") || "";
-      const pastedText =
-        clipboard?.getData("text/plain") || "";
-      const range = currentVisualRange();
-
-      if (!range) return;
-
-      range.deleteContents();
-
-      if (pastedHtml) {
-        const fragment =
-          range.createContextualFragment(
-            sanitize(pastedHtml)
-          );
-
-        const lastNode = fragment.lastChild;
-
-        range.insertNode(fragment);
-
-        if (lastNode) {
-          placeCaretAfter(lastNode);
-        }
-      } else {
-        const textNode =
-          document.createTextNode(pastedText);
-
-        range.insertNode(textNode);
-        placeCaretAfter(textNode);
-      }
-
-      syncVisualToSource();
-    }
-
-    function handleVisualKeydown(event) {
-      if (!(event.ctrlKey || event.metaKey)) return;
-
-      const key = event.key.toLowerCase();
-
-      if (key === "b") {
-        event.preventDefault();
-        wrapVisual("strong", "n·ªôi dung ƒë·∫≠m");
-      } else if (key === "i") {
-        event.preventDefault();
-        wrapVisual("em", "n·ªôi dung nghi√™ng");
-      } else if (key === "u") {
-        event.preventDefault();
-        wrapVisual("u", "n·ªôi dung g·∫°ch ch√¢n");
-      }
-    }
-
-    function handleSourceKeydown(event) {
-      if (
-        event.key === "Tab" &&
-        !event.ctrlKey &&
-        !event.metaKey
-      ) {
-        event.preventDefault();
-
-        source.setRangeText(
-          "  ",
-          source.selectionStart,
-          source.selectionEnd,
-          "end"
-        );
-
-        source.dispatchEvent(
-          new Event("input", { bubbles: true })
-        );
-
-        return;
-      }
-
-      if (!(event.ctrlKey || event.metaKey)) return;
-
-      const key = event.key.toLowerCase();
-
-      if (key === "b") {
-        event.preventDefault();
-
-        replaceSourceSelection(
-          "<strong>",
-          "</strong>",
-          "n·ªôi dung ƒë·∫≠m"
-        );
-      } else if (key === "i") {
-        event.preventDefault();
-
-        replaceSourceSelection(
-          "<em>",
-          "</em>",
-          "n·ªôi dung nghi√™ng"
-        );
-      } else if (key === "u") {
-        event.preventDefault();
-
-        replaceSourceSelection(
-          "<u>",
-          "</u>",
-          "n·ªôi dung g·∫°ch ch√¢n"
-        );
-      }
-    }
-
-    function handleTabKeydown(event) {
-      const index = tabs.indexOf(event.currentTarget);
-      if (index < 0) return;
-
-      let next = index;
-
-      if (event.key === "ArrowRight") {
-        next = (index + 1) % tabs.length;
-      } else if (event.key === "ArrowLeft") {
-        next =
-          (index - 1 + tabs.length) %
-          tabs.length;
-      } else if (event.key === "Home") {
-        next = 0;
-      } else if (event.key === "End") {
-        next = tabs.length - 1;
-      } else {
-        return;
-      }
-
-      event.preventDefault();
-
-      setView(tabs[next].dataset.editorView);
-      tabs[next].focus();
-    }
-
-    for (const tab of tabs) {
-      tab.addEventListener(
-        "click",
-        () => setView(tab.dataset.editorView)
-      );
-
-      tab.addEventListener(
-        "keydown",
-        handleTabKeydown
-      );
-    }
-
-    toolbar.addEventListener(
-      "pointerdown",
-      event => {
-        captureSelection();
-
-        if (event.target.closest("[data-format]")) {
-          event.preventDefault();
-        }
-      }
-    );
-
-    toolbar.addEventListener(
-      "click",
-      event => {
-        const button =
-          event.target.closest("[data-format]");
-
-        if (button) {
-          applyFormat(button.dataset.format);
-        }
-      }
-    );
-
-    visual.addEventListener(
-      "input",
-      syncVisualToSource
-    );
-    visual.addEventListener(
-      "paste",
-      pasteVisual
-    );
-    visual.addEventListener(
-      "keydown",
-      handleVisualKeydown
-    );
-
-    for (const eventName of [
-      "keyup",
-      "mouseup",
-      "focus",
-      "input"
-    ]) {
-      visual.addEventListener(
-        eventName,
-        saveVisualSelection
-      );
-    }
-
-    source.addEventListener(
-      "input",
-      () => {
-        updateLineNumbers();
-        updateCounter();
-      }
-    );
-
-    source.addEventListener(
-      "scroll",
-      syncLineNumberScroll,
-      { passive: true }
-    );
-
-    for (const eventName of [
-      "select",
-      "keyup",
-      "mouseup",
-      "focus",
-      "input"
-    ]) {
-      source.addEventListener(
-        eventName,
-        saveSourceSelection
-      );
-    }
-
-    source.addEventListener(
-      "keydown",
-      handleSourceKeydown
-    );
-
-    function setHtml(
-      value = "",
-      { view = "visual", focus = false } = {}
-    ) {
-      const clean = sanitize(value);
-
-      source.value = clean;
-      visual.innerHTML = clean;
-
-      updateLineNumbers();
-      syncLineNumberScroll();
-      updateCounter();
-      setView(view, { focus });
-    }
-
-    function getHtml() {
-      if (currentView === "visual") {
-        syncVisualToSource();
-      } else {
-        syncSourceToVisual();
-      }
-
-      const clean = sanitize(source.value);
-
-      source.value = clean;
-      visual.innerHTML = clean;
-
-      updateLineNumbers();
-      updateCounter();
-
-      return clean;
-    }
-
-    function clear() {
-      source.value = "";
-      visual.innerHTML = "";
-      savedVisualRange = null;
-      savedSourceSelection = {
-        start: 0,
-        end: 0,
-        direction: "none"
-      };
-
-      updateLineNumbers();
-      syncLineNumberScroll();
-      setView("visual", { focus: false });
-      updateCounter();
-    }
-
-    clear();
-
-    return Object.freeze({
-      setHtml,
-      getHtml,
-      clear,
-      setView,
-      getView: () => currentView,
-      applyInlineStyle,
-      applyBlockStyle,
-      clearFormatting,
-      captureSelection,
-      restoreSelection,
-      focus: () => {
-        if (currentView === "html") {
-          source.focus();
-        } else {
-          visual.focus();
-        }
-      }
-    });
-  }
-
-  window.WeeklyRichEditor = Object.freeze({
-    create
-  });
-})();
+        `<$µ®›[OHâÿ‹‹’^Hèâ‹Ÿ[X›YO…›YﬂOò¬Çà€›\òŸKúŸ]ò[ôŸU^
+à[à›\ùà[ôàúŸ[X›Çà
+N¬Çà€›\òŸKôõÿ›\ 
+N¬à€›\òŸKô\‹]⁄]ô[ù
+àô]»]ô[ù
+ö[ú]ã»ùXòõ\ŒàùYHJBà
+N¬àBÇàù[ò›[€à\R[õ[ôT›[J›[\»HﬂJH¬àYà
+›\úô[ùöY]»OOHùö\›X[äH¬à‹ò\ö\›X[›[J›[\ N¬àH[ŸH¬àô\XŸT€›\òŸU⁄]›[J›[\ N¬àBàBÇàù[ò›[€à\Põÿ⁄‘›[J›[\»HﬂJH¬àYà
+›\úô[ùöY]»OOHùö\›X[äH¬à\Uö\›X[õÿ⁄‘›[J›[\ N¬àH[ŸH¬àô\XŸT€›\òŸU⁄]›[Jà›[\Àà¬àõÿ⁄ŒàùYKàXŸZ€\éàì∏nÊZH[ô»Ò €à⁄8n‚[öÇàBà
+N¬àBàBÇàù[ò›[€à[ù‹ò\[[Y[ù
+[[Y[ù
+H¬àYà
+Y[[Y[ùÀú\ô[ùõŸJHô]\õé¬Çà⁄[H
+[[Y[ùôö\ú›⁄[
+H¬à[[Y[ùú\ô[ùõŸKö[úŸ\ùôYõ‹ôJà[[Y[ùôö\ú›⁄[à[[Y[ùà
+N¬àBÇà[[Y[ùúô[[›ôJ
+N¬àBÇàù[ò›[€à€X\ïö\›X[õ‹õX][ô 
+H¬à€€ú›ò[ôŸHH›\úô[ùö\›X[ò[ôŸJ
+N¬ÇàYà
+\ò[ôŸJH¬àö\›X[ôõÿ›\ 
+N¬àô]\õé¬àBÇàYà
+ò[ôŸKò€€\ŸY
+H¬à€€ú›[[Y[ùBàò[ôŸKú›\ù€€ùZ[ô\ãõõŸU\HOOHõŸKëSSQSï”ì—Bà»ò[ôŸKú›\ù€€ùZ[ô\Çààò[ôŸKú›\ù€€ùZ[ô\ãú\ô[ù[[Y[ù¬Çà€€ú›[õ[ôHH[[Y[ùÀò€‹Ÿ\›
+àú›õ€ôÀã[KKKÀX\öÀ‹[àÇà
+N¬ÇàYà
+à[õ[ôH	âÇà[õ[ôHOOHö\›X[	âÇàö\›X[ò€€ùZ[ú [õ[ôJBà
+H¬à[ù‹ò\[[Y[ù
+[õ[ôJN¬àﬁ[ò’ö\›X[‘€›\òŸJ
+N¬àBÇàô]\õé¬àBÇà€€ú›úòY€Y[ùHò[ôŸKô^òX›€€ù[ù 
+N¬Çàõ‹à
+€€ú›[[Y[ùŸà¬àããôúòY€Y[ùú]Y\ûTŸ[X›‹ê[
+äàäBàJH¬àõ‹à
+€€ú›õ‹\ùHŸà¬àôõ€ùYò[Z[Hãàôõ€ù\⁄^ôHãàôõ€ù]ŸZY⁄ãàôõ€ù\›[Hãàò€€‹àãàòòX⁄Ÿ‹õ›[ôãàòòX⁄Ÿ‹õ›[ôX€€‹àãàù^YX€‹ò][€àãàù^YX€‹ò][€ã[[ôHãàù^X[Y€àÇàJH¬à[[Y[ùú›[Kúô[[›ôTõ‹\ùJõ‹\ùJN¬àBÇàYà
+Y[[Y[ùôŸ]]öXù]Jú›[HäOÀùö[J
+JH¬à[[Y[ùúô[[›ôP]öXù]Jú›[HäN¬àBàBÇàõ‹à
+€€ú›[[Y[ùŸà¬àããôúòY€Y[ùú]Y\ûTŸ[X›‹ê[
+àú›õ€ôÀã[KKKÀX\ö»Çà
+BàKúô]ô\úŸJ
+JH¬à[ù‹ò\[[Y[ù
+[[Y[ù
+N¬àBÇà€€ú›‹ò\\àHÿ›[Y[ùò‹ôX]Q[[Y[ù
+ú‹[àäN¬à‹ò\\ãò\[ô
+úòY€Y[ù
+N¬àò[ôŸKö[úŸ\ùõŸJ‹ò\\äN¬ÇàŸ[X›€€ù[ù ‹ò\\äN¬àﬁ[ò’ö\›X[‘€›\òŸJ
+N¬àBÇàù[ò›[€à€X\î€›\òŸQõ‹õX][ô 
+H¬à€€ú›¬à›\ùà[ôàHH›\úô[ù€›\òŸTŸ[X›[€ä
+N¬ÇàYà
+›\ùOOH[ô
+H¬à€ïÿ\›
+àïõ€ô»S0ËﬁH⁄8n„[à1$[¯n®[àpË»¯n©€à0ÏÿH1$xn‚€ö8n®[ôÀàÇà
+N¬àô]\õé¬àBÇà]Ÿ[X›YH€›\òŸKùò[YKú€XŸJ›\ù[ô
+N¬ÇàŸ[X›YHŸ[X›Yàúô\XŸJàœœ Œú›õ€ôﬂü[___ﬂX\ö Wñ◊èóJèãŸ⁄KààÇà
+Bàúô\XŸJà ◊èóJ W‹›[OJ»â◊JV◊◊◊Jè◊ä◊èóJèäKŸ⁄KàâI»Çà
+N¬Çà€›\òŸKúŸ]ò[ôŸU^
+àŸ[X›Yà›\ùà[ôàúŸ[X›Çà
+N¬Çà€›\òŸKôõÿ›\ 
+N¬à€›\òŸKô\‹]⁄]ô[ù
+àô]»]ô[ù
+ö[ú]ã»ùXòõ\ŒàùYHJBà
+N¬àBÇàù[ò›[€à€X\ëõ‹õX][ô 
+H¬àYà
+›\úô[ùöY]»OOHùö\›X[äH¬à€X\ïö\›X[õ‹õX][ô 
+N¬àH[ŸH¬à€X\î€›\òŸQõ‹õX][ô 
+N¬àBÇàBÇàù[ò›[€àõ‹õX]ö\›X[õÿ⁄ YÀXŸZ€\äH¬à€€ú›ò[ôŸHH›\úô[ùö\›X[ò[ôŸJ
+N¬ÇàYà
+\ò[ôŸJH¬àö\›X[ôõÿ›\ 
+N¬àô]\õé¬àBÇà€€ú›õÿ⁄»H€‹Ÿ\›^õÿ⁄ ò[ôŸKú›\ù€€ùZ[ô\äN¬ÇàYà
+õÿ⁄ H¬à€€ú›ô\XŸ[Y[ùHÿ›[Y[ùò‹ôX]Q[[Y[ù
+Y N¬Çà⁄[H
+õÿ⁄Àôö\ú›⁄[
+H¬àô\XŸ[Y[ùò\[ô
+õÿ⁄Àôö\ú›⁄[
+N¬àBÇàõÿ⁄Àúô\XŸU⁄]
+ô\XŸ[Y[ù
+N¬àŸ[X›€€ù[ù ô\XŸ[Y[ù
+N¬àﬁ[ò’ö\›X[‘€›\òŸJ
+N¬àô]\õé¬àBÇà‹ò\ö\›X[
+YÀXŸZ€\äN¬àBÇàù[ò›[€àô\XŸT€›\òŸTŸ[X›[€äôYõ‹ôKYù\ãXŸZ€\äH¬à€€ú›¬à›\ùà[ôàHH›\úô[ù€›\òŸTŸ[X›[€ä
+N¬à€€ú›Ÿ[X›YH€›\òŸKùò[YKú€XŸJ›\ù[ô
+HXŸZ€\é¬à€€ú›[H	ÿôYõ‹ô_I‹Ÿ[X›YIÿYù\üX¬Çà€›\òŸKúŸ]ò[ôŸU^
+[›\ù[ôúŸ[X›äN¬à€›\òŸKôõÿ›\ 
+N¬à€›\òŸKô\‹]⁄]ô[ù
+àô]»]ô[ù
+ö[ú]ã»ùXòõ\ŒàùYHJBà
+N¬àBÇàù[ò›[€àXZŸUö\›X[\›
+Y H¬à€€ú›ò[ôŸHH›\úô[ùö\›X[ò[ôŸJ
+N¬ÇàYà
+\ò[ôŸJH¬àö\›X[ôõÿ›\ 
+N¬àô]\õé¬àBÇà€€ú›^Hò[ôŸKù‘›ö[ô 
+Kùö[J
+Hì]·ª•X»[öËX⁄é¬à€€ú›[ô\»H^àú‹]
+◊äÀ BàõX\
+[ôHOà[ôKùö[J
+JBàôö[\äõ€€X[äN¬Çà€€ú›\›Hÿ›[Y[ùò‹ôX]Q[[Y[ù
+Y N¬Çàõ‹à
+€€ú›[ôHŸà[ô\ H¬à€€ú›][HHÿ›[Y[ùò‹ôX]Q[[Y[ù
+õHäN¬à][Kù^€€ù[ùH[ôN¬à\›ò\[ô
+][JN¬àBÇàò[ôŸKô[]P€€ù[ù 
+N¬àò[ôŸKö[úŸ\ùõŸJ\›
+N¬àŸ[X›€€ù[ù \›
+N¬àﬁ[ò’ö\›X[‘€›\òŸJ
+N¬àBÇàù[ò›[€àXZŸT€›\òŸS\›
+Y H¬à€€ú›¬à›\ùà[ôàHH›\úô[ù€›\òŸTŸ[X›[€ä
+N¬Çà€€ú›^H€›\òŸKùò[YKú€XŸJ›\ù[ô
+Kùö[J
+HìxnÈX»[öËX⁄é¬à€€ú›[ô\»H^àú‹]
+◊äÀ BàõX\
+[ôHOà[ôKùö[J
+JBàôö[\äõ€€X[äN¬à€€ú›[H	›YﬂOâ€[ô\ÀõX\
+[ôHOàOâ‹ô[ô\ô\ãô\ÿÿ\R[
+[ôJ_O€Oò
+Köõ⁄[äàä_O…›YﬂOò¬Çà€›\òŸKúŸ]ò[ôŸU^
+[›\ù[ôúŸ[X›äN¬à€›\òŸKôõÿ›\ 
+N¬à€›\òŸKô\‹]⁄]ô[ù
+àô]»]ô[ù
+ö[ú]ã»ùXòõ\ŒàùYHJBà
+N¬àBÇàù[ò›[€àò[Y]S[ö ò[YJH¬à€€ú›ò]»H›ö[ô ò[YHàäKùö[J
+N¬àYà
+\ò] Hô]\õààé¬ÇàûH¬àYà
+àò]Àú›\ù’⁄]
+à»äHàò]Àú›\ù’⁄]
+ã»äHàò]Àú›\ù’⁄]
+ãã»äHàò]Àú›\ù’⁄]
+ããã»äBà
+H¬àô]\õàò]Œ¬àBÇà€€ú›\õHô]»Tì
+ò] N¬Çàô]\õà»öàãöŒàãõXZ[Œàãù[àóKö[ò€Y\ \õúõ›ÿ€€
+Bà»ò]¬àààé¬àHÿ]⁄¬àô]\õààé¬àBàBÇàù[ò›[€àXZŸUö\›X[[ö 
+H¬à€€ú›ò[ôŸHH›\úô[ùö\›X[ò[ôŸJ
+N¬àYà
+\ò[ôŸJHô]\õé¬Çà€€ú›Ÿ[X›YHò[ôŸKù‘›ö[ô 
+HõpÍõà¯nØ›é¬à€€ú›ôYàHò[Y]S[ö õ€\
+ìö8n´\0Íõà¯nØ›8nÁ»1$pËõ»
+ŒãÀÀããäNàäJN¬ÇàYà
+ZôYäH¬à€ïÿ\›
+ìpÍõà¯nØ›⁄pÌô»8nË‹8n·ÀàäN¬àô]\õé¬àBÇà€€ú›[ö»Hÿ›[Y[ùò‹ôX]Q[[Y[ù
+òHäN¬à[öÀöôYàHôYé¬à[öÀù^€€ù[ùHŸ[X›Y¬à[öÀúô[Hõõ€‹[ô\àõ‹ôYô\úô\àé¬à[öÀù\ôŸ]Hóÿõ[ö»é¬Çàò[ôŸKô[]P€€ù[ù 
+N¬àò[ôŸKö[úŸ\ùõŸJ[ö N¬àŸ[X›€€ù[ù [ö N¬àﬁ[ò’ö\›X[‘€›\òŸJ
+N¬àBÇàù[ò›[€àXZŸT€›\òŸS[ö 
+H¬à€€ú›¬à›\ùà[ôàHH›\úô[ù€›\òŸTŸ[X›[€ä
+N¬à€€ú›Ÿ[X›YH€›\òŸKùò[YKú€XŸJ›\ù[ô
+HõpÍõà¯nØ›é¬à€€ú›ôYàHò[Y]S[ö õ€\
+ìö8n´\0Íõà¯nØ›8nÁ»1$pËõ»
+ŒãÀÀããäNàäJN¬ÇàYà
+ZôYäH¬à€ïÿ\›
+ìpÍõà¯nØ›⁄pÌô»8nË‹8n·ÀàäN¬àô]\õé¬àBÇà€€ú›[HHôYèHâ‹ô[ô\ô\ãô\ÿÿ\R[
+ôYä_Hà\ôŸ]Hóÿõ[ö»àô[Hõõ€‹[ô\àõ‹ôYô\úô\àèâ‹Ÿ[X›YOÿOò¬Çà€›\òŸKúŸ]ò[ôŸU^
+[›\ù[ôúŸ[X›äN¬à€›\òŸKôõÿ›\ 
+N¬à€›\òŸKô\‹]⁄]ô[ù
+àô]»]ô[ù
+ö[ú]ã»ùXòõ\ŒàùYHJBà
+N¬àBÇàù[ò›[€à\Qõ‹õX]
+õ‹õX]
+H¬àYà
+›\úô[ùöY]»OOHùö\›X[äH¬àYà
+õ‹õX]OOHòõ€äH¬à‹ò\ö\›X[
+ú›õ€ô»ãõ∏nÊZH[ô»1$xn´[HäN¬àH[ŸHYà
+õ‹õX]OOHö][X»äH¬à‹ò\ö\›X[
+ô[Hãõ∏nÊZH[ô»ô⁄pÍõô»äN¬àH[ŸHYà
+õ‹õX]OOHù[ô\õ[ôHäH¬à‹ò\ö\›X[
+ùHãõ∏nÊZH[ô»¯n®X⁄⁄0ËõàäN¬àH[ŸHYà
+õ‹õX]OOHú›öZŸHäH¬à‹ò\ö\›X[
+ú»ãõ∏nÊZH[ô»¯n®X⁄ôÿ[ô»äN¬àH[ŸHYà
+õ‹õX]OOHöXY[ô»äH¬àõ‹õX]ö\›X[õÿ⁄ ö»ãïpÍùH1$xn‡HäN¬àH[ŸHYà
+õ‹õX]OOHòù[]äH¬àXZŸUö\›X[\›
+ù[äN¬àH[ŸHYà
+õ‹õX]OOHõù[Xô\ôYäH¬àXZŸUö\›X[\›
+õ€äN¬àH[ŸHYà
+õ‹õX]OOHú][›HäH¬à‹ò\ö\›X[
+àòõÿ⁄‹][›Hãàì∏nÊZH[ô»∞ÎX⁄8n™€àÇà
+N¬àH[ŸHYà
+õ‹õX]OOHõ[ö»äH¬àXZŸUö\›X[[ö 
+N¬àBÇàô]\õé¬àBÇàYà
+õ‹õX]OOHòõ€äH¬àô\XŸT€›\òŸTŸ[X›[€äàè›õ€ôœàãàè‹›õ€ôœàãàõ∏nÊZH[ô»1$xn´[HÇà
+N¬àH[ŸHYà
+õ‹õX]OOHö][X»äH¬àô\XŸT€›\òŸTŸ[X›[€äàè[OàãàèŸ[Oàãàõ∏nÊZH[ô»ô⁄pÍõô»Çà
+N¬àH[ŸHYà
+õ‹õX]OOHù[ô\õ[ôHäH¬àô\XŸT€›\òŸTŸ[X›[€äàèOàãàè›Oàãàõ∏nÊZH[ô»¯n®X⁄⁄0ËõàÇà
+N¬àH[ŸHYà
+õ‹õX]OOHú›öZŸHäH¬àô\XŸT€›\òŸTŸ[X›[€äàèœàãàè‹œàãàõ∏nÊZH[ô»¯n®X⁄ôÿ[ô»Çà
+N¬àH[ŸHYà
+õ‹õX]OOHöXY[ô»äH¬àô\XŸT€›\òŸTŸ[X›[€äàèœàãàè⁄œàãàï0ÍùH1$xn‡HÇà
+N¬àH[ŸHYà
+õ‹õX]OOHòù[]äH¬àXZŸT€›\òŸS\›
+ù[äN¬àH[ŸHYà
+õ‹õX]OOHõù[Xô\ôYäH¬àXZŸT€›\òŸS\›
+õ€äN¬àH[ŸHYà
+õ‹õX]OOHú][›HäH¬àô\XŸT€›\òŸTŸ[X›[€äàèõÿ⁄‹][›Oàãàèÿõÿ⁄‹][›Oàãàì∏nÊZH[ô»∞ÎX⁄8n™€àÇà
+N¬àH[ŸHYà
+õ‹õX]OOHõ[ö»äH¬àXZŸT€›\òŸS[ö 
+N¬àBàBÇàù[ò›[€à\›Uö\›X[
+]ô[ù
+H¬à]ô[ùúô]ô[ùYò][
+
+N¬Çà€€ú›€\õÿ\ôH]ô[ùò€\õÿ\ô]N¬à€€ú›\›Y[Bà€\õÿ\ôÀôŸ]]Jù^⁄[äHàé¬à€€ú›\›Y^Bà€\õÿ\ôÀôŸ]]Jù^‹Z[àäHàé¬à€€ú›ò[ôŸHH›\úô[ùö\›X[ò[ôŸJ
+N¬ÇàYà
+\ò[ôŸJHô]\õé¬Çàò[ôŸKô[]P€€ù[ù 
+N¬ÇàYà
+\›Y[
+H¬à€€ú›úòY€Y[ùBàò[ôŸKò‹ôX]P€€ù^X[úòY€Y[ù
+àÿ[ö]^ôJ\›Y[
+Bà
+N¬à€€ú›\›õŸHHúòY€Y[ùõ\›⁄[¬Çàò[ôŸKö[úŸ\ùõŸJúòY€Y[ù
+N¬ÇàYà
+\›õŸJH¬àXŸPÿ\ô]Yù\ä\›õŸJN¬àBàH[ŸH¬à€€ú›^õŸHBàÿ›[Y[ùò‹ôX]U^õŸJ\›Y^
+N¬Çàò[ôŸKö[úŸ\ùõŸJ^õŸJN¬àXŸPÿ\ô]Yù\ä^õŸJN¬àBÇàﬁ[ò’ö\›X[‘€›\òŸJ
+N¬àBÇàù[ò›[€à[ôUö\›X[Ÿ^Y›€ä]ô[ù
+H¬àYà
+J]ô[ùò›õŸ^H]ô[ùõY]RŸ^JJHô]\õé¬Çà€€ú›Ÿ^HH]ô[ùöŸ^Kù”›Ÿ\êÿ\ŸJ
+N¬ÇàYà
+Ÿ^HOOHòàäH¬à]ô[ùúô]ô[ùYò][
+
+N¬à‹ò\ö\›X[
+ú›õ€ô»ãõ∏nÊZH[ô»1$xn´[HäN¬àH[ŸHYà
+Ÿ^HOOHöHäH¬à]ô[ùúô]ô[ùYò][
+
+N¬à‹ò\ö\›X[
+ô[Hãõ∏nÊZH[ô»ô⁄pÍõô»äN¬àH[ŸHYà
+Ÿ^HOOHùHäH¬à]ô[ùúô]ô[ùYò][
+
+N¬à‹ò\ö\›X[
+ùHãõ∏nÊZH[ô»¯n®X⁄⁄0ËõàäN¬àBàBÇàù[ò›[€à[ôT€›\òŸRŸ^Y›€ä]ô[ù
+H¬àYà
+à]ô[ùöŸ^HOOHïXàà	âÇàY]ô[ùò›õŸ^H	âÇàY]ô[ùõY]RŸ^Bà
+H¬à]ô[ùúô]ô[ùYò][
+
+N¬Çà€›\òŸKúŸ]ò[ôŸU^
+ààãà€›\òŸKúŸ[X›[€î›\ùà€›\òŸKúŸ[X›[€ë[ôàô[ôÇà
+N¬Çà€›\òŸKô\‹]⁄]ô[ù
+àô]»]ô[ù
+ö[ú]ã»ùXòõ\ŒàùYHJBà
+N¬Çàô]\õé¬àBÇàYà
+J]ô[ùò›õŸ^H]ô[ùõY]RŸ^JJHô]\õé¬Çà€€ú›Ÿ^HH]ô[ùöŸ^Kù”›Ÿ\êÿ\ŸJ
+N¬ÇàYà
+Ÿ^HOOHòàäH¬à]ô[ùúô]ô[ùYò][
+
+N¬Çàô\XŸT€›\òŸTŸ[X›[€äàè›õ€ôœàãàè‹›õ€ôœàãàõ∏nÊZH[ô»1$xn´[HÇà
+N¬àH[ŸHYà
+Ÿ^HOOHöHäH¬à]ô[ùúô]ô[ùYò][
+
+N¬Çàô\XŸT€›\òŸTŸ[X›[€äàè[OàãàèŸ[Oàãàõ∏nÊZH[ô»ô⁄pÍõô»Çà
+N¬àH[ŸHYà
+Ÿ^HOOHùHäH¬à]ô[ùúô]ô[ùYò][
+
+N¬Çàô\XŸT€›\òŸTŸ[X›[€äàèOàãàè›Oàãàõ∏nÊZH[ô»¯n®X⁄⁄0ËõàÇà
+N¬àBàBÇàù[ò›[€à[ôUXíŸ^Y›€ä]ô[ù
+H¬à€€ú›[ô^HXúÀö[ô^Ÿä]ô[ùò›\úô[ù\ôŸ]
+N¬àYà
+[ô^
+Hô]\õé¬Çà]ô^H[ô^¬ÇàYà
+]ô[ùöŸ^HOOHê\úõ›‘öY⁄äH¬àô^H
+[ô^
+»JH	HXúÀõ[ô›¬àH[ŸHYà
+]ô[ùöŸ^HOOHê\úõ›”YùäH¬àô^Bà
+[ô^HH
+»XúÀõ[ô›
+H	BàXúÀõ[ô›¬àH[ŸHYà
+]ô[ùöŸ^HOOHí€YHäH¬àô^H¬àH[ŸHYà
+]ô[ùöŸ^HOOHë[ôäH¬àô^HXúÀõ[ô›HN¬àH[ŸH¬àô]\õé¬àBÇà]ô[ùúô]ô[ùYò][
+
+N¬ÇàŸ]öY] Xú÷€ô^Kô]\Ÿ]ôY]‹ïöY] N¬àXú÷€ô^Kôõÿ›\ 
+N¬àBÇàõ‹à
+€€ú›XàŸàXú H¬àXãòY]ô[ù\›[ô\äàò€X⁄»ãà
+
+HOàŸ]öY] Xãô]\Ÿ]ôY]‹ïöY] Bà
+N¬ÇàXãòY]ô[ù\›[ô\äàöŸ^Y›€àãà[ôUXíŸ^Y›€Çà
+N¬àBÇà€€ò\ãòY]ô[ù\›[ô\äàú⁄[ù\ô›€àãà]ô[ùOà¬àÿ\\ôTŸ[X›[€ä
+N¬ÇàYà
+]ô[ùù\ôŸ]ò€‹Ÿ\›
+ñŸ]KYõ‹õX]HäJH¬à]ô[ùúô]ô[ùYò][
+
+N¬àBàBà
+N¬Çà€€ò\ãòY]ô[ù\›[ô\äàò€X⁄»ãà]ô[ùOà¬à€€ú›ù]€àBà]ô[ùù\ôŸ]ò€‹Ÿ\›
+ñŸ]KYõ‹õX]HäN¬ÇàYà
+ù]€äH¬à\Qõ‹õX]
+ù]€ãô]\Ÿ]ôõ‹õX]
+N¬àBàBà
+N¬Çàö\›X[òY]ô[ù\›[ô\äàö[ú]ãàﬁ[ò’ö\›X[‘€›\òŸBà
+N¬àö\›X[òY]ô[ù\›[ô\äàú\›Hãà\›Uö\›X[à
+N¬àö\›X[òY]ô[ù\›[ô\äàöŸ^Y›€àãà[ôUö\›X[Ÿ^Y›€Çà
+N¬Çàõ‹à
+€€ú›]ô[ùò[YHŸà¬àöŸ^]\ãàõ[›\Ÿ]\ãàôõÿ›\»ãàö[ú]ÇàJH¬àö\›X[òY]ô[ù\›[ô\äà]ô[ùò[YKàÿ]ôUö\›X[Ÿ[X›[€Çà
+N¬àBÇà€›\òŸKòY]ô[ù\›[ô\äàö[ú]ãà
+
+HOà¬à\]S[ôSù[Xô\ú 
+N¬à\]P€›[ù\ä
+N¬àBà
+N¬Çà€›\òŸKòY]ô[ù\›[ô\äàúÿ‹õ€ãàﬁ[ò”[ôSù[Xô\îÿ‹õ€à»\‹⁄]ôNàùYHBà
+N¬Çàõ‹à
+€€ú›]ô[ùò[YHŸà¬àúŸ[X›ãàöŸ^]\ãàõ[›\Ÿ]\ãàôõÿ›\»ãàö[ú]ÇàJH¬à€›\òŸKòY]ô[ù\›[ô\äà]ô[ùò[YKàÿ]ôT€›\òŸTŸ[X›[€Çà
+N¬àBÇà€›\òŸKòY]ô[ù\›[ô\äàöŸ^Y›€àãà[ôT€›\òŸRŸ^Y›€Çà
+N¬Çàù[ò›[€àŸ][
+àò[YHHàãà»öY]»Hùö\›X[ãõÿ›\»Hò[ŸHHHﬂBà
+H¬à€€ú›€X[àHÿ[ö]^ôJò[YJN¬Çà€›\òŸKùò[YHH€X[é¬àö\›X[ö[õô\íSH€X[é¬Çà\]S[ôSù[Xô\ú 
+N¬àﬁ[ò”[ôSù[Xô\îÿ‹õ€
+
+N¬à\]P€›[ù\ä
+N¬àŸ]öY] öY]À»õÿ›\»JN¬àBÇàù[ò›[€àŸ][
+
+H¬àYà
+›\úô[ùöY]»OOHùö\›X[äH¬àﬁ[ò’ö\›X[‘€›\òŸJ
+N¬àH[ŸH¬àﬁ[ò‘€›\òŸU’ö\›X[
+
+N¬àBÇà€€ú›€X[àHÿ[ö]^ôJ€›\òŸKùò[YJN¬Çà€›\òŸKùò[YHH€X[é¬àö\›X[ö[õô\íSH€X[é¬Çà\]S[ôSù[Xô\ú 
+N¬à\]P€›[ù\ä
+N¬Çàô]\õà€X[é¬àBÇàù[ò›[€à€X\ä
+H¬à€›\òŸKùò[YHHàé¬àö\›X[ö[õô\íSHàé¬àÿ]ôYö\›X[ò[ôŸHHù[¬àÿ]ôY€›\òŸTŸ[X›[€àH¬à›\ùàà[ôàà\ôX›[€éàõõ€ôHÇàN¬Çà\]S[ôSù[Xô\ú 
+N¬àﬁ[ò”[ôSù[Xô\îÿ‹õ€
+
+N¬àŸ]öY] ùö\›X[ã»õÿ›\Œàò[ŸHJN¬à\]P€›[ù\ä
+N¬àBÇà€X\ä
+N¬Çàô]\õàÿöôX›ôúôY^ôJ¬àŸ][àŸ][à€X\ãàŸ]öY]ÀàŸ]öY]Œà
+
+HOà›\úô[ùöY]Àà\R[õ[ôT›[Kà\Põÿ⁄‘›[Kà€X\ëõ‹õX][ôÀàÿ\\ôTŸ[X›[€ãàô\›‹ôTŸ[X›[€ãàõÿ›\Œà
+
+HOà¬àYà
+›\úô[ùöY]»OOHö[äH¬à€›\òŸKôõÿ›\ 
+N¬àH[ŸH¬àö\›X[ôõÿ›\ 
+N¬àBàBàJN¬àBÇà⁄[ô›ÀïŸYZ€TöX⁄Y]‹àHÿöôX›ôúôY^ôJ¬à‹ôX]BàJN¬üJJ
+N¬
