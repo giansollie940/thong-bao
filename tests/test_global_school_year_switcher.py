@@ -11,6 +11,7 @@ def require(text: str, needle: str, message: str) -> None:
         raise AssertionError(message)
 
 
+# GREEN verification for V3.18.0 global school-year isolation.
 # Global school-year switcher must live in the sidebar.
 require(INDEX, 'id="global-school-year-filter"', "sidebar global school-year selector must exist")
 require(INDEX, 'class="sidebar-school-year"', "sidebar school-year control must have dedicated layout")
