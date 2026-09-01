@@ -1126,16 +1126,80 @@
       );
     }
 
+    function toggleVisualInlineCommand(
+      command,
+      fallbackTag,
+      placeholder
+    ) {
+      const range = currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      if (range.collapsed) {
+        wrapVisual(fallbackTag, placeholder);
+        return;
+      }
+
+      try {
+        visual.focus({ preventScroll: true });
+      } catch {
+        visual.focus();
+      }
+
+      const selection = window.getSelection();
+      if (!selection) return;
+
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      /*
+       * Browser editing commands implement true inline toggles: they split
+       * existing markup at selection boundaries and remove a mark when the
+       * whole selection already has it. This avoids endlessly nesting
+       * <strong>/<em>/<u>/<s> wrappers after sequential formatting.
+       */
+      const changed =
+        typeof document.execCommand === "function" &&
+        document.execCommand(command, false, null);
+
+      if (!changed) {
+        wrapVisual(fallbackTag, placeholder);
+        return;
+      }
+
+      saveVisualSelection();
+      syncVisualToSource();
+    }
+
     function applyFormat(format) {
       if (currentView === "visual") {
         if (format === "bold") {
-          wrapVisual("strong", "nội dung đậm");
+          toggleVisualInlineCommand(
+            "bold",
+            "strong",
+            "nội dung đậm"
+          );
         } else if (format === "italic") {
-          wrapVisual("em", "nội dung nghiêng");
+          toggleVisualInlineCommand(
+            "italic",
+            "em",
+            "nội dung nghiêng"
+          );
         } else if (format === "underline") {
-          wrapVisual("u", "nội dung gạch chân");
+          toggleVisualInlineCommand(
+            "underline",
+            "u",
+            "nội dung gạch chân"
+          );
         } else if (format === "strike") {
-          wrapVisual("s", "nội dung gạch ngang");
+          toggleVisualInlineCommand(
+            "strikeThrough",
+            "s",
+            "nội dung gạch ngang"
+          );
         } else if (format === "heading") {
           formatVisualBlock("h3", "Tiêu đề");
         } else if (format === "bullet") {
@@ -1244,13 +1308,25 @@
 
       if (key === "b") {
         event.preventDefault();
-        wrapVisual("strong", "nội dung đậm");
+        toggleVisualInlineCommand(
+          "bold",
+          "strong",
+          "nội dung đậm"
+        );
       } else if (key === "i") {
         event.preventDefault();
-        wrapVisual("em", "nội dung nghiêng");
+        toggleVisualInlineCommand(
+          "italic",
+          "em",
+          "nội dung nghiêng"
+        );
       } else if (key === "u") {
         event.preventDefault();
-        wrapVisual("u", "nội dung gạch chân");
+        toggleVisualInlineCommand(
+          "underline",
+          "u",
+          "nội dung gạch chân"
+        );
       }
     }
 
