@@ -30,6 +30,7 @@
 
     let currentView = "visual";
     let savedVisualRange = null;
+    let savedVisualOffsets = null;
     let savedSourceSelection = {
       start: 0,
       end: 0,
@@ -64,6 +65,7 @@
       source.value = clean;
       visual.innerHTML = clean;
       savedVisualRange = null;
+      savedVisualOffsets = null;
       savedSourceSelection = {
         start: 0,
         end: 0,
@@ -160,6 +162,102 @@
       );
     }
 
+    function visualOffsetsFromRange(range) {
+      if (!range || !rangeBelongsToVisual(range)) return null;
+
+      try {
+        const startProbe = document.createRange();
+        startProbe.selectNodeContents(visual);
+        startProbe.setEnd(range.startContainer, range.startOffset);
+
+        const endProbe = document.createRange();
+        endProbe.selectNodeContents(visual);
+        endProbe.setEnd(range.endContainer, range.endOffset);
+
+        return {
+          start: startProbe.toString().length,
+          end: endProbe.toString().length
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    function visualRangeFromOffsets(offsets) {
+      if (!offsets) return null;
+
+      const startTarget = Math.max(0, Number(offsets.start) || 0);
+      const endTarget = Math.max(startTarget, Number(offsets.end) || 0);
+      const walker = document.createTreeWalker(
+        visual,
+        NodeFilter.SHOW_TEXT
+      );
+
+      let position = 0;
+      let startNode = null;
+      let startOffset = 0;
+      let endNode = null;
+      let endOffset = 0;
+      let lastNode = null;
+      let node = walker.nextNode();
+
+      while (node) {
+        const length = node.nodeValue?.length || 0;
+        const nextPosition = position + length;
+        lastNode = node;
+
+        if (!startNode && startTarget <= nextPosition) {
+          startNode = node;
+          startOffset = Math.min(
+            length,
+            Math.max(0, startTarget - position)
+          );
+        }
+
+        if (!endNode && endTarget <= nextPosition) {
+          endNode = node;
+          endOffset = Math.min(
+            length,
+            Math.max(0, endTarget - position)
+          );
+          break;
+        }
+
+        position = nextPosition;
+        node = walker.nextNode();
+      }
+
+      if (!startNode && lastNode) {
+        startNode = lastNode;
+        startOffset = lastNode.nodeValue?.length || 0;
+      }
+
+      if (!endNode && lastNode) {
+        endNode = lastNode;
+        endOffset = lastNode.nodeValue?.length || 0;
+      }
+
+      if (!startNode || !endNode) return null;
+
+      try {
+        const range = document.createRange();
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+        return range;
+      } catch {
+        return null;
+      }
+    }
+
+    function rememberVisualRange(range) {
+      if (!range || !rangeBelongsToVisual(range)) return false;
+
+      savedVisualRange = range.cloneRange();
+      const offsets = visualOffsetsFromRange(range);
+      if (offsets) savedVisualOffsets = offsets;
+      return true;
+    }
+
     function saveVisualSelection() {
       const selection = window.getSelection();
       if (!selection?.rangeCount) return false;
@@ -184,7 +282,7 @@
         return false;
       }
 
-      savedVisualRange = range.cloneRange();
+      rememberVisualRange(range);
       return true;
     }
 
@@ -221,13 +319,19 @@
     function restoreVisualSelection({
       focus = true
     } = {}) {
-      if (!savedVisualRange) return null;
+      /*
+       * Logical character offsets are authoritative. DOM Range objects can
+       * remain syntactically valid after contenteditable normalizes/rebuilds
+       * its children while pointing at detached or collapsed nodes.
+       */
+      let range = visualRangeFromOffsets(savedVisualOffsets);
+
+      if (!range) {
+        range = savedVisualRange;
+        if (!range || !rangeBelongsToVisual(range)) return null;
+      }
 
       try {
-        if (!rangeBelongsToVisual(savedVisualRange)) {
-          return null;
-        }
-
         const selection = window.getSelection();
         if (!selection) return null;
 
@@ -240,9 +344,9 @@
         }
 
         selection.removeAllRanges();
-        selection.addRange(savedVisualRange);
-
-        return savedVisualRange;
+        selection.addRange(range);
+        rememberVisualRange(range);
+        return range;
       } catch {
         savedVisualRange = null;
         return null;
@@ -295,7 +399,7 @@
         const range = selection.getRangeAt(0);
 
         if (rangeBelongsToVisual(range)) {
-          savedVisualRange = range.cloneRange();
+          rememberVisualRange(range);
           return range;
         }
       }
@@ -325,7 +429,7 @@
       selection.removeAllRanges();
       selection.addRange(range);
 
-      savedVisualRange = range.cloneRange();
+      rememberVisualRange(range);
     }
 
     function placeCaretAfter(node) {
@@ -339,7 +443,7 @@
       selection.removeAllRanges();
       selection.addRange(range);
 
-      savedVisualRange = range.cloneRange();
+      rememberVisualRange(range);
     }
 
     function visualTextSegments(range) {
@@ -426,7 +530,7 @@
 
     selection.removeAllRanges();
     selection.addRange(range);
-    savedVisualRange = range.cloneRange();
+    rememberVisualRange(range);
   }
 
   function wrapVisual(tag, placeholder) {
