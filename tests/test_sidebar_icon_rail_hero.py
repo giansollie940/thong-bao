@@ -15,8 +15,8 @@ def require(text: str, needle: str, message: str) -> None:
 require(INDEX, 'id="sidebar-toggle"', "sidebar toggle button must exist")
 require(INDEX, 'aria-controls="app-sidebar"', "toggle must identify the controlled sidebar")
 require(INDEX, 'id="app-sidebar"', "sidebar needs a stable id for accessibility")
-require(INDEX, 'sidebar-collapse.js?v=3.17.1', "sidebar behavior script must be loaded with V3.17.1 cache busting")
-require(INDEX, 'macos-glossy.css?v=3.17.1', "macOS layer cache version must be V3.17.1")
+require(INDEX, 'sidebar-collapse.js?v=3.17.1', "sidebar behavior script must retain its current cache version")
+require(INDEX, 'macos-glossy.css?v=3.18.0', "macOS layer cache version must be V3.18.0")
 
 # Restore the exact pre-redesign visual assets rather than approximating them.
 require(CSS, 'url("mint-garden-pattern.svg")', "old mint-garden page pattern must be restored")
