@@ -4,6 +4,7 @@ import re
 index = Path('index.html').read_text(encoding='utf-8')
 form_css = Path('announcement-form.css').read_text(encoding='utf-8')
 editor_css = Path('rich-editor.css').read_text(encoding='utf-8')
+macos_css = Path('macos-glossy.css').read_text(encoding='utf-8')
 
 start = index.index('<dialog id="announcement-dialog"')
 end = index.index('</dialog>', start)
@@ -13,10 +14,8 @@ failures = []
 
 required_html = [
     'class="mac-window-header"',
-    'class="mac-traffic-lights"',
-    'class="mac-traffic-light mac-close close-dialog"',
-    'class="mac-traffic-light mac-minimize"',
-    'class="mac-traffic-light mac-maximize"',
+    'mac-dialog-close',
+    'close-dialog',
     'class="mac-form-section mac-form-section-primary"',
     'class="mac-form-section mac-form-section-schedule"',
     'class="mac-form-section mac-form-section-options"',
@@ -27,6 +26,10 @@ required_html = [
 for token in required_html:
     if token not in dialog:
         failures.append(f'html-missing:{token}')
+
+for obsolete in ['mac-traffic-lights', 'mac-traffic-light', 'mac-close', 'mac-minimize', 'mac-maximize']:
+    if obsolete in dialog:
+        failures.append(f'obsolete-traffic-control:{obsolete}')
 
 heading_variants = [
     ('Thông tin chính', ['Thông tin chính']),
@@ -48,9 +51,6 @@ for preserved_id in [
         failures.append(f'preserved-id-missing:{preserved_id}')
 
 css_checks = {
-    'traffic-red': r'\.mac-close\s*\{[^}]*#ff5f57',
-    'traffic-yellow': r'\.mac-minimize\s*\{[^}]*#febc2e',
-    'traffic-green': r'\.mac-maximize\s*\{[^}]*#28c840',
     'sticky-footer': r'\.mac-modal-footer\s*\{[^}]*position\s*:\s*sticky[^}]*bottom\s*:\s*0',
     'glass-header': r'\.mac-window-header\s*\{[^}]*backdrop-filter',
     'section-card': r'\.mac-form-section\s*\{[^}]*border-radius',
@@ -58,6 +58,14 @@ css_checks = {
 for name, pattern in css_checks.items():
     if not re.search(pattern, form_css, re.S | re.I):
         failures.append(f'css-missing:{name}')
+
+macos_checks = {
+    'normal-close-button': r'\.mac-dialog-close\s*\{[^}]*border-radius\s*:\s*50%',
+    'final-glass-header': r'\.mac-window-header\s*\{[^}]*backdrop-filter',
+}
+for name, pattern in macos_checks.items():
+    if not re.search(pattern, macos_css, re.S | re.I):
+        failures.append(f'macos-css-missing:{name}')
 
 editor_checks = {
     'segmented-control': r'\.mac-segmented-control\s*\{[^}]*border-radius',
@@ -67,10 +75,10 @@ for name, pattern in editor_checks.items():
     if not re.search(pattern, editor_css, re.S | re.I):
         failures.append(f'editor-css-missing:{name}')
 
-if '?v=3.16.14' not in index:
-    failures.append('cache-version-not-bumped-to-3.16.14')
+if '?v=3.17.0' not in index:
+    failures.append('cache-version-not-bumped-to-3.17.0')
 
 if failures:
     raise SystemExit('FAIL: ' + '; '.join(failures))
 
-print('PASS: announcement dialog uses a stable macOS-style layout')
+print('PASS: announcement dialog uses the approved macOS glossy layout without traffic lights')
