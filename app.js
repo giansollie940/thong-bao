@@ -64,6 +64,7 @@
     currentWeekState: "none",
     categoryFilter: "all",
     schoolYearPreview: [],
+    activeSchoolYear: "",
     yearFilter: "",
     archiveYearFilter: ""
   };
@@ -74,6 +75,7 @@
     currentWeekCard: $("#current-week-card"),
     currentAnnouncements: $("#current-announcements"),
     categoryDashboard: $("#category-dashboard"),
+    globalSchoolYearFilter: $("#global-school-year-filter"),
     categoryDialog: $("#categories-dialog"),
     categoryForm: $("#category-form"),
     categoryManagerList: $("#category-manager-list"),
@@ -238,8 +240,10 @@
     return today < week.start_date ? "upcoming" : "past";
   }
 
-  function chooseFeaturedWeek() {
-    const weeks = [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
+  function chooseFeaturedWeek(schoolYear = "all") {
+    const weeks = [...state.weeks]
+      .filter(week => !schoolYear || schoolYear === "all" || schoolYearKey(week) === schoolYear)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
     const today = todayIso();
 
     const current = weeks.find(w => weekState(w, today) === "current");
@@ -274,6 +278,9 @@
         // nếu có thời gian hiệu lực, thông báo xuất hiện ở mọi tuần
         // mà khoảng hiệu lực giao với khoảng thời gian của tuần đó.
         if (item.valid_from || item.valid_until) {
+          const originWeek = state.weeks.find(w => w.id === item.week_id);
+          if (originWeek && schoolYearKey(originWeek) !== schoolYearKey(week)) return false;
+
           const from = item.valid_from || item.event_date || week.start_date;
           const until = item.valid_until || item.valid_from || item.event_date || week.end_date;
           return from <= week.end_date && until >= week.start_date;
@@ -379,6 +386,47 @@
     if (value === "all") return "all";
     if (groups.some(group => group.key === value)) return value;
     return fallback;
+  }
+
+  function renderGlobalSchoolYearSwitcher() {
+    if (!el.globalSchoolYearFilter) return;
+
+    const groups = getSchoolYearGroups();
+    if (!groups.length) {
+      el.globalSchoolYearFilter.innerHTML = '<option value="">Chưa có năm học</option>';
+      el.globalSchoolYearFilter.disabled = true;
+      state.activeSchoolYear = "";
+      return;
+    }
+
+    const fallback = defaultSchoolYearKey(groups);
+    if (!groups.some(group => group.key === state.activeSchoolYear)) {
+      state.activeSchoolYear = fallback;
+    }
+
+    el.globalSchoolYearFilter.innerHTML = groups.map(group =>
+      `<option value="${escapeHtml(group.key)}">${escapeHtml(group.label)}</option>`
+    ).join("");
+    el.globalSchoolYearFilter.disabled = false;
+    el.globalSchoolYearFilter.value = state.activeSchoolYear;
+  }
+
+  function applyGlobalSchoolYear(value) {
+    const groups = getSchoolYearGroups();
+    const fallback = defaultSchoolYearKey(groups);
+    const next = groups.some(group => group.key === value) ? value : fallback;
+
+    state.activeSchoolYear = next;
+    state.yearFilter = state.activeSchoolYear;
+    state.archiveYearFilter = state.activeSchoolYear;
+    state.categoryFilter = "all";
+    [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek(state.activeSchoolYear);
+
+    renderAll();
+
+    if (el.searchInput?.value.trim() && !el.searchResultsSection?.classList.contains("hidden")) {
+      runSearch(el.searchInput.value);
+    }
   }
 
   function renderSchoolYearSelectors() {
@@ -1373,6 +1421,7 @@
   function renderAll() {
     renderAdmin();
     renderConnection();
+    renderGlobalSchoolYearSwitcher();
     renderCurrent();
     renderSchoolYearSelectors();
     renderYearStrip();
@@ -1430,7 +1479,13 @@
         state.categories = categories || [];
       }
 
-      [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek();
+      const groups = getSchoolYearGroups();
+      if (!groups.some(group => group.key === state.activeSchoolYear)) {
+        state.activeSchoolYear = defaultSchoolYearKey(groups);
+      }
+      state.yearFilter = state.activeSchoolYear;
+      state.archiveYearFilter = state.activeSchoolYear;
+      [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek(state.activeSchoolYear);
       scheduleRenderAll();
     } finally {
       endLoading?.();
@@ -1969,6 +2024,20 @@
     return preview;
   }
 
+  function overlappingSchoolYearGroups(preview) {
+    if (!preview?.length) return [];
+
+    const start = preview[0].start_date;
+    const end = preview.at(-1).end_date;
+    const candidateYear = preview[0].school_year;
+
+    return getSchoolYearGroups().filter(group =>
+      group.key !== candidateYear &&
+      start <= group.end_date &&
+      end >= group.start_date
+    );
+  }
+
   async function saveSchoolYear(event) {
     event.preventDefault();
 
@@ -1976,6 +2045,15 @@
 
     const preview = generateSchoolYearPreview();
     if (!preview.length) return;
+
+    const overlappingGroups = overlappingSchoolYearGroups(preview);
+    if (overlappingGroups.length) {
+      setMessage(
+        el.schoolYearMessage,
+        `Năm học mới bị chồng ngày với ${overlappingGroups.map(group => group.label).join(", ")}. Hãy điều chỉnh ngày bắt đầu/kết thúc.`
+      );
+      return;
+    }
 
     const duplicates = preview.filter(candidate =>
       state.weeks.some(existing =>
@@ -2027,8 +2105,9 @@
     }
 
     const schoolYear = preview[0].school_year;
-    state.yearFilter = schoolYear;
-    state.archiveYearFilter = schoolYear;
+    state.activeSchoolYear = schoolYear;
+    state.yearFilter = state.activeSchoolYear;
+    state.archiveYearFilter = state.activeSchoolYear;
     el.schoolYearDialog.close();
     await loadData();
     showToast(`Đã tạo ${preview.length} tuần cho năm học ${schoolYear}.`);
@@ -2142,6 +2221,9 @@
 
     const results = state.announcements.filter(item => {
       const week = state.weeks.find(w => w.id === item.week_id);
+      if (state.activeSchoolYear && (!week || schoolYearKey(week) !== state.activeSchoolYear)) {
+        return false;
+      }
       const haystack = normalizeText([
         item.title,
         contentRenderer.toPlainText(item.content),
@@ -2279,6 +2361,10 @@
     el.archiveYearFilter?.addEventListener("change", () => {
       state.archiveYearFilter = el.archiveYearFilter.value;
       renderArchives();
+    });
+
+    el.globalSchoolYearFilter?.addEventListener("change", () => {
+      applyGlobalSchoolYear(el.globalSchoolYearFilter.value);
     });
 
     el.announcementForm.addEventListener("submit", saveAnnouncement);
