@@ -6,16 +6,16 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.16.13">
-  <link rel="stylesheet" href="controls.css?v=3.16.13">
-  <link rel="stylesheet" href="content-renderer.css?v=3.16.13">
-  <link rel="stylesheet" href="content-interactions.css?v=3.16.13">
-  <link rel="stylesheet" href="rich-editor.css?v=3.16.13">
-  <link rel="stylesheet" href="editor-formatting.css?v=3.16.13">
-  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.13">
-  <link rel="stylesheet" href="loading-diamond.css?v=3.16.13">
-  <link rel="stylesheet" href="announcement-form.css?v=3.16.13">
-  <link rel="stylesheet" href="pet-companion.css?v=3.16.13">
+  <link rel="stylesheet" href="styles.css?v=3.16.14">
+  <link rel="stylesheet" href="controls.css?v=3.16.14">
+  <link rel="stylesheet" href="content-renderer.css?v=3.16.14">
+  <link rel="stylesheet" href="content-interactions.css?v=3.16.14">
+  <link rel="stylesheet" href="rich-editor.css?v=3.16.14">
+  <link rel="stylesheet" href="editor-formatting.css?v=3.16.14">
+  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.14">
+  <link rel="stylesheet" href="loading-diamond.css?v=3.16.14">
+  <link rel="stylesheet" href="announcement-form.css?v=3.16.14">
+  <link rel="stylesheet" href="pet-companion.css?v=3.16.14">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -287,15 +287,26 @@
     <form class="modal-card modal-card-wide" id="announcement-form">
       <input type="hidden" id="announcement-id">
 
-      <div class="modal-heading">
-        <div>
-          <p class="eyebrow">THÔNG BÁO</p>
+      <header class="mac-window-header">
+        <div class="mac-traffic-lights" aria-label="Điều khiển cửa sổ">
+          <button class="mac-traffic-light mac-close close-dialog" type="button" aria-label="Đóng cửa sổ"></button>
+          <span class="mac-traffic-light mac-minimize" aria-hidden="true"></span>
+          <span class="mac-traffic-light mac-maximize" aria-hidden="true"></span>
+        </div>
+        <div class="mac-window-title">
+          <span class="mac-window-kicker">THÔNG BÁO</span>
           <h2 id="announcement-dialog-title">Đăng thông báo mới</h2>
         </div>
-        <button class="icon-button close-dialog" type="button" aria-label="Đóng cửa sổ">×</button>
-      </div>
+        <div class="mac-window-header-spacer" aria-hidden="true"></div>
+      </header>
 
-      <div class="form-grid">
+      <div class="form-grid mac-form-grid">
+        <section class="mac-form-section mac-form-section-primary">
+          <div class="mac-section-heading">
+            <span class="mac-section-icon" aria-hidden="true">✦</span>
+            <div><h3>Thông tin chính</h3><p>Nội dung nhận diện và tuần đăng.</p></div>
+          </div>
+          <div class="mac-section-grid">
         <div class="field field-span-2">
           <label for="announcement-title">Tiêu đề</label>
           <input id="announcement-title" type="text" maxlength="150" required>
@@ -306,7 +317,15 @@
           <select id="announcement-week" required></select>
           <p class="field-hint">Bạn có thể chọn tuần hiện tại, tuần sau hoặc bất kỳ tuần nào đã tạo.</p>
         </div>
+          </div>
+        </section>
 
+        <section class="mac-form-section mac-form-section-schedule">
+          <div class="mac-section-heading">
+            <span class="mac-section-icon" aria-hidden="true">◷</span>
+            <div><h3>Phân loại &amp; thời gian</h3><p>Ngày thông báo, chuyên mục và thời gian hiệu lực.</p></div>
+          </div>
+          <div class="mac-section-grid mac-section-grid-two">
         <div class="field">
           <label for="announcement-date">Ngày / mốc thông báo</label>
           <input id="announcement-date" type="date" required>
@@ -333,7 +352,15 @@
           <label for="announcement-valid-until">Hiệu lực đến</label>
           <input id="announcement-valid-until" type="date" required>
         </div>
+          </div>
+        </section>
 
+        <section class="mac-form-section mac-form-section-options">
+          <div class="mac-section-heading">
+            <span class="mac-section-icon" aria-hidden="true">⌘</span>
+            <div><h3>Tùy chọn</h3><p>Ưu tiên hiển thị và ghim thông báo.</p></div>
+          </div>
+          <div class="mac-section-grid mac-section-grid-two mac-options-grid">
         <div class="field">
           <label for="announcement-priority">Mức độ</label>
           <select id="announcement-priority">
@@ -346,7 +373,10 @@
           <input id="announcement-pinned" type="checkbox">
           <label for="announcement-pinned">Ghim lên đầu tuần</label>
         </div>
+          </div>
+        </section>
 
+        <section class="mac-editor-workspace">
         <div class="field field-span-2">
           <div class="editor-label-row">
             <span class="editor-field-label" id="announcement-editor-label">Nội dung</span>
@@ -359,7 +389,7 @@
             data-view="visual"
             aria-labelledby="announcement-editor-label"
           >
-            <div class="editor-view-tabs" role="tablist" aria-label="Chế độ trình soạn thảo">
+            <div class="editor-view-tabs mac-segmented-control" role="tablist" aria-label="Chế độ trình soạn thảo">
               <button
                 class="editor-view-tab active"
                 id="announcement-tab-visual"
@@ -636,13 +666,15 @@
           <input id="announcement-remove-image" type="checkbox">
           <label for="announcement-remove-image">Xóa ảnh hiện tại khi lưu</label>
         </div>
+        </section>
       </div>
 
-      <p class="form-message" id="announcement-message" aria-live="polite"></p>
-
-      <div class="modal-actions">
-        <button class="button button-secondary close-dialog" type="button">Hủy</button>
-        <button class="button button-primary" type="submit">Lưu thông báo</button>
+      <div class="modal-actions mac-modal-footer">
+        <p class="form-message" id="announcement-message" aria-live="polite"></p>
+        <div class="mac-footer-actions">
+          <button class="button button-secondary close-dialog" type="button">Hủy</button>
+          <button class="button button-primary" id="announcement-submit-button" type="submit">Lưu thông báo</button>
+        </div>
       </div>
     </form>
   </dialog>
@@ -1102,13 +1134,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="content-renderer.js?v=3.16.13"></script>
-  <script src="content-interactions.js?v=3.16.13"></script>
-  <script src="rich-editor.js?v=3.16.13"></script>
-  <script src="editor-formatting.js?v=3.16.13"></script>
-  <script src="editor-find-replace.js?v=3.16.13"></script>
-  <script src="loading-diamond.js?v=3.16.13"></script>
-  <script src="app.js?v=3.16.13"></script>
-  <script src="pet-companion.js?v=3.16.13"></script>
+  <script src="content-renderer.js?v=3.16.14"></script>
+  <script src="content-interactions.js?v=3.16.14"></script>
+  <script src="rich-editor.js?v=3.16.14"></script>
+  <script src="editor-formatting.js?v=3.16.14"></script>
+  <script src="editor-find-replace.js?v=3.16.14"></script>
+  <script src="loading-diamond.js?v=3.16.14"></script>
+  <script src="app.js?v=3.16.14"></script>
+  <script src="pet-companion.js?v=3.16.14"></script>
 </body>
 </html>
