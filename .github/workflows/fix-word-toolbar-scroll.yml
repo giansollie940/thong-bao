@@ -1,0 +1,83 @@
+name: Fix scroll toolbar anchoring
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-word-toolbar-scroll.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch dropdown anchoring
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('editor-formatting.js')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''    let activePanelMode = null;\n    let activePanelToggle = null;\n\n    panel.classList.add("editor-format-dropdown");\n'''
+          new = '''    let activePanelMode = null;\n    let activePanelToggle = null;\n\n    panel.classList.add("editor-format-dropdown");\n\n    /*\n     * The announcement form scrolls inside .modal-card. Keep the popup\n     * in the dialog top layer but outside that scrolling/clipping element,\n     * otherwise a fixed popup can be visually clipped or drift from its\n     * trigger while the form scrolls.\n     */\n    const dialogHost = root.closest("dialog");\n    if (dialogHost && panel.parentElement !== dialogHost) {\n      dialogHost.append(panel);\n    }\n'''
+          if old not in text:
+              raise SystemExit('panel initialization marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '''      panel.hidden = !open;\n      activePanelMode = open ? nextMode : null;\n      activePanelToggle = open\n        ? toggle || panelToggles.find(\n            item => item.dataset.editorFormatToggle === nextMode\n          )\n        : null;\n\n      if (open) {\n        panel.dataset.mode = nextMode;\n        panel.dataset.anchor = activePanelToggle?.id || "";\n      } else {\n        delete panel.dataset.mode;\n        delete panel.dataset.anchor;\n        panel.style.removeProperty("left");\n        panel.style.removeProperty("top");\n        panel.style.removeProperty("width");\n      }\n'''
+          new = '''      activePanelMode = open ? nextMode : null;\n      activePanelToggle = open\n        ? toggle || panelToggles.find(\n            item => item.dataset.editorFormatToggle === nextMode\n          )\n        : null;\n\n      if (open) {\n        /*\n         * Measure and position while invisible, then reveal synchronously.\n         * This prevents the one-frame flash at the panel's previous/default\n         * position that users perceive as a violent hover/click jitter.\n         */\n        panel.style.visibility = "hidden";\n        panel.hidden = false;\n        panel.dataset.mode = nextMode;\n        panel.dataset.anchor = activePanelToggle?.id || "";\n      } else {\n        panel.hidden = true;\n        panel.style.removeProperty("visibility");\n        delete panel.dataset.mode;\n        delete panel.dataset.anchor;\n        panel.style.removeProperty("left");\n        panel.style.removeProperty("top");\n        panel.style.removeProperty("width");\n      }\n'''
+          if old not in text:
+              raise SystemExit('panel state marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '''      if (open) {\n        requestAnimationFrame(() => positionPanel(activePanelToggle));\n      }\n    }\n'''
+          new = '''      if (open) {\n        positionPanel(activePanelToggle);\n        panel.style.removeProperty("visibility");\n      }\n    }\n'''
+          if old not in text:
+              raise SystemExit('deferred positioning marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '''    for (const eventName of ["resize", "scroll"]) {\n      window.addEventListener(\n        eventName,\n        () => positionPanel(),\n        { passive: true }\n      );\n    }\n'''
+          new = '''    window.addEventListener(\n      "resize",\n      () => positionPanel(),\n      { passive: true }\n    );\n\n    /* Scroll does not bubble. Capture phase sees scrolling modal-card too. */\n    document.addEventListener(\n      "scroll",\n      () => positionPanel(),\n      { passive: true, capture: true }\n    );\n'''
+          if old not in text:
+              raise SystemExit('scroll listener marker missing')
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+          index = Path('index.html')
+          index_text = index.read_text(encoding='utf-8').replace('?v=3.16.11', '?v=3.16.12')
+          index.write_text(index_text, encoding='utf-8')
+          PY
+          node --check editor-formatting.js
+          git diff --check
+
+      - name: Verify scroll regression and existing editor regressions
+        run: |
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$BROWSER"
+          for test in \
+            tests/editor-word-toolbar-scroll-regression.html \
+            tests/editor-word-toolbar-regression.html \
+            tests/editor-sequential-formatting-sync.html \
+            tests/editor-multiblock-regression.html \
+            tests/editor-offset-selection-regression.html; do
+            out="/tmp/$(basename "$test").html"
+            timeout 25s "$BROWSER" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --allow-file-access-from-files --virtual-time-budget=5000 --dump-dom "file://$PWD/$test" > "$out"
+            grep 'id="test-output"' "$out" || true
+            grep 'data-test-status="pass"' "$out"
+          done
+
+      - name: Commit verified fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add editor-formatting.js index.html
+          git commit -m "Keep formatting dropdowns anchored while scrolling"
+          git push
