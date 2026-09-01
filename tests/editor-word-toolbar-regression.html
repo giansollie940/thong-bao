@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Word-like editor toolbar regression</title>
+  <link rel="stylesheet" href="../editor-formatting.css">
+</head>
+<body>
+<div id="outside">Outside</div>
+<div id="announcement-rich-editor">
+  <div id="announcement-format-toolbar" class="canvas-format-toolbar">
+    <select id="announcement-font-family" class="format-select"><option value="">Font</option><option value="Georgia, serif">Georgia</option></select>
+    <select id="announcement-font-size" class="format-select"><option value="">Size</option><option value="24px">24</option></select>
+    <button type="button" class="format-button" data-format="bold">B</button>
+    <button type="button" class="format-button" data-format="italic">I</button>
+    <button type="button" class="format-button" data-format="underline">U</button>
+    <button type="button" class="format-button" data-format="strike">S</button>
+    <button id="announcement-color-more" type="button" class="format-button format-more-button" data-editor-format-toggle="color" aria-expanded="false">Màu</button>
+    <button id="announcement-align-more" type="button" class="format-button format-more-button" data-editor-format-toggle="align" aria-expanded="false">Căn</button>
+    <button type="button" data-editor-clear-format>Tx</button>
+  </div>
+  <section id="announcement-format-panel" class="editor-format-panel" hidden>
+    <div class="editor-format-panel-group" data-editor-format-section="align">
+      <button type="button" data-editor-align="left">Trái</button>
+      <button type="button" data-editor-align="center">Giữa</button>
+    </div>
+    <div class="editor-format-panel-group" data-editor-format-section="color">
+      <button type="button" data-editor-text-color="#1565c0">Blue</button>
+      <input id="announcement-text-color" type="color" value="#243a33">
+    </div>
+    <div class="editor-format-panel-group" data-editor-format-section="color">
+      <button type="button" data-editor-highlight-color="#fff2a8">Yellow</button>
+      <input id="announcement-highlight-color" type="color" value="#fff2a8">
+    </div>
+    <p class="editor-format-panel-hint"></p>
+  </section>
+  <button type="button" data-editor-view="visual">Visual</button>
+  <button type="button" data-editor-view="html">HTML</button>
+  <div data-editor-panel="visual"><div id="announcement-visual-editor" contenteditable="true"></div></div>
+  <div data-editor-panel="html" hidden><textarea id="announcement-content"></textarea><pre id="announcement-html-lines"></pre></div>
+  <div id="announcement-editor-status"></div><div id="announcement-editor-count"></div>
+</div>
+<pre id="test-output">RUNNING</pre>
+<script src="../content-renderer.js"></script>
+<script src="../rich-editor.js"></script>
+<script src="../editor-formatting.js"></script>
+<script>
+(() => {
+  const root = document.querySelector('#announcement-rich-editor');
+  const visual = document.querySelector('#announcement-visual-editor');
+  const panel = document.querySelector('#announcement-format-panel');
+  const color = document.querySelector('#announcement-color-more');
+  const align = document.querySelector('#announcement-align-more');
+  const bold = document.querySelector('[data-format="bold"]');
+  const outside = document.querySelector('#outside');
+  const output = document.querySelector('#test-output');
+  const editor = WeeklyRichEditor.create({ root, renderer: WeeklyContent });
+  WeeklyEditorFormatting.create({ root, editor });
+
+  function selectAll() {
+    const range = document.createRange();
+    range.selectNodeContents(visual);
+    const selection = getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    editor.captureSelection();
+  }
+
+  function click(node) {
+    node.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+    node.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  }
+
+  editor.setHtml('<p>Alpha Beta Gamma</p><p>Delta Epsilon</p>', { view: 'visual', focus: false });
+  selectAll();
+
+  const failures = [];
+  const heightBefore = root.getBoundingClientRect().height;
+  click(color);
+  const heightAfter = root.getBoundingClientRect().height;
+
+  if (panel.hidden) failures.push('color-dropdown-not-open');
+  if (!panel.classList.contains('editor-format-dropdown')) failures.push('missing-dropdown-class');
+  if (panel.dataset.anchor !== 'announcement-color-more') failures.push(`wrong-anchor-${panel.dataset.anchor || 'none'}`);
+  if (getComputedStyle(panel).position !== 'fixed') failures.push(`panel-position-${getComputedStyle(panel).position}`);
+  if (Math.abs(heightAfter - heightBefore) > 1) failures.push(`layout-shift-${heightBefore}->${heightAfter}`);
+
+  click(align);
+  if (panel.hidden || panel.dataset.mode !== 'align') failures.push('align-dropdown-switch-failed');
+  if (panel.dataset.anchor !== 'announcement-align-more') failures.push('align-anchor-failed');
+
+  click(outside);
+  if (!panel.hidden) failures.push('outside-click-did-not-close');
+
+  selectAll();
+  click(bold);
+  setTimeout(() => {
+    if (!bold.classList.contains('active') || bold.getAttribute('aria-pressed') !== 'true') {
+      failures.push('bold-active-state-missing');
+    }
+    click(bold);
+    setTimeout(() => {
+      if (bold.classList.contains('active') || bold.getAttribute('aria-pressed') !== 'false') {
+        failures.push('bold-active-state-not-cleared');
+      }
+      output.textContent = failures.length ? `FAIL: ${failures.join('; ')}` : 'PASS: Word-like toolbar interaction is stable';
+      document.body.dataset.testStatus = failures.length ? 'fail' : 'pass';
+    }, 50);
+  }, 50);
+})();
+</script>
+</body>
+</html>
