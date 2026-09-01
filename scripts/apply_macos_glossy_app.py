@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+# Temporary migration helper for the approved V3.17.0 visual layer.
 path = Path('index.html')
 text = path.read_text(encoding='utf-8')
 
