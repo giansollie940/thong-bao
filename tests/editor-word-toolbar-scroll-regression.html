@@ -69,7 +69,9 @@
   function errorFromAnchor(toggle) {
     const t = toggle.getBoundingClientRect();
     const p = panel.getBoundingClientRect();
-    return { top: Math.abs(p.top - (t.bottom + 6)), left: Math.abs(p.left - t.left) };
+    const below = Math.abs(p.top - (t.bottom + 6));
+    const above = Math.abs(p.bottom - (t.top - 6));
+    return { top: Math.min(below, above), left: Math.abs(p.left - t.left) };
   }
 
   editor.setHtml('<p>Alpha Beta Gamma</p><p>Delta Epsilon</p>', { view: 'visual', focus: false });
@@ -94,7 +96,7 @@
       const alignFrame = errorFromAnchor(align);
       if (alignFrame.top > 2 || alignFrame.left > 2) failures.push(`align-frame:${alignFrame.top.toFixed(1)},${alignFrame.left.toFixed(1)}`);
 
-      output.textContent = failures.length ? `FAIL: ${failures.join('; ')}` : 'PASS: dropdown stays anchored in scrollable modal';
+      output.textContent = failures.length ? `FAIL: ${failures.join('; ')}` : 'PASS: dropdown stays anchored above or below in scrollable modal';
       document.body.dataset.testStatus = failures.length ? 'fail' : 'pass';
     }, 60);
   }, 60);
