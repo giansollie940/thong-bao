@@ -6,17 +6,17 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.17.0">
-  <link rel="stylesheet" href="controls.css?v=3.17.0">
-  <link rel="stylesheet" href="content-renderer.css?v=3.17.0">
-  <link rel="stylesheet" href="content-interactions.css?v=3.17.0">
-  <link rel="stylesheet" href="rich-editor.css?v=3.17.0">
-  <link rel="stylesheet" href="editor-formatting.css?v=3.17.0">
-  <link rel="stylesheet" href="editor-find-replace.css?v=3.17.0">
-  <link rel="stylesheet" href="loading-diamond.css?v=3.17.0">
-  <link rel="stylesheet" href="announcement-form.css?v=3.17.0">
-  <link rel="stylesheet" href="macos-glossy.css?v=3.17.0">
-  <link rel="stylesheet" href="pet-companion.css?v=3.17.0">
+  <link rel="stylesheet" href="styles.css?v=3.17.1">
+  <link rel="stylesheet" href="controls.css?v=3.17.1">
+  <link rel="stylesheet" href="content-renderer.css?v=3.17.1">
+  <link rel="stylesheet" href="content-interactions.css?v=3.17.1">
+  <link rel="stylesheet" href="rich-editor.css?v=3.17.1">
+  <link rel="stylesheet" href="editor-formatting.css?v=3.17.1">
+  <link rel="stylesheet" href="editor-find-replace.css?v=3.17.1">
+  <link rel="stylesheet" href="loading-diamond.css?v=3.17.1">
+  <link rel="stylesheet" href="announcement-form.css?v=3.17.1">
+  <link rel="stylesheet" href="macos-glossy.css?v=3.17.1">
+  <link rel="stylesheet" href="pet-companion.css?v=3.17.1">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -50,7 +50,16 @@
   <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
 
   <div class="app-shell">
-    <aside class="app-sidebar" aria-label="Thanh điều hướng">
+    <aside class="app-sidebar" id="app-sidebar" aria-label="Thanh điều hướng">
+      <button
+        class="sidebar-toggle"
+        id="sidebar-toggle"
+        type="button"
+        aria-controls="app-sidebar"
+        aria-expanded="true"
+        aria-label="Thu gọn thanh điều hướng"
+        title="Thu gọn thanh điều hướng"
+      ><span aria-hidden="true">‹</span></button>
       <a class="sidebar-brand" href="#main-content" aria-label="Bảng thông báo theo tuần">
         <span class="sidebar-logo" aria-hidden="true">
           <img src="./favicon-64.png" alt="" width="44" height="44">
@@ -1130,13 +1139,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="content-renderer.js?v=3.17.0"></script>
-  <script src="content-interactions.js?v=3.17.0"></script>
-  <script src="rich-editor.js?v=3.17.0"></script>
-  <script src="editor-formatting.js?v=3.17.0"></script>
-  <script src="editor-find-replace.js?v=3.17.0"></script>
-  <script src="loading-diamond.js?v=3.17.0"></script>
-  <script src="app.js?v=3.17.0"></script>
-  <script src="pet-companion.js?v=3.17.0"></script>
+  <script src="content-renderer.js?v=3.17.1"></script>
+  <script src="content-interactions.js?v=3.17.1"></script>
+  <script src="rich-editor.js?v=3.17.1"></script>
+  <script src="editor-formatting.js?v=3.17.1"></script>
+  <script src="editor-find-replace.js?v=3.17.1"></script>
+  <script src="loading-diamond.js?v=3.17.1"></script>
+  <script src="sidebar-collapse.js?v=3.17.1"></script>
+  <script src="app.js?v=3.17.1"></script>
+  <script src="pet-companion.js?v=3.17.1"></script>
 </body>
 </html>
