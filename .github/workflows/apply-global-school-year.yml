@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/apply_global_school_year.py'
+      - 'scripts/trigger_global_school_year.txt'
   workflow_dispatch:
 
 permissions:
