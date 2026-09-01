@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - scripts/apply_macos_announcement_layout.py
+      - tests/test_macos_announcement_layout.py
       - .github/workflows/apply-macos-announcement-layout.yml
 
 permissions:
