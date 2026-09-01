@@ -4,10 +4,14 @@ on:
   push:
     branches: [main]
     paths:
-      - 'tests/test_sidebar_icon_rail_hero.py'
+      - 'tests/**'
       - 'index.html'
       - 'macos-glossy.css'
       - 'sidebar-collapse.js'
+      - 'announcement-form.css'
+      - 'rich-editor.css'
+      - 'editor-formatting.css'
+      - 'editor-formatting.js'
       - '.github/workflows/test-sidebar-hero.yml'
   workflow_dispatch:
 
@@ -22,4 +26,62 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python tests/test_sidebar_icon_rail_hero.py
+
+      - name: Run source regressions
+        run: |
+          python tests/test_sidebar_icon_rail_hero.py
+          python tests/test_macos_glossy_app.py
+          python tests/test_macos_announcement_layout.py
+          python tests/test_toolbar_two_rows.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser regression runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Run editor browser regressions
+        run: |
+          python -m http.server 8000 >/tmp/thong-bao-http.log 2>&1 &
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const files = [
+            'editor-word-toolbar-regression.html',
+            'editor-word-toolbar-scroll-regression.html',
+            'editor-multiblock-regression.html',
+            'editor-offset-selection-regression.html',
+            'editor-sequential-formatting-regression.html',
+            'editor-sequential-formatting-sync.html',
+          ];
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+            const failures = [];
+            for (const file of files) {
+              const url = `http://127.0.0.1:8000/tests/${file}`;
+              await page.goto(url, { waitUntil: 'load' });
+              try {
+                await page.waitForFunction(() => document.body.dataset.testStatus === 'pass' || document.body.dataset.testStatus === 'fail', null, { timeout: 7000 });
+              } catch (error) {
+                failures.push(`${file}: timeout`);
+                console.log(`FAIL: ${file}: timeout`);
+                continue;
+              }
+              const status = await page.evaluate(() => document.body.dataset.testStatus);
+              const output = await page.locator('#test-output').textContent().catch(() => '(no output)');
+              console.log(`${file}: ${output}`);
+              if (status !== 'pass') failures.push(`${file}: ${output}`);
+            }
+            await browser.close();
+            if (failures.length) {
+              console.error(failures.join('\n'));
+              process.exit(1);
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
