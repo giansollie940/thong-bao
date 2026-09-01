@@ -75,8 +75,8 @@ for name, pattern in editor_checks.items():
     if not re.search(pattern, editor_css, re.S | re.I):
         failures.append(f'editor-css-missing:{name}')
 
-if '?v=3.17.0' not in index:
-    failures.append('cache-version-not-bumped-to-3.17.0')
+if '?v=3.17.1' not in index:
+    failures.append('cache-version-not-bumped-to-3.17.1')
 
 if failures:
     raise SystemExit('FAIL: ' + '; '.join(failures))
