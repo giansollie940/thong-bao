@@ -1,0 +1,31 @@
+name: Test editor sequential formatting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tests/editor-sequential-formatting-regression.html
+      - .github/workflows/test-editor-sequential.yml
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run browser regression
+        shell: bash
+        run: |
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$BROWSER"
+          timeout 25s "$BROWSER" \
+            --headless \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --allow-file-access-from-files \
+            --virtual-time-budget=5000 \
+            --dump-dom \
+            "file://$PWD/tests/editor-sequential-formatting-regression.html" \
+            > /tmp/sequential.html
+          grep 'id="test-output"' /tmp/sequential.html
+          grep 'data-test-status="pass"' /tmp/sequential.html
