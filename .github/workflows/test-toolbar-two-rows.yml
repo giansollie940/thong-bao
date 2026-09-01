@@ -1,0 +1,19 @@
+name: Test two-row toolbar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tests/test_toolbar_two_rows.py
+      - index.html
+      - editor-formatting.js
+      - editor-formatting.css
+      - .github/workflows/test-toolbar-two-rows.yml
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run two-row toolbar regression
+        run: python tests/test_toolbar_two_rows.py
