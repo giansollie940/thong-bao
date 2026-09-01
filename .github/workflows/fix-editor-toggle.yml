@@ -1,0 +1,79 @@
+name: Fix editor inline toggles
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-editor-toggle.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch toggle engine
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('rich-editor.js')
+          text = path.read_text(encoding='utf-8')
+
+          marker = '''    function applyFormat(format) {\n'''
+          if marker not in text:
+              raise SystemExit('applyFormat marker missing')
+
+          helper = '''    function toggleVisualInlineCommand(\n      command,\n      fallbackTag,\n      placeholder\n    ) {\n      const range = currentVisualRange();\n\n      if (!range) {\n        visual.focus();\n        return;\n      }\n\n      if (range.collapsed) {\n        wrapVisual(fallbackTag, placeholder);\n        return;\n      }\n\n      try {\n        visual.focus({ preventScroll: true });\n      } catch {\n        visual.focus();\n      }\n\n      const selection = window.getSelection();\n      if (!selection) return;\n\n      selection.removeAllRanges();\n      selection.addRange(range);\n\n      /*\n       * Browser editing commands implement true inline toggles: they split\n       * existing markup at selection boundaries and remove a mark when the\n       * whole selection already has it. This avoids endlessly nesting\n       * <strong>/<em>/<u>/<s> wrappers after sequential formatting.\n       */\n      const changed =\n        typeof document.execCommand === "function" &&\n        document.execCommand(command, false, null);\n\n      if (!changed) {\n        wrapVisual(fallbackTag, placeholder);\n        return;\n      }\n\n      saveVisualSelection();\n      syncVisualToSource();\n    }\n\n'''
+          text = text.replace(marker, helper + marker, 1)
+
+          replacements = {
+              '          wrapVisual("strong", "nội dung đậm");': '          toggleVisualInlineCommand(\n            "bold",\n            "strong",\n            "nội dung đậm"\n          );',
+              '          wrapVisual("em", "nội dung nghiêng");': '          toggleVisualInlineCommand(\n            "italic",\n            "em",\n            "nội dung nghiêng"\n          );',
+              '          wrapVisual("u", "nội dung gạch chân");': '          toggleVisualInlineCommand(\n            "underline",\n            "u",\n            "nội dung gạch chân"\n          );',
+              '          wrapVisual("s", "nội dung gạch ngang");': '          toggleVisualInlineCommand(\n            "strikeThrough",\n            "s",\n            "nội dung gạch ngang"\n          );',
+              '        wrapVisual("strong", "nội dung đậm");': '        toggleVisualInlineCommand(\n          "bold",\n          "strong",\n          "nội dung đậm"\n        );',
+              '        wrapVisual("em", "nội dung nghiêng");': '        toggleVisualInlineCommand(\n          "italic",\n          "em",\n          "nội dung nghiêng"\n        );',
+              '        wrapVisual("u", "nội dung gạch chân");': '        toggleVisualInlineCommand(\n          "underline",\n          "u",\n          "nội dung gạch chân"\n        );',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+
+          path.write_text(text, encoding='utf-8')
+
+          index = Path('index.html')
+          index_text = index.read_text(encoding='utf-8').replace('?v=3.16.9', '?v=3.16.10')
+          index.write_text(index_text, encoding='utf-8')
+          PY
+          node --check rich-editor.js
+          git diff --check
+
+      - name: Verify toggle regression
+        run: |
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$BROWSER"
+          timeout 25s "$BROWSER" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --allow-file-access-from-files --virtual-time-budget=5000 --dump-dom "file://$PWD/tests/editor-sequential-formatting-sync.html" > /tmp/toggle.html
+          grep 'id="test-output"' /tmp/toggle.html
+          grep 'data-test-status="pass"' /tmp/toggle.html
+
+      - name: Verify existing multiblock regression
+        run: |
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          timeout 25s "$BROWSER" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --allow-file-access-from-files --virtual-time-budget=5000 --dump-dom "file://$PWD/tests/editor-multiblock-regression.html" > /tmp/multiblock.html
+          grep 'id="test-output"' /tmp/multiblock.html
+          grep 'data-test-status="pass"' /tmp/multiblock.html
+
+      - name: Commit verified fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rich-editor.js index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Make inline formatting buttons true toggles"
+            git push
+          fi
