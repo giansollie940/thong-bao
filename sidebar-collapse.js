@@ -2,11 +2,51 @@
   const STORAGE_KEY = "weekly-sidebar-collapsed";
   const desktopQuery = window.matchMedia("(min-width: 821px)");
 
+  function ensureFloatingSearchStyles() {
+    if (document.querySelector('link[data-search-island-style="true"]')) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "floating-search-island.css?v=3.17.2";
+    link.dataset.searchIslandStyle = "true";
+    document.head.append(link);
+  }
+
+  function moveSearchIntoIsland(shell) {
+    const workspace = shell.querySelector(".app-workspace");
+    const main = shell.querySelector("#main-content");
+    const topbar = shell.querySelector(".app-topbar");
+    const searchForm = document.querySelector("#search-form");
+    if (!workspace || !main || !searchForm) return;
+
+    let island = workspace.querySelector(".search-island-wrap");
+    if (!island) {
+      island = document.createElement("div");
+      island.className = "search-island-wrap";
+      island.setAttribute("role", "presentation");
+      workspace.insertBefore(island, main);
+    }
+
+    if (searchForm.parentElement !== island) {
+      island.append(searchForm);
+    }
+
+    if (topbar) topbar.remove();
+  }
+
   function boot() {
     const shell = document.querySelector(".app-shell");
     const sidebar = document.querySelector("#app-sidebar");
     const toggle = document.querySelector("#sidebar-toggle");
     if (!shell || !sidebar || !toggle) return;
+
+    ensureFloatingSearchStyles();
+
+    // Keep the toggle outside the scrollable sidebar so it cannot be clipped.
+    if (toggle.parentElement === sidebar) {
+      shell.insertBefore(toggle, sidebar);
+    }
+
+    moveSearchIntoIsland(shell);
 
     const labelTargets = sidebar.querySelectorAll(
       ".sidebar-link, .sidebar-command, .sidebar-mini-command, .sidebar-action"
