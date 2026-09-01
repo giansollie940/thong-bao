@@ -1,0 +1,41 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Logical selection offset regression</title></head><body>
+<div id="announcement-rich-editor">
+  <div id="announcement-format-toolbar"></div>
+  <button data-editor-view="visual">Visual</button><button data-editor-view="html">HTML</button>
+  <div data-editor-panel="visual"><div id="announcement-visual-editor" contenteditable="true"></div></div>
+  <div data-editor-panel="html" hidden><textarea id="announcement-content"></textarea><pre id="announcement-html-lines"></pre></div>
+  <div id="announcement-editor-status"></div><div id="announcement-editor-count"></div>
+</div>
+<pre id="test-output">RUNNING</pre>
+<script src="../content-renderer.js"></script><script src="../rich-editor.js"></script>
+<script>
+(() => {
+const sample=`*Thời gian: ****Ngày 04/09/2026 ( tiết 8,9 thứ 6)***
+*Khung chương trình:*
+*14h40-14h50: Học sinh tập trung ở hội trường*
+*14h50-15h30: Tập huấn chung ở hội trường.*
+*15h30-16h20\\:Tập huấn riêng từng chức danh ở các phòng*
+
+- *Phòng Lớp trưởng: A302*
+- *Phòng Lớp phó học tập: B304*
+- *Phòng Lớp phó kỷ luật: B308*
+- *Phòng Cán sự thư viện: Thư viện B209*
+- *Phòng Cán sự tư vấn-y tế: A209-B208*
+- *Phòng Cán sự Văn – Thể - Mỹ: AB10*`;
+const root=document.querySelector('#announcement-rich-editor'),visual=document.querySelector('#announcement-visual-editor'),out=document.querySelector('#test-output');
+const editor=WeeklyRichEditor.create({root,renderer:WeeklyContent});
+function textNodes(){const w=document.createTreeWalker(visual,NodeFilter.SHOW_TEXT),a=[];let n=w.nextNode();while(n){if(n.nodeValue?.trim()&&n.parentElement?.closest('p,li'))a.push(n);n=w.nextNode()}return a}
+function selectAll(){const a=textNodes(),r=document.createRange();r.setStart(a[0],0);r.setEnd(a[a.length-1],a[a.length-1].nodeValue.length);const s=getSelection();s.removeAllRanges();s.addRange(r);editor.captureSelection()}
+function coverage(prop,val){const a=textNodes();return {total:a.length,covered:a.filter(n=>{let e=n.parentElement;while(e&&e!==visual){if(e.style?.getPropertyValue(prop)===val)return true;e=e.parentElement}return false}).length}}
+editor.setHtml(WeeklyContent.renderMarkdown(sample),{view:'visual',focus:false});selectAll();
+editor.applyInlineStyle({'font-family':'Georgia, serif'});editor.captureSelection();
+// Simulate a browser/editor DOM normalization between toolbar commands.
+visual.innerHTML=visual.innerHTML;
+getSelection().removeAllRanges();
+editor.restoreSelection({focus:false});
+editor.applyInlineStyle({'font-size':'24px'});
+const font=coverage('font-family','Georgia, serif'),size=coverage('font-size','24px');
+const pass=font.covered===font.total&&size.covered===size.total;
+out.textContent=`${pass?'PASS':'FAIL'}: font=${font.covered}/${font.total}; size-after-dom-reparse=${size.covered}/${size.total}`;document.body.dataset.testStatus=pass?'pass':'fail';
+})();
+</script></body></html>
