@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Scrollable modal toolbar regression</title>
+  <link rel="stylesheet" href="../editor-formatting.css">
+  <style>
+    body { margin: 20px; }
+    #scroll-host { width: 760px; height: 320px; overflow-y: auto; border: 1px solid #ccc; padding: 12px; }
+    .spacer-top { height: 150px; }
+    .spacer-bottom { height: 700px; }
+  </style>
+</head>
+<body>
+<div id="outside">Outside</div>
+<div id="scroll-host" class="modal-card">
+  <div class="spacer-top"></div>
+  <div id="announcement-rich-editor">
+    <div id="announcement-format-toolbar" class="canvas-format-toolbar">
+      <select id="announcement-font-family" class="format-select"><option value="">Font</option><option value="Georgia, serif">Georgia</option></select>
+      <select id="announcement-font-size" class="format-select"><option value="">Size</option><option value="24px">24</option></select>
+      <button type="button" class="format-button" data-format="bold">B</button>
+      <button type="button" class="format-button" data-format="italic">I</button>
+      <button type="button" class="format-button" data-format="underline">U</button>
+      <button type="button" class="format-button" data-format="strike">S</button>
+      <button id="announcement-color-more" type="button" class="format-button format-more-button" data-editor-format-toggle="color" aria-expanded="false">Màu</button>
+      <button id="announcement-align-more" type="button" class="format-button format-more-button" data-editor-format-toggle="align" aria-expanded="false">Căn</button>
+      <button type="button" data-editor-clear-format>Tx</button>
+    </div>
+    <section id="announcement-format-panel" class="editor-format-panel" hidden>
+      <div class="editor-format-panel-group" data-editor-format-section="align"><button type="button" data-editor-align="left">Trái</button><button type="button" data-editor-align="center">Giữa</button></div>
+      <div class="editor-format-panel-group" data-editor-format-section="color"><button type="button" data-editor-text-color="#1565c0">Blue</button><input id="announcement-text-color" type="color" value="#243a33"></div>
+      <div class="editor-format-panel-group" data-editor-format-section="color"><button type="button" data-editor-highlight-color="#fff2a8">Yellow</button><input id="announcement-highlight-color" type="color" value="#fff2a8"></div>
+      <p class="editor-format-panel-hint"></p>
+    </section>
+    <button type="button" data-editor-view="visual">Visual</button>
+    <button type="button" data-editor-view="html">HTML</button>
+    <div data-editor-panel="visual"><div id="announcement-visual-editor" contenteditable="true"></div></div>
+    <div data-editor-panel="html" hidden><textarea id="announcement-content"></textarea><pre id="announcement-html-lines"></pre></div>
+    <div id="announcement-editor-status"></div><div id="announcement-editor-count"></div>
+  </div>
+  <div class="spacer-bottom"></div>
+</div>
+<pre id="test-output">RUNNING</pre>
+<script src="../content-renderer.js"></script>
+<script src="../rich-editor.js"></script>
+<script src="../editor-formatting.js"></script>
+<script>
+(() => {
+  const root = document.querySelector('#announcement-rich-editor');
+  const visual = document.querySelector('#announcement-visual-editor');
+  const panel = document.querySelector('#announcement-format-panel');
+  const color = document.querySelector('#announcement-color-more');
+  const align = document.querySelector('#announcement-align-more');
+  const scrollHost = document.querySelector('#scroll-host');
+  const output = document.querySelector('#test-output');
+  const editor = WeeklyRichEditor.create({ root, renderer: WeeklyContent });
+  WeeklyEditorFormatting.create({ root, editor });
+
+  function selectAll() {
+    const range = document.createRange(); range.selectNodeContents(visual);
+    const selection = getSelection(); selection.removeAllRanges(); selection.addRange(range); editor.captureSelection();
+  }
+  function click(node) {
+    node.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+    node.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  }
+  function errorFromAnchor(toggle) {
+    const t = toggle.getBoundingClientRect();
+    const p = panel.getBoundingClientRect();
+    return { top: Math.abs(p.top - (t.bottom + 6)), left: Math.abs(p.left - t.left) };
+  }
+
+  editor.setHtml('<p>Alpha Beta Gamma</p><p>Delta Epsilon</p>', { view: 'visual', focus: false });
+  selectAll();
+  const failures = [];
+
+  click(color);
+  const firstFrame = errorFromAnchor(color);
+  if (firstFrame.top > 2 || firstFrame.left > 2) failures.push(`first-frame:${firstFrame.top.toFixed(1)},${firstFrame.left.toFixed(1)}`);
+
+  setTimeout(() => {
+    const settled = errorFromAnchor(color);
+    if (settled.top > 2 || settled.left > 2) failures.push(`settled:${settled.top.toFixed(1)},${settled.left.toFixed(1)}`);
+
+    scrollHost.scrollTop += 70;
+    scrollHost.dispatchEvent(new Event('scroll'));
+    setTimeout(() => {
+      const afterScroll = errorFromAnchor(color);
+      if (afterScroll.top > 2 || afterScroll.left > 2) failures.push(`scroll:${afterScroll.top.toFixed(1)},${afterScroll.left.toFixed(1)}`);
+
+      click(align);
+      const alignFrame = errorFromAnchor(align);
+      if (alignFrame.top > 2 || alignFrame.left > 2) failures.push(`align-frame:${alignFrame.top.toFixed(1)},${alignFrame.left.toFixed(1)}`);
+
+      output.textContent = failures.length ? `FAIL: ${failures.join('; ')}` : 'PASS: dropdown stays anchored in scrollable modal';
+      document.body.dataset.testStatus = failures.length ? 'fail' : 'pass';
+    }, 60);
+  }, 60);
+})();
+</script>
+</body>
+</html>
