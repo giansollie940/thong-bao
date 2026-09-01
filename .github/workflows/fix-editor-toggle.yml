@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/fix-editor-toggle.yml
+      - tests/editor-multiblock-regression.html
 
 permissions:
   contents: write
