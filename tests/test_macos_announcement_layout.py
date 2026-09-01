@@ -28,9 +28,14 @@ for token in required_html:
     if token not in dialog:
         failures.append(f'html-missing:{token}')
 
-for heading in ['Thông tin chính', 'Phân loại & thời gian', 'Tùy chọn']:
-    if heading not in dialog:
-        failures.append(f'section-heading-missing:{heading}')
+heading_variants = [
+    ('Thông tin chính', ['Thông tin chính']),
+    ('Phân loại & thời gian', ['Phân loại & thời gian', 'Phân loại &amp; thời gian']),
+    ('Tùy chọn', ['Tùy chọn']),
+]
+for label, variants in heading_variants:
+    if not any(variant in dialog for variant in variants):
+        failures.append(f'section-heading-missing:{label}')
 
 for preserved_id in [
     'announcement-title', 'announcement-week', 'announcement-date',
