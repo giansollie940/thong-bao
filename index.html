@@ -6,16 +6,16 @@
   <meta name="description" content="Bảng thông báo theo tuần - xem, tìm kiếm và sao chép thông tin.">
   <title>Bảng thông báo theo tuần</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="styles.css?v=3.16.12">
-  <link rel="stylesheet" href="controls.css?v=3.16.12">
-  <link rel="stylesheet" href="content-renderer.css?v=3.16.12">
-  <link rel="stylesheet" href="content-interactions.css?v=3.16.12">
-  <link rel="stylesheet" href="rich-editor.css?v=3.16.12">
-  <link rel="stylesheet" href="editor-formatting.css?v=3.16.12">
-  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.12">
-  <link rel="stylesheet" href="loading-diamond.css?v=3.16.12">
-  <link rel="stylesheet" href="announcement-form.css?v=3.16.12">
-  <link rel="stylesheet" href="pet-companion.css?v=3.16.12">
+  <link rel="stylesheet" href="styles.css?v=3.16.13">
+  <link rel="stylesheet" href="controls.css?v=3.16.13">
+  <link rel="stylesheet" href="content-renderer.css?v=3.16.13">
+  <link rel="stylesheet" href="content-interactions.css?v=3.16.13">
+  <link rel="stylesheet" href="rich-editor.css?v=3.16.13">
+  <link rel="stylesheet" href="editor-formatting.css?v=3.16.13">
+  <link rel="stylesheet" href="editor-find-replace.css?v=3.16.13">
+  <link rel="stylesheet" href="loading-diamond.css?v=3.16.13">
+  <link rel="stylesheet" href="announcement-form.css?v=3.16.13">
+  <link rel="stylesheet" href="pet-companion.css?v=3.16.13">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -395,121 +395,28 @@
               role="toolbar"
               aria-label="Định dạng nội dung thông báo"
             >
-              <label class="format-control format-control-font">
-                <span class="sr-only">Phông chữ</span>
-                <select
-                  id="announcement-font-family"
-                  class="format-select format-font-select"
-                  aria-label="Phông chữ"
-                  title="Phông chữ"
-                  data-editor-control="font-family"
-                >
-                  <option value="">Phông mặc định</option>
-                  <option value="Arial, sans-serif">Arial</option>
-                  <option value="Verdana, sans-serif">Verdana</option>
-                  <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
-                  <option value="Georgia, serif">Georgia</option>
-                  <option value="Times New Roman, serif">Times New Roman</option>
-                  <option value="Courier New, monospace">Courier New</option>
-                </select>
-              </label>
-
-              <label class="format-control format-control-size">
-                <span class="sr-only">Cỡ chữ</span>
-                <select
-                  id="announcement-font-size"
-                  class="format-select format-size-select"
-                  aria-label="Cỡ chữ"
-                  title="Cỡ chữ"
-                  data-editor-control="font-size"
-                >
-                  <option value="">Cỡ chữ</option>
-                  <option value="12px">12</option>
-                  <option value="14px">14</option>
-                  <option value="16px">16</option>
-                  <option value="18px">18</option>
-                  <option value="20px">20</option>
-                  <option value="24px">24</option>
-                  <option value="28px">28</option>
-                  <option value="32px">32</option>
-                  <option value="36px">36</option>
-                </select>
-              </label>
-
-              <span class="format-separator" aria-hidden="true"></span>
-
-              <button class="format-button" type="button" data-format="bold" title="In đậm (Ctrl/Cmd+B)" aria-label="In đậm">
-                <strong>B</strong>
-              </button>
-              <button class="format-button" type="button" data-format="italic" title="In nghiêng (Ctrl/Cmd+I)" aria-label="In nghiêng">
-                <em>I</em>
-              </button>
-              <button class="format-button" type="button" data-format="underline" title="Gạch chân (Ctrl/Cmd+U)" aria-label="Gạch chân">
-                <u>U</u>
-              </button>
-              <button class="format-button" type="button" data-format="strike" title="Gạch ngang" aria-label="Gạch ngang">
-                <s>S</s>
-              </button>
-              <button class="format-button format-button-wide" type="button" data-format="heading" title="Tiêu đề nhỏ" aria-label="Tiêu đề nhỏ">
-                T
-              </button>
-
-              <span class="format-separator" aria-hidden="true"></span>
-
-              <button
-                class="format-button format-button-wide format-more-button"
-                id="announcement-format-more"
-                type="button"
-                data-editor-format-toggle
-                aria-controls="announcement-format-panel"
-                aria-expanded="false"
-                title="Màu chữ, highlight và canh lề"
-              >
-                🎨 Màu &amp; căn
-              </button>
-
-              <button
-                class="format-button format-button-wide"
-                type="button"
-                data-editor-clear-format
-                title="Xóa định dạng đã chọn"
-                aria-label="Xóa định dạng"
-              >
-                Tx
-              </button>
-
-              <span class="format-separator" aria-hidden="true"></span>
-
-              <button class="format-button" type="button" data-format="bullet" title="Danh sách chấm" aria-label="Danh sách chấm">
-                •
-              </button>
-              <button class="format-button" type="button" data-format="numbered" title="Danh sách số" aria-label="Danh sách số">
-                1.
-              </button>
-              <button class="format-button" type="button" data-format="quote" title="Trích dẫn / ghi chú" aria-label="Trích dẫn">
-                ❝
-              </button>
-
-              <span class="format-separator" aria-hidden="true"></span>
-
-              <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">
-                🔗
-              </button>
-
-              <span class="format-separator" aria-hidden="true"></span>
-
-              <button
-                class="format-button format-button-wide editor-find-toggle"
-                id="announcement-find-toggle"
-                type="button"
-                data-editor-action="find-replace"
-                title="Tìm và thay thế (Ctrl/Cmd+F)"
-                aria-label="Tìm và thay thế"
-                aria-controls="announcement-find-panel"
-                aria-expanded="false"
-              >
-                🔎
-              </button>
+              <div class="format-toolbar-row format-toolbar-row-primary">
+                <label class="format-control format-control-font"><span class="sr-only">Phông chữ</span><select id="announcement-font-family" class="format-select format-font-select" aria-label="Phông chữ" title="Phông chữ" data-editor-control="font-family"><option value="">Phông mặc định</option><option value="Arial, sans-serif">Arial</option><option value="Verdana, sans-serif">Verdana</option><option value="Trebuchet MS, sans-serif">Trebuchet MS</option><option value="Georgia, serif">Georgia</option><option value="Times New Roman, serif">Times New Roman</option><option value="Courier New, monospace">Courier New</option></select></label>
+                <label class="format-control format-control-size"><span class="sr-only">Cỡ chữ</span><select id="announcement-font-size" class="format-select format-size-select" aria-label="Cỡ chữ" title="Cỡ chữ" data-editor-control="font-size"><option value="">Cỡ chữ</option><option value="12px">12</option><option value="14px">14</option><option value="16px">16</option><option value="18px">18</option><option value="20px">20</option><option value="24px">24</option><option value="28px">28</option><option value="32px">32</option><option value="36px">36</option></select></label>
+                <span class="format-separator" aria-hidden="true"></span>
+                <button class="format-button" type="button" data-format="bold" title="In đậm (Ctrl/Cmd+B)" aria-label="In đậm"><strong>B</strong></button>
+                <button class="format-button" type="button" data-format="italic" title="In nghiêng (Ctrl/Cmd+I)" aria-label="In nghiêng"><em>I</em></button>
+                <button class="format-button" type="button" data-format="underline" title="Gạch chân (Ctrl/Cmd+U)" aria-label="Gạch chân"><u>U</u></button>
+                <button class="format-button" type="button" data-format="strike" title="Gạch ngang" aria-label="Gạch ngang"><s>S</s></button>
+                <button class="format-button format-button-wide" type="button" data-format="heading" title="Tiêu đề nhỏ" aria-label="Tiêu đề nhỏ">T</button>
+                <button class="format-button format-button-wide" type="button" data-editor-clear-format title="Xóa định dạng đã chọn" aria-label="Xóa định dạng">Tx</button>
+              </div>
+              <div class="format-toolbar-row format-toolbar-row-secondary">
+                <button class="format-button format-button-wide format-more-button" id="announcement-color-more" type="button" data-editor-format-toggle="color" aria-controls="announcement-format-panel" aria-expanded="false" title="Màu chữ và highlight" aria-label="Màu chữ và highlight">🎨 Màu</button>
+                <button class="format-button format-button-wide format-more-button" id="announcement-align-more" type="button" data-editor-format-toggle="align" aria-controls="announcement-format-panel" aria-expanded="false" title="Căn lề đoạn văn" aria-label="Căn lề đoạn văn">☰ Căn</button>
+                <span class="format-separator" aria-hidden="true"></span>
+                <button class="format-button" type="button" data-format="bullet" title="Danh sách chấm" aria-label="Danh sách chấm">•</button>
+                <button class="format-button" type="button" data-format="numbered" title="Danh sách số" aria-label="Danh sách số">1.</button>
+                <button class="format-button" type="button" data-format="quote" title="Trích dẫn / ghi chú" aria-label="Trích dẫn">❝</button>
+                <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">🔗</button>
+                <span class="format-separator" aria-hidden="true"></span>
+                <button class="format-button format-button-wide editor-find-toggle" id="announcement-find-toggle" type="button" data-editor-action="find-replace" title="Tìm và thay thế (Ctrl/Cmd+F)" aria-label="Tìm và thay thế" aria-controls="announcement-find-panel" aria-expanded="false">🔎</button>
+              </div>
             </div>
 
             <section
@@ -1195,13 +1102,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="content-renderer.js?v=3.16.12"></script>
-  <script src="content-interactions.js?v=3.16.12"></script>
-  <script src="rich-editor.js?v=3.16.12"></script>
-  <script src="editor-formatting.js?v=3.16.12"></script>
-  <script src="editor-find-replace.js?v=3.16.12"></script>
-  <script src="loading-diamond.js?v=3.16.12"></script>
-  <script src="app.js?v=3.16.12"></script>
-  <script src="pet-companion.js?v=3.16.12"></script>
+  <script src="content-renderer.js?v=3.16.13"></script>
+  <script src="content-interactions.js?v=3.16.13"></script>
+  <script src="rich-editor.js?v=3.16.13"></script>
+  <script src="editor-formatting.js?v=3.16.13"></script>
+  <script src="editor-find-replace.js?v=3.16.13"></script>
+  <script src="loading-diamond.js?v=3.16.13"></script>
+  <script src="app.js?v=3.16.13"></script>
+  <script src="pet-companion.js?v=3.16.13"></script>
 </body>
 </html>

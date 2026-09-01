@@ -376,3 +376,33 @@ html[data-theme="dark"] .editor-format-panel {
 #announcement-format-panel :is(.editor-align-button, .editor-color-swatch):is(:hover, :focus-visible, :active) {
   transform: none !important;
 }
+
+
+/* V3.16.13 — fixed two-row formatting toolbar */
+#announcement-format-toolbar.canvas-format-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+#announcement-format-toolbar .format-toolbar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+#announcement-format-toolbar .format-toolbar-row > * { flex: 0 0 auto; }
+#announcement-format-toolbar .format-button,
+#announcement-format-toolbar .format-select,
+#announcement-format-toolbar .format-control { flex-shrink: 0 !important; }
+#announcement-format-toolbar .format-toolbar-row::-webkit-scrollbar { height: 5px; }
+#announcement-format-toolbar .format-toolbar-row-primary { padding-bottom: 1px; }
+#announcement-format-toolbar .format-toolbar-row-secondary { padding-top: 1px; }
+#announcement-format-toolbar .format-more-button { min-width: 92px; }
