@@ -73,15 +73,42 @@
         editor.captureSelection();
       }
 
-      function blockCoverage(selector, predicate) {
-        const blocks = [...visual.querySelectorAll('p, li')]
+      function blocks() {
+        return [...visual.querySelectorAll('p, li')]
           .filter(block => block.textContent.trim());
-        const covered = blocks.filter(block =>
-          [...block.querySelectorAll(selector)].some(node =>
-            node.textContent.trim() && predicate(node)
-          )
-        );
-        return { total: blocks.length, covered: covered.length };
+      }
+
+      function sizeCoverage() {
+        const all = blocks();
+        const covered = all.filter(block => {
+          const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+          let node = walker.nextNode();
+          while (node) {
+            if (node.nodeValue?.trim() && getComputedStyle(node.parentElement).fontSize === '18px') {
+              return true;
+            }
+            node = walker.nextNode();
+          }
+          return false;
+        });
+        return { total: all.length, covered: covered.length };
+      }
+
+      function boldCoverage() {
+        const all = blocks();
+        const covered = all.filter(block => {
+          const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+          let node = walker.nextNode();
+          while (node) {
+            if (node.nodeValue?.trim()) {
+              const weight = getComputedStyle(node.parentElement).fontWeight;
+              if (weight === 'bold' || Number.parseInt(weight, 10) >= 600) return true;
+            }
+            node = walker.nextNode();
+          }
+          return false;
+        });
+        return { total: all.length, covered: covered.length };
       }
 
       const failures = [];
@@ -90,9 +117,9 @@
       editor.setHtml(initialHtml, { view: 'visual', focus: false });
       selectAllEditorText();
       editor.applyInlineStyle({ 'font-size': '18px' });
-      const sizeCoverage = blockCoverage('span', node => node.style.fontSize === '18px');
-      if (sizeCoverage.covered !== sizeCoverage.total) {
-        failures.push(`font-size ${sizeCoverage.covered}/${sizeCoverage.total} blocks`);
+      const size = sizeCoverage();
+      if (size.covered !== size.total) {
+        failures.push(`font-size ${size.covered}/${size.total} blocks`);
       }
 
       editor.setHtml(initialHtml, { view: 'visual', focus: false });
@@ -102,9 +129,9 @@
       document.querySelector('#announcement-format-toolbar').appendChild(boldButton);
       boldButton.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
       boldButton.click();
-      const boldCoverage = blockCoverage('strong', () => true);
-      if (boldCoverage.covered !== boldCoverage.total) {
-        failures.push(`bold ${boldCoverage.covered}/${boldCoverage.total} blocks`);
+      const bold = boldCoverage();
+      if (bold.covered !== bold.total) {
+        failures.push(`bold ${bold.covered}/${bold.total} blocks`);
       }
 
       if (failures.length) {
