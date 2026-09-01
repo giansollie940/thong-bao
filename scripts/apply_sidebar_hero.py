@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One-shot migration helper for V3.17.1.
 INDEX = Path("index.html")
 CSS = Path("macos-glossy.css")
 
