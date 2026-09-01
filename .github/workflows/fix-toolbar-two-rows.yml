@@ -1,0 +1,76 @@
+name: Fix two-row toolbar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-toolbar-two-rows.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Implement fixed two-row toolbar
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          index_path = Path('index.html')
+          index = index_path.read_text(encoding='utf-8')
+          start = index.index('            <div\n              class="format-toolbar canvas-format-toolbar"\n              id="announcement-format-toolbar"')
+          end = index.index('            <section\n              class="editor-format-panel"', start)
+
+          replacement = '''            <div\n              class="format-toolbar canvas-format-toolbar"\n              id="announcement-format-toolbar"\n              role="toolbar"\n              aria-label="Định dạng nội dung thông báo"\n            >\n              <div class="format-toolbar-row format-toolbar-row-primary">\n                <label class="format-control format-control-font">\n                  <span class="sr-only">Phông chữ</span>\n                  <select id="announcement-font-family" class="format-select format-font-select" aria-label="Phông chữ" title="Phông chữ" data-editor-control="font-family">\n                    <option value="">Phông mặc định</option>\n                    <option value="Arial, sans-serif">Arial</option>\n                    <option value="Verdana, sans-serif">Verdana</option>\n                    <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>\n                    <option value="Georgia, serif">Georgia</option>\n                    <option value="Times New Roman, serif">Times New Roman</option>\n                    <option value="Courier New, monospace">Courier New</option>\n                  </select>\n                </label>\n\n                <label class="format-control format-control-size">\n                  <span class="sr-only">Cỡ chữ</span>\n                  <select id="announcement-font-size" class="format-select format-size-select" aria-label="Cỡ chữ" title="Cỡ chữ" data-editor-control="font-size">\n                    <option value="">Cỡ chữ</option>\n                    <option value="12px">12</option>\n                    <option value="14px">14</option>\n                    <option value="16px">16</option>\n                    <option value="18px">18</option>\n                    <option value="20px">20</option>\n                    <option value="24px">24</option>\n                    <option value="28px">28</option>\n                    <option value="32px">32</option>\n                    <option value="36px">36</option>\n                  </select>\n                </label>\n\n                <span class="format-separator" aria-hidden="true"></span>\n                <button class="format-button" type="button" data-format="bold" title="In đậm (Ctrl/Cmd+B)" aria-label="In đậm"><strong>B</strong></button>\n                <button class="format-button" type="button" data-format="italic" title="In nghiêng (Ctrl/Cmd+I)" aria-label="In nghiêng"><em>I</em></button>\n                <button class="format-button" type="button" data-format="underline" title="Gạch chân (Ctrl/Cmd+U)" aria-label="Gạch chân"><u>U</u></button>\n                <button class="format-button" type="button" data-format="strike" title="Gạch ngang" aria-label="Gạch ngang"><s>S</s></button>\n                <button class="format-button format-button-wide" type="button" data-format="heading" title="Tiêu đề nhỏ" aria-label="Tiêu đề nhỏ">T</button>\n                <button class="format-button format-button-wide" type="button" data-editor-clear-format title="Xóa định dạng đã chọn" aria-label="Xóa định dạng">Tx</button>\n              </div>\n\n              <div class="format-toolbar-row format-toolbar-row-secondary">\n                <button class="format-button format-button-wide format-more-button" id="announcement-color-more" type="button" data-editor-format-toggle="color" aria-controls="announcement-format-panel" aria-expanded="false" title="Màu chữ và highlight" aria-label="Màu chữ và highlight">🎨 Màu</button>\n                <button class="format-button format-button-wide format-more-button" id="announcement-align-more" type="button" data-editor-format-toggle="align" aria-controls="announcement-format-panel" aria-expanded="false" title="Căn lề đoạn văn" aria-label="Căn lề đoạn văn">☰ Căn</button>\n                <span class="format-separator" aria-hidden="true"></span>\n                <button class="format-button" type="button" data-format="bullet" title="Danh sách chấm" aria-label="Danh sách chấm">•</button>\n                <button class="format-button" type="button" data-format="numbered" title="Danh sách số" aria-label="Danh sách số">1.</button>\n                <button class="format-button" type="button" data-format="quote" title="Trích dẫn / ghi chú" aria-label="Trích dẫn">❝</button>\n                <button class="format-button" type="button" data-format="link" title="Chèn liên kết" aria-label="Chèn liên kết">🔗</button>\n                <span class="format-separator" aria-hidden="true"></span>\n                <button class="format-button format-button-wide editor-find-toggle" id="announcement-find-toggle" type="button" data-editor-action="find-replace" title="Tìm và thay thế (Ctrl/Cmd+F)" aria-label="Tìm và thay thế" aria-controls="announcement-find-panel" aria-expanded="false">🔎</button>\n              </div>\n            </div>\n\n'''
+          index = index[:start] + replacement + index[end:]
+          index = index.replace('?v=3.16.12', '?v=3.16.13')
+          index_path.write_text(index, encoding='utf-8')
+
+          js_path = Path('editor-formatting.js')
+          js = js_path.read_text(encoding='utf-8')
+          start = js.index('    function enhanceLegacyToolbar() {')
+          end = js.index('    enhanceLegacyToolbar();', start) + len('    enhanceLegacyToolbar();\n')
+          replacement_js = '''    function enhanceLegacyToolbar() {\n      if (!toolbar || !panel) return;\n\n      const groups = [\n        ...panel.querySelectorAll(\n          ".editor-format-panel-group"\n        )\n      ];\n\n      if (groups.length >= 3) {\n        groups[0].dataset.editorFormatSection = "align";\n        groups[1].dataset.editorFormatSection = "color";\n        groups[2].dataset.editorFormatSection = "color";\n      }\n\n      const hint = panel.querySelector(\n        ".editor-format-panel-hint"\n      );\n      if (hint) {\n        hint.textContent =\n          "Bôi đen nội dung trước, sau đó chọn Màu hoặc Căn. " +\n          "Vùng chọn được giữ lại để áp dụng nhiều định dạng liên tiếp.";\n      }\n    }\n\n    enhanceLegacyToolbar();\n'''
+          js = js[:start] + replacement_js + js[end:]
+          js_path.write_text(js, encoding='utf-8')
+
+          css_path = Path('editor-formatting.css')
+          css = css_path.read_text(encoding='utf-8')
+          css += '''\n\n/* V3.16.13 — fixed two-row formatting toolbar */\n#announcement-format-toolbar.canvas-format-toolbar {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 6px;\n  width: 100%;\n  min-width: 0;\n}\n\n#announcement-format-toolbar .format-toolbar-row {\n  display: flex;\n  align-items: center;\n  flex-wrap: nowrap;\n  gap: 6px;\n  width: 100%;\n  min-width: 0;\n  overflow-x: auto;\n  overflow-y: hidden;\n  scrollbar-width: thin;\n  overscroll-behavior-x: contain;\n}\n\n#announcement-format-toolbar .format-toolbar-row > * {\n  flex: 0 0 auto;\n}\n\n#announcement-format-toolbar .format-button,\n#announcement-format-toolbar .format-select,\n#announcement-format-toolbar .format-control {\n  flex-shrink: 0 !important;\n}\n\n#announcement-format-toolbar .format-toolbar-row::-webkit-scrollbar {\n  height: 5px;\n}\n\n#announcement-format-toolbar .format-toolbar-row-primary {\n  padding-bottom: 1px;\n}\n\n#announcement-format-toolbar .format-toolbar-row-secondary {\n  padding-top: 1px;\n}\n\n#announcement-format-toolbar .format-more-button {\n  min-width: 92px;\n}\n'''
+          css_path.write_text(css, encoding='utf-8')
+          PY
+
+          node --check editor-formatting.js
+          git diff --check
+
+      - name: Verify toolbar and editor regressions
+        run: |
+          python tests/test_toolbar_two_rows.py
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$BROWSER"
+          for test in \
+            tests/editor-word-toolbar-scroll-regression.html \
+            tests/editor-word-toolbar-regression.html \
+            tests/editor-sequential-formatting-sync.html \
+            tests/editor-multiblock-regression.html \
+            tests/editor-offset-selection-regression.html; do
+            out="/tmp/$(basename "$test").html"
+            timeout 25s "$BROWSER" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --allow-file-access-from-files --virtual-time-budget=5000 --dump-dom "file://$PWD/$test" > "$out"
+            grep 'id="test-output"' "$out" || true
+            grep 'data-test-status="pass"' "$out"
+          done
+
+      - name: Commit verified implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html editor-formatting.js editor-formatting.css tests/test_toolbar_two_rows.py
+          git commit -m "Use a fixed two-row formatting toolbar"
+          git push
