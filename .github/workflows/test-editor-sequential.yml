@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - tests/editor-sequential-formatting-sync.html
+      - tests/editor-offset-selection-regression.html
       - .github/workflows/test-editor-sequential.yml
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
             --allow-file-access-from-files \
             --virtual-time-budget=5000 \
             --dump-dom \
-            "file://$PWD/tests/editor-sequential-formatting-sync.html" \
-            > /tmp/sequential.html
-          grep 'id="test-output"' /tmp/sequential.html
-          grep 'data-test-status="pass"' /tmp/sequential.html
+            "file://$PWD/tests/editor-offset-selection-regression.html" \
+            > /tmp/selection.html
+          grep 'id="test-output"' /tmp/selection.html
+          grep 'data-test-status="pass"' /tmp/selection.html
