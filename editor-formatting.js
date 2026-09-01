@@ -173,6 +173,28 @@
     const clearButton = root.querySelector(
       "[data-editor-clear-format]"
     );
+    const inlineStateButtons = {
+      bold: toolbar.querySelector('[data-format="bold"]'),
+      italic: toolbar.querySelector('[data-format="italic"]'),
+      underline: toolbar.querySelector('[data-format="underline"]'),
+      strikeThrough: toolbar.querySelector('[data-format="strike"]')
+    };
+
+    function updateInlineButtonStates() {
+      for (const [command, button] of Object.entries(inlineStateButtons)) {
+        if (!button) continue;
+
+        let active = false;
+        try {
+          active = Boolean(document.queryCommandState(command));
+        } catch {
+          active = false;
+        }
+
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      }
+    }
 
     if (
       !toolbar ||
@@ -222,19 +244,64 @@
     }
 
     let activePanelMode = null;
+    let activePanelToggle = null;
 
-    function setPanelOpen(open, mode = activePanelMode) {
+    panel.classList.add("editor-format-dropdown");
+
+    function positionPanel(toggle = activePanelToggle) {
+      if (!toggle || panel.hidden) return;
+
+      const rect = toggle.getBoundingClientRect();
+      const gap = 6;
+      const margin = 10;
+      const preferredWidth =
+        activePanelMode === "align" ? 292 : 390;
+      const width = Math.min(
+        preferredWidth,
+        Math.max(240, window.innerWidth - margin * 2)
+      );
+      const left = Math.min(
+        Math.max(margin, rect.left),
+        Math.max(margin, window.innerWidth - width - margin)
+      );
+      let top = rect.bottom + gap;
+
+      panel.style.width = `${width}px`;
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
+
+      const panelRect = panel.getBoundingClientRect();
+      if (panelRect.bottom > window.innerHeight - margin) {
+        top = Math.max(
+          margin,
+          rect.top - panelRect.height - gap
+        );
+        panel.style.top = `${top}px`;
+      }
+    }
+
+    function setPanelOpen(open, mode = activePanelMode, toggle = activePanelToggle) {
       const nextMode =
         mode ||
         panelToggles[0].dataset.editorFormatToggle;
 
       panel.hidden = !open;
       activePanelMode = open ? nextMode : null;
+      activePanelToggle = open
+        ? toggle || panelToggles.find(
+            item => item.dataset.editorFormatToggle === nextMode
+          )
+        : null;
 
       if (open) {
         panel.dataset.mode = nextMode;
+        panel.dataset.anchor = activePanelToggle?.id || "";
       } else {
         delete panel.dataset.mode;
+        delete panel.dataset.anchor;
+        panel.style.removeProperty("left");
+        panel.style.removeProperty("top");
+        panel.style.removeProperty("width");
       }
 
       for (const section of panelSections) {
@@ -243,16 +310,20 @@
           section.dataset.editorFormatSection !== nextMode;
       }
 
-      for (const toggle of panelToggles) {
+      for (const item of panelToggles) {
         const active =
           open &&
-          toggle.dataset.editorFormatToggle === nextMode;
+          item.dataset.editorFormatToggle === nextMode;
 
-        toggle.setAttribute(
+        item.setAttribute(
           "aria-expanded",
           String(active)
         );
-        toggle.classList.toggle("active", active);
+        item.classList.toggle("active", active);
+      }
+
+      if (open) {
+        requestAnimationFrame(() => positionPanel(activePanelToggle));
       }
     }
 
@@ -262,8 +333,23 @@
         const samePanelOpen =
           !panel.hidden && activePanelMode === mode;
 
-        setPanelOpen(!samePanelOpen, mode);
+        setPanelOpen(!samePanelOpen, mode, toggle);
       });
+    }
+
+    document.addEventListener("pointerdown", event => {
+      if (panel.hidden) return;
+      if (panel.contains(event.target)) return;
+      if (panelToggles.some(item => item.contains(event.target))) return;
+      setPanelOpen(false);
+    });
+
+    for (const eventName of ["resize", "scroll"]) {
+      window.addEventListener(
+        eventName,
+        () => positionPanel(),
+        { passive: true }
+      );
     }
 
     /*
@@ -389,6 +475,22 @@
         });
       }
     );
+
+    toolbar.addEventListener("click", event => {
+      const button = event.target.closest(
+        '[data-format="bold"], [data-format="italic"], [data-format="underline"], [data-format="strike"]'
+      );
+      if (!button) return;
+
+      /*
+       * The rich-editor click handler runs first and performs the actual
+       * toggle. Mirror that toggle deterministically on the toolbar button
+       * so focus/selection restoration cannot leave stale visual state.
+       */
+      const nextActive = button.getAttribute("aria-pressed") !== "true";
+      button.classList.toggle("active", nextActive);
+      button.setAttribute("aria-pressed", String(nextActive));
+    });
 
     clearButton.addEventListener("click", () => {
       runWithSelection(() => {

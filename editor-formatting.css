@@ -335,3 +335,44 @@ html[data-theme="dark"] .editor-format-panel {
     transform: none !important;
   }
 }
+
+
+/* V3.16.11 — Word-like anchored formatting dropdowns */
+.editor-format-dropdown {
+  position: fixed;
+  z-index: 1400;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  max-width: calc(100vw - 20px);
+  max-height: min(460px, calc(100vh - 20px));
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--line));
+  border-radius: 12px;
+  background: var(--surface-solid);
+  box-shadow: 0 14px 38px rgba(28, 61, 51, .18);
+}
+
+.editor-format-dropdown .editor-format-panel-group {
+  padding: 8px;
+}
+
+.editor-format-dropdown .editor-format-panel-hint {
+  grid-column: auto;
+  margin: 0 2px;
+}
+
+.format-button.active,
+.format-button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--brand) 38%, var(--line));
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 12%, transparent);
+}
+
+/* Editor controls must never move under the pointer. */
+#announcement-format-toolbar .format-button:is(:hover, :focus-visible, :active),
+#announcement-format-panel :is(.editor-align-button, .editor-color-swatch):is(:hover, :focus-visible, :active) {
+  transform: none !important;
+}
