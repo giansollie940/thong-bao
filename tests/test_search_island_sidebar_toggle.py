@@ -11,6 +11,7 @@ def require(text: str, needle: str, message: str) -> None:
         raise AssertionError(message)
 
 
+# RED verification marker: production is still V3.17.1 before the fix.
 # The old horizontal topbar must be gone from production markup.
 if '<header class="app-topbar">' in INDEX:
     raise AssertionError("horizontal topbar must be removed")
