@@ -140,13 +140,17 @@ pattern = re.compile(
 replacement = '''    function restoreVisualSelection({
       focus = true
     } = {}) {
-      let range = savedVisualRange;
+      /*
+       * Logical character offsets are authoritative. DOM Range objects can
+       * remain syntactically valid after contenteditable normalizes/rebuilds
+       * its children while pointing at detached or collapsed nodes.
+       */
+      let range = visualRangeFromOffsets(savedVisualOffsets);
 
-      if (!range || !rangeBelongsToVisual(range)) {
-        range = visualRangeFromOffsets(savedVisualOffsets);
+      if (!range) {
+        range = savedVisualRange;
+        if (!range || !rangeBelongsToVisual(range)) return null;
       }
-
-      if (!range) return null;
 
       try {
         const selection = window.getSelection();
