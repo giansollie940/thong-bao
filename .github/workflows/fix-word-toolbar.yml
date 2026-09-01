@@ -1,0 +1,113 @@
+name: Fix Word-like toolbar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-word-toolbar.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch Word-like toolbar
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          js = Path('editor-formatting.js')
+          text = js.read_text(encoding='utf-8')
+
+          old = '''    let activePanelMode = null;\n\n    function setPanelOpen(open, mode = activePanelMode) {\n'''
+          new = '''    let activePanelMode = null;\n    let activePanelToggle = null;\n\n    panel.classList.add("editor-format-dropdown");\n\n    function positionPanel(toggle = activePanelToggle) {\n      if (!toggle || panel.hidden) return;\n\n      const rect = toggle.getBoundingClientRect();\n      const gap = 6;\n      const margin = 10;\n      const preferredWidth =\n        activePanelMode === "align" ? 292 : 390;\n      const width = Math.min(\n        preferredWidth,\n        Math.max(240, window.innerWidth - margin * 2)\n      );\n      const left = Math.min(\n        Math.max(margin, rect.left),\n        Math.max(margin, window.innerWidth - width - margin)\n      );\n      let top = rect.bottom + gap;\n\n      panel.style.width = `${width}px`;\n      panel.style.left = `${left}px`;\n      panel.style.top = `${top}px`;\n\n      const panelRect = panel.getBoundingClientRect();\n      if (panelRect.bottom > window.innerHeight - margin) {\n        top = Math.max(\n          margin,\n          rect.top - panelRect.height - gap\n        );\n        panel.style.top = `${top}px`;\n      }\n    }\n\n    function setPanelOpen(open, mode = activePanelMode, toggle = activePanelToggle) {\n'''
+          if old not in text:
+              raise SystemExit('panel marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '''      panel.hidden = !open;\n      activePanelMode = open ? nextMode : null;\n\n      if (open) {\n        panel.dataset.mode = nextMode;\n      } else {\n        delete panel.dataset.mode;\n      }\n'''
+          new = '''      panel.hidden = !open;\n      activePanelMode = open ? nextMode : null;\n      activePanelToggle = open\n        ? toggle || panelToggles.find(\n            item => item.dataset.editorFormatToggle === nextMode\n          )\n        : null;\n\n      if (open) {\n        panel.dataset.mode = nextMode;\n        panel.dataset.anchor = activePanelToggle?.id || "";\n      } else {\n        delete panel.dataset.mode;\n        delete panel.dataset.anchor;\n        panel.style.removeProperty("left");\n        panel.style.removeProperty("top");\n        panel.style.removeProperty("width");\n      }\n'''
+          if old not in text:
+              raise SystemExit('panel state marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '''      for (const toggle of panelToggles) {\n        const active =\n          open &&\n          toggle.dataset.editorFormatToggle === nextMode;\n\n        toggle.setAttribute(\n          "aria-expanded",\n          String(active)\n        );\n        toggle.classList.toggle("active", active);\n      }\n    }\n'''
+          new = '''      for (const item of panelToggles) {\n        const active =\n          open &&\n          item.dataset.editorFormatToggle === nextMode;\n\n        item.setAttribute(\n          "aria-expanded",\n          String(active)\n        );\n        item.classList.toggle("active", active);\n      }\n\n      if (open) {\n        requestAnimationFrame(() => positionPanel(activePanelToggle));\n      }\n    }\n'''
+          if old not in text:
+              raise SystemExit('toggle loop marker missing')
+          text = text.replace(old, new, 1)
+
+          old = '''        setPanelOpen(!samePanelOpen, mode);\n      });\n    }\n'''
+          new = '''        setPanelOpen(!samePanelOpen, mode, toggle);\n      });\n    }\n\n    document.addEventListener("pointerdown", event => {\n      if (panel.hidden) return;\n      if (panel.contains(event.target)) return;\n      if (panelToggles.some(item => item.contains(event.target))) return;\n      setPanelOpen(false);\n    });\n\n    for (const eventName of ["resize", "scroll"]) {\n      window.addEventListener(\n        eventName,\n        () => positionPanel(),\n        { passive: true }\n      );\n    }\n'''
+          if old not in text:
+              raise SystemExit('panel click marker missing')
+          text = text.replace(old, new, 1)
+
+          marker = '''    const clearButton = root.querySelector(\n      "[data-editor-clear-format]"\n    );\n'''
+          insert = marker + '''    const inlineStateButtons = {\n      bold: toolbar.querySelector('[data-format="bold"]'),\n      italic: toolbar.querySelector('[data-format="italic"]'),\n      underline: toolbar.querySelector('[data-format="underline"]'),\n      strikeThrough: toolbar.querySelector('[data-format="strike"]')\n    };\n\n    function updateInlineButtonStates() {\n      for (const [command, button] of Object.entries(inlineStateButtons)) {\n        if (!button) continue;\n\n        let active = false;\n        try {\n          active = Boolean(document.queryCommandState(command));\n        } catch {\n          active = false;\n        }\n\n        button.classList.toggle("active", active);\n        button.setAttribute("aria-pressed", String(active));\n      }\n    }\n'''
+          if marker not in text:
+              raise SystemExit('clear button marker missing')
+          text = text.replace(marker, insert, 1)
+
+          marker = '''    clearButton.addEventListener("click", () => {\n'''
+          insert = '''    toolbar.addEventListener("click", event => {\n      if (!event.target.closest('[data-format="bold"], [data-format="italic"], [data-format="underline"], [data-format="strike"]')) return;\n      requestAnimationFrame(updateInlineButtonStates);\n    });\n\n    document.addEventListener("selectionchange", () => {\n      const selection = window.getSelection();\n      if (!selection?.rangeCount) return;\n      const range = selection.getRangeAt(0);\n      const visual = root.querySelector("#announcement-visual-editor");\n      const node = range.commonAncestorContainer;\n      const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;\n      if (visual && element && (element === visual || visual.contains(element))) {\n        requestAnimationFrame(updateInlineButtonStates);\n      }\n    });\n\n''' + marker
+          if marker not in text:
+              raise SystemExit('clear listener marker missing')
+          text = text.replace(marker, insert, 1)
+
+          marker = '''    enhanceLegacyToolbar();\n'''
+          # no-op: active states are initialized after all queries below
+
+          js.write_text(text, encoding='utf-8')
+
+          css = Path('editor-formatting.css')
+          css_text = css.read_text(encoding='utf-8')
+          css_text += '''\n\n/* V3.16.11 — Word-like anchored formatting dropdowns */\n.editor-format-dropdown {\n  position: fixed;\n  z-index: 1400;\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 8px;\n  max-width: calc(100vw - 20px);\n  max-height: min(460px, calc(100vh - 20px));\n  overflow: auto;\n  padding: 10px;\n  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--line));\n  border-radius: 12px;\n  background: var(--surface-solid);\n  box-shadow: 0 14px 38px rgba(28, 61, 51, .18);\n}\n\n.editor-format-dropdown .editor-format-panel-group {\n  padding: 8px;\n}\n\n.editor-format-dropdown .editor-format-panel-hint {\n  grid-column: auto;\n  margin: 0 2px;\n}\n\n.format-button.active,\n.format-button[aria-pressed="true"] {\n  border-color: color-mix(in srgb, var(--brand) 38%, var(--line));\n  background: var(--brand-soft);\n  color: var(--brand-strong);\n  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 12%, transparent);\n}\n\n/* Editor controls must never move under the pointer. */\n#announcement-format-toolbar .format-button:is(:hover, :focus-visible, :active),\n#announcement-format-panel :is(.editor-align-button, .editor-color-swatch):is(:hover, :focus-visible, :active) {\n  transform: none !important;\n}\n'''
+          css.write_text(css_text, encoding='utf-8')
+
+          controls = Path('controls.css')
+          controls_text = controls.read_text(encoding='utf-8')
+          bad = '''.format-button:is(:hover, :focus-visible),\n\n/* Topbar / mini actions — soft fill */\n.topbar-search-button,\n.mini-action {'''
+          good = '''.format-button:is(:hover, :focus-visible) {\n  border-color: color-mix(in srgb, var(--brand) 30%, var(--line));\n  box-shadow: 0 5px 12px rgba(46,113,91,.08);\n}\n\n/* Topbar / mini actions — soft fill */\n.topbar-search-button,\n.mini-action {'''
+          if bad not in controls_text:
+              raise SystemExit('dangling hover selector marker missing')
+          controls_text = controls_text.replace(bad, good, 1)
+          controls.write_text(controls_text, encoding='utf-8')
+
+          index = Path('index.html')
+          index_text = index.read_text(encoding='utf-8').replace('?v=3.16.10', '?v=3.16.11')
+          index.write_text(index_text, encoding='utf-8')
+          PY
+          node --check editor-formatting.js
+          git diff --check
+
+      - name: Verify Word-like toolbar regression
+        run: |
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$BROWSER"
+          timeout 25s "$BROWSER" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --allow-file-access-from-files --virtual-time-budget=5000 --dump-dom "file://$PWD/tests/editor-word-toolbar-regression.html" > /tmp/word-toolbar.html
+          grep 'id="test-output"' /tmp/word-toolbar.html
+          grep 'data-test-status="pass"' /tmp/word-toolbar.html
+
+      - name: Verify existing formatting regressions
+        run: |
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          for test in tests/editor-sequential-formatting-sync.html tests/editor-multiblock-regression.html tests/editor-offset-selection-regression.html; do
+            out="/tmp/$(basename "$test").html"
+            timeout 25s "$BROWSER" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --allow-file-access-from-files --virtual-time-budget=5000 --dump-dom "file://$PWD/$test" > "$out"
+            grep 'data-test-status="pass"' "$out"
+          done
+
+      - name: Commit verified fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add editor-formatting.js editor-formatting.css controls.css index.html
+          git commit -m "Make formatting toolbar behave like Word"
+          git push
