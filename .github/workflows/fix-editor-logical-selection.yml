@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/fix-editor-logical-selection.yml
+      - tests/patch-logical-selection.py
 
 permissions:
   contents: write
