@@ -11,9 +11,9 @@ def test_macos_glossy_whole_app_contract():
     css = CSS_PATH.read_text(encoding="utf-8")
 
     # Final visual layer and cache version.
-    assert 'announcement-form.css?v=3.17.0' in INDEX
-    assert 'macos-glossy.css?v=3.17.0' in INDEX
-    assert INDEX.index('macos-glossy.css?v=3.17.0') > INDEX.index('announcement-form.css?v=3.17.0')
+    assert 'announcement-form.css?v=3.17.1' in INDEX
+    assert 'macos-glossy.css?v=3.17.1' in INDEX
+    assert INDEX.index('macos-glossy.css?v=3.17.1') > INDEX.index('announcement-form.css?v=3.17.1')
     assert '?v=3.16.14' not in INDEX
 
     # The newly approved direction removes macOS traffic-light controls.
