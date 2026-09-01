@@ -66,15 +66,16 @@ for forbidden in [
     if forbidden in js:
         failures.append(f'dynamic-toolbar-mutation:{forbidden}')
 
-required_css = [
-    '.format-toolbar-row',
-    'flex-wrap: nowrap',
-    'overflow-x: auto',
-    'flex: 0 0 auto',
-]
-for token in required_css:
-    if token not in css:
-        failures.append(f'css-missing:{token}')
+if '.format-toolbar-row' not in css:
+    failures.append('css-missing:.format-toolbar-row')
+
+for label, pattern in [
+    ('flex-wrap:nowrap', r'flex-wrap\s*:\s*nowrap'),
+    ('overflow-x:auto', r'overflow-x\s*:\s*auto'),
+    ('flex:0 0 auto', r'flex\s*:\s*0\s+0\s+auto'),
+]:
+    if not re.search(pattern, css):
+        failures.append(f'css-missing:{label}')
 
 if failures:
     raise SystemExit('FAIL: ' + '; '.join(failures))
