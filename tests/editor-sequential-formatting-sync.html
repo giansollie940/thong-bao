@@ -1,0 +1,54 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Sequential formatting sync regression</title></head><body>
+<div id="announcement-rich-editor">
+  <div id="announcement-format-toolbar">
+    <select id="announcement-font-family"><option value="">Font</option><option value="Georgia, serif">Georgia</option></select>
+    <select id="announcement-font-size"><option value="">Size</option><option value="24px">24</option></select>
+    <button id="announcement-color-more" type="button" data-editor-format-toggle="color">Màu</button>
+    <button id="announcement-align-more" type="button" data-editor-format-toggle="align">Căn</button>
+    <button type="button" data-editor-clear-format>Tx</button>
+  </div>
+  <section id="announcement-format-panel" hidden>
+    <div class="editor-format-panel-group" data-editor-format-section="align"><button type="button" data-editor-align="left">Trái</button></div>
+    <div class="editor-format-panel-group" data-editor-format-section="color"><button type="button" data-editor-text-color="#1565c0">Blue</button><input id="announcement-text-color" type="color" value="#243a33"></div>
+    <div class="editor-format-panel-group" data-editor-format-section="color"><button type="button" data-editor-highlight-color="#fff2a8">Yellow</button><input id="announcement-highlight-color" type="color" value="#fff2a8"></div>
+    <p class="editor-format-panel-hint"></p>
+  </section>
+  <button type="button" data-editor-view="visual">Visual</button><button type="button" data-editor-view="html">HTML</button>
+  <div data-editor-panel="visual"><div id="announcement-visual-editor" contenteditable="true"></div></div>
+  <div data-editor-panel="html" hidden><textarea id="announcement-content"></textarea><pre id="announcement-html-lines"></pre></div>
+  <div id="announcement-editor-status"></div><div id="announcement-editor-count"></div>
+</div>
+<pre id="test-output">RUNNING</pre>
+<script src="../content-renderer.js"></script><script src="../rich-editor.js"></script><script src="../editor-formatting.js"></script>
+<script>
+(() => {
+const sample=`*Thời gian: ****Ngày 04/09/2026 ( tiết 8,9 thứ 6)***
+*Khung chương trình:*
+*14h40-14h50: Học sinh tập trung ở hội trường*
+*14h50-15h30: Tập huấn chung ở hội trường.*
+*15h30-16h20\\:Tập huấn riêng từng chức danh ở các phòng*
+
+- *Phòng Lớp trưởng: A302*
+- *Phòng Lớp phó học tập: B304*
+- *Phòng Lớp phó kỷ luật: B308*
+- *Phòng Cán sự thư viện: Thư viện B209*
+- *Phòng Cán sự tư vấn-y tế: A209-B208*
+- *Phòng Cán sự Văn – Thể - Mỹ: AB10*
+
+*Cán sự khi tập huấn mang theo 1 quyển sổ nhỏ và bút để ghi chép và mang theo ba lô khi kết thúc chương trình thì ra về luôn, không cần quay lại phòng chủ nhiệm*`;
+const root=document.querySelector('#announcement-rich-editor'),visual=document.querySelector('#announcement-visual-editor'),out=document.querySelector('#test-output');
+const editor=WeeklyRichEditor.create({root,renderer:WeeklyContent}); WeeklyEditorFormatting.create({root,editor});
+function textNodes(){const w=document.createTreeWalker(visual,NodeFilter.SHOW_TEXT),a=[];let n=w.nextNode();while(n){if(n.nodeValue?.trim()&&n.parentElement?.closest('p,li'))a.push(n);n=w.nextNode()}return a}
+function selectAll(){const a=textNodes(),r=document.createRange();r.setStart(a[0],0);r.setEnd(a[a.length-1],a[a.length-1].nodeValue.length);const s=getSelection();s.removeAllRanges();s.addRange(r);editor.captureSelection()}
+function coverage(prop,val){const a=textNodes();return {total:a.length,covered:a.filter(n=>{let e=n.parentElement;while(e&&e!==visual){if(e.style?.getPropertyValue(prop)===val)return true;e=e.parentElement}return false}).length}}
+function len(){return getSelection()?.toString().trim().length||0}
+function useSelect(id,value){const s=document.querySelector(id);s.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));s.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));s.focus();s.value=value;s.dispatchEvent(new Event('change',{bubbles:true}))}
+editor.setHtml(WeeklyContent.renderMarkdown(sample),{view:'visual',focus:false});selectAll();const start=len();
+useSelect('#announcement-font-family','Georgia, serif');
+setTimeout(()=>{const font=coverage('font-family','Georgia, serif'),afterFont=len();useSelect('#announcement-font-size','24px');
+setTimeout(()=>{const size=coverage('font-size','24px'),font2=coverage('font-family','Georgia, serif'),afterSize=len();const failures=[];
+if(font.covered!==font.total)failures.push(`font ${font.covered}/${font.total}`);if(size.covered!==size.total)failures.push(`size-after-font ${size.covered}/${size.total}`);if(font2.covered!==font2.total)failures.push(`font-lost ${font2.covered}/${font2.total}`);if(afterFont<start*.9)failures.push(`selection-after-font ${afterFont}/${start}`);if(afterSize<start*.9)failures.push(`selection-after-size ${afterSize}/${start}`);
+const detail=`font=${font.covered}/${font.total}; size=${size.covered}/${size.total}; finalFont=${font2.covered}/${font2.total}; selection=${start}->${afterFont}->${afterSize}`;
+out.textContent=(failures.length?`FAIL: ${failures.join('; ')} | `:'PASS: ')+detail;document.body.dataset.testStatus=failures.length?'fail':'pass';},50)},50);
+})();
+</script></body></html>
