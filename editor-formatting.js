@@ -248,6 +248,17 @@
 
     panel.classList.add("editor-format-dropdown");
 
+    /*
+     * The announcement form scrolls inside .modal-card. Keep the popup
+     * in the dialog top layer but outside that scrolling/clipping element,
+     * otherwise a fixed popup can be visually clipped or drift from its
+     * trigger while the form scrolls.
+     */
+    const dialogHost = root.closest("dialog");
+    if (dialogHost && panel.parentElement !== dialogHost) {
+      dialogHost.append(panel);
+    }
+
     function positionPanel(toggle = activePanelToggle) {
       if (!toggle || panel.hidden) return;
 
@@ -285,7 +296,6 @@
         mode ||
         panelToggles[0].dataset.editorFormatToggle;
 
-      panel.hidden = !open;
       activePanelMode = open ? nextMode : null;
       activePanelToggle = open
         ? toggle || panelToggles.find(
@@ -294,9 +304,18 @@
         : null;
 
       if (open) {
+        /*
+         * Measure and position while invisible, then reveal synchronously.
+         * This prevents the one-frame flash at the panel's previous/default
+         * position that users perceive as a violent hover/click jitter.
+         */
+        panel.style.visibility = "hidden";
+        panel.hidden = false;
         panel.dataset.mode = nextMode;
         panel.dataset.anchor = activePanelToggle?.id || "";
       } else {
+        panel.hidden = true;
+        panel.style.removeProperty("visibility");
         delete panel.dataset.mode;
         delete panel.dataset.anchor;
         panel.style.removeProperty("left");
@@ -323,7 +342,8 @@
       }
 
       if (open) {
-        requestAnimationFrame(() => positionPanel(activePanelToggle));
+        positionPanel(activePanelToggle);
+        panel.style.removeProperty("visibility");
       }
     }
 
@@ -344,13 +364,18 @@
       setPanelOpen(false);
     });
 
-    for (const eventName of ["resize", "scroll"]) {
-      window.addEventListener(
-        eventName,
-        () => positionPanel(),
-        { passive: true }
-      );
-    }
+    window.addEventListener(
+      "resize",
+      () => positionPanel(),
+      { passive: true }
+    );
+
+    /* Scroll does not bubble. Capture phase sees scrolling modal-card too. */
+    document.addEventListener(
+      "scroll",
+      () => positionPanel(),
+      { passive: true, capture: true }
+    );
 
     /*
      * Capture phase rất quan trọng:
