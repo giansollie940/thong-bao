@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Single style layer regression</title>
+</head>
+<body>
+<div id="announcement-rich-editor">
+  <div id="announcement-format-toolbar">
+    <select id="announcement-font-family">
+      <option value="">Font</option>
+      <option value="Georgia, serif">Georgia</option>
+    </select>
+    <select id="announcement-font-size">
+      <option value="">Size</option>
+      <option value="24px">24</option>
+    </select>
+    <button id="announcement-color-more"
+      type="button" data-editor-format-toggle="color">Màu</button>
+    <button id="announcement-align-more"
+      type="button" data-editor-format-toggle="align">Căn</button>
+    <button type="button" data-editor-clear-format>Tx</button>
+  </div>
+
+  <section id="announcement-format-panel" hidden>
+    <div class="editor-format-panel-group"
+      data-editor-format-section="align">
+      <button type="button" data-editor-align="center">Giữa</button>
+    </div>
+    <div class="editor-format-panel-group"
+      data-editor-format-section="color">
+      <button type="button"
+        data-editor-text-color="#1565c0">Blue</button>
+      <input id="announcement-text-color"
+        type="color" value="#243a33">
+    </div>
+    <div class="editor-format-panel-group"
+      data-editor-format-section="color">
+      <button type="button"
+        data-editor-highlight-color="#fff2a8">Yellow</button>
+      <input id="announcement-highlight-color"
+        type="color" value="#fff2a8">
+    </div>
+    <p class="editor-format-panel-hint"></p>
+  </section>
+
+  <button type="button" data-editor-view="visual">Visual</button>
+  <button type="button" data-editor-view="html">HTML</button>
+  <div data-editor-panel="visual">
+    <div id="announcement-visual-editor" contenteditable="true"></div>
+  </div>
+  <div data-editor-panel="html" hidden>
+    <textarea id="announcement-content"></textarea>
+    <pre id="announcement-html-lines"></pre>
+  </div>
+  <div id="announcement-editor-status"></div>
+  <div id="announcement-editor-count"></div>
+</div>
+
+<pre id="test-output">RUNNING</pre>
+
+<script src="../content-renderer.js"></script>
+<script src="../rich-editor.js"></script>
+<script src="../editor-formatting.js"></script>
+<script>
+(() => {
+  const root = document.querySelector("#announcement-rich-editor");
+  const visual = document.querySelector("#announcement-visual-editor");
+  const output = document.querySelector("#test-output");
+
+  const editor = WeeklyRichEditor.create({
+    root,
+    renderer: WeeklyContent
+  });
+  WeeklyEditorFormatting.create({ root, editor });
+
+  editor.setHtml(
+    "<p>Thông báo dành cho học sinh lớp 10.</p>",
+    { view: "visual", focus: false }
+  );
+
+  function selectText(text) {
+    const walker = document.createTreeWalker(
+      visual,
+      NodeFilter.SHOW_TEXT
+    );
+    let node = walker.nextNode();
+
+    while (node) {
+      const index = (node.nodeValue || "").indexOf(text);
+
+      if (index >= 0) {
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + text.length);
+
+        const selection = getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.captureSelection();
+        return true;
+      }
+
+      node = walker.nextNode();
+    }
+
+    return false;
+  }
+
+  const failures = [];
+
+  if (!selectText("học sinh")) {
+    failures.push("select-failed");
+  }
+
+  editor.applyInlineStyle({ color: "#1565c0" });
+  editor.captureSelection();
+
+  editor.applyInlineStyle({
+    "background-color": "#fff2a8"
+  });
+  editor.captureSelection();
+
+  editor.applyInlineStyle({
+    "font-family": "Georgia, serif"
+  });
+  editor.captureSelection();
+
+  editor.applyInlineStyle({
+    "font-size": "24px"
+  });
+
+  const targetSpans = [
+    ...visual.querySelectorAll("span[style]")
+  ].filter(span => span.textContent === "học sinh");
+
+  if (targetSpans.length !== 1) {
+    failures.push(`target-span-count-${targetSpans.length}`);
+  }
+
+  if (visual.querySelector("span[style] span[style]")) {
+    failures.push("nested-style-span");
+  }
+
+  const style = targetSpans[0]?.style;
+
+  for (const property of [
+    "color",
+    "background-color",
+    "font-family",
+    "font-size"
+  ]) {
+    if (!style?.getPropertyValue(property)) {
+      failures.push(`missing-${property}`);
+    }
+  }
+
+  const stored = editor.getHtml();
+  const storedSpanCount = (
+    stored.match(/<span\b[^>]*style=/g) || []
+  ).length;
+
+  if (storedSpanCount !== 1) {
+    failures.push(`stored-span-count-${storedSpanCount}`);
+  }
+
+  output.textContent = failures.length
+    ? `FAIL: ${failures.join("; ")}`
+    : "PASS: sequential inline styles merge into one layer";
+
+  document.body.dataset.testStatus =
+    failures.length ? "fail" : "pass";
+})();
+</script>
+</body>
+</html>

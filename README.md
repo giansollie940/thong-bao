@@ -214,3 +214,27 @@ UI mới cho Màu & căn:
 - Mobile chuyển panel thành 1 cột.
 
 Không thay đổi sanitizer, database hoặc Supabase.
+
+
+## V3.18.1 — Style Merge Fix trên repo hiện tại
+
+Bản này được ghép trực tiếp trên repo hiện tại, không thay repo bằng nhánh
+V3.16.x cũ.
+
+Giữ nguyên các tính năng đang có: macOS glossy, floating search island,
+sidebar collapse/icon rail, toolbar 2 hàng, popup Màu/Căn kiểu Word,
+logical-offset selection, multi-block formatting, Find & Replace,
+Diamond Loading, YouTube embed, Tabs và Accordion.
+
+Sửa riêng phần định dạng liên tiếp:
+
+- `Màu → Highlight → Font → Cỡ chữ` trên cùng selection merge vào cùng
+  `span[style]` của từng text segment, không tạo thêm lớp style lồng nhau.
+- Khi selection chỉ phủ một phần của vùng đã có style, editor vẫn tạo span
+  con khi thực sự cần để không làm style lan sang chữ ngoài vùng chọn.
+- Chỉ flatten span style thuần có cùng phạm vi; span có class/data/ARIA
+  của nội dung người dùng được giữ nguyên.
+- Selection được restore đồng bộ ngay sau lệnh format để tránh race khi
+  thao tác liên tiếp nhanh.
+
+Không thay đổi `config.js`, database hoặc các tính năng giao diện hiện có.

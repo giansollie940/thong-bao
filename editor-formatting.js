@@ -131,13 +131,15 @@
        */
       restoreSelection();
 
-      try {
-        action();
-        rememberSelection();
-      } finally {
-        /* Keep the updated selection available for the next command. */
-        requestAnimationFrame(restoreSelection);
-      }
+      action();
+      rememberSelection();
+
+      /*
+       * Khôi phục ngay, không chờ requestAnimationFrame.
+       * Chuỗi Màu → Highlight → Font → Size vì thế dùng cùng
+       * logical selection kể cả khi người dùng bấm nhanh.
+       */
+      restoreSelection();
     }
 
     let activePanelMode = null;

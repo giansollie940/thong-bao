@@ -570,41 +570,299 @@
         .join("; ");
     }
 
-    function wrapVisualStyle(styles = {}, placeholder = "nội dung") {
-    const range = currentVisualRange();
-
-    if (!range) {
-      visual.focus();
-      return;
+    function isPlainStyleSpan(element) {
+      return Boolean(
+        element?.matches?.("span[style]") &&
+        [...element.attributes].every(
+          attribute => attribute.name === "style"
+        )
+      );
     }
 
-    const cssText = cssTextFromObject(styles);
-    if (!cssText) return;
-
-    if (range.collapsed) {
-      const wrapper = document.createElement("span");
-      wrapper.setAttribute("style", cssText);
-      wrapper.textContent = placeholder;
-      range.insertNode(wrapper);
-      selectContents(wrapper);
-      syncVisualToSource();
-      return;
+    function styleValueMeansRemove(
+      property,
+      value
+    ) {
+      return (
+        !value ||
+        (
+          property === "color" &&
+          value === "inherit"
+        ) ||
+        (
+          (
+            property === "background" ||
+            property === "background-color"
+          ) &&
+          value === "transparent"
+        )
+      );
     }
 
-    const wrappers = wrapVisualSegments(
-      range,
-      () => {
-        const wrapper = document.createElement("span");
-        wrapper.setAttribute("style", cssText);
-        return wrapper;
+    function applyStyleProperties(
+      element,
+      styles = {}
+    ) {
+      if (!(element instanceof Element)) {
+        return;
       }
-    );
 
-    if (!wrappers.length) return;
+      for (
+        const [property, rawValue]
+        of Object.entries(styles)
+      ) {
+        const value =
+          String(rawValue ?? "").trim();
 
-    selectWrapperRange(wrappers);
-    syncVisualToSource();
-  }
+        if (
+          styleValueMeansRemove(
+            property,
+            value
+          )
+        ) {
+          element.style.removeProperty(
+            property
+          );
+          continue;
+        }
+
+        element.style.setProperty(
+          property,
+          value
+        );
+      }
+
+      if (!element.style.length) {
+        element.removeAttribute("style");
+      }
+    }
+
+    function isolateVisualTextSegment(
+      segment
+    ) {
+      let {
+        node,
+        start,
+        end
+      } = segment;
+
+      if (!node?.isConnected) {
+        return null;
+      }
+
+      let selectedNode = node;
+
+      if (
+        end <
+        selectedNode.nodeValue.length
+      ) {
+        selectedNode.splitText(end);
+      }
+
+      if (start > 0) {
+        selectedNode =
+          selectedNode.splitText(start);
+      }
+
+      return selectedNode;
+    }
+
+    function reusableStyleSpanForNode(
+      selectedNode
+    ) {
+      const parent =
+        selectedNode?.parentElement;
+
+      if (
+        !parent?.matches?.("span[style]") ||
+        parent.childNodes.length !== 1 ||
+        parent.firstChild !== selectedNode
+      ) {
+        return null;
+      }
+
+      return parent;
+    }
+
+    function flattenEquivalentStyleParents(
+      span
+    ) {
+      let current = span;
+
+      /*
+       * Chỉ gộp các span style thuần do editor tạo và có cùng phạm vi.
+       * Span có class/data/ARIA của nội dung người dùng được giữ nguyên.
+       */
+      while (
+        isPlainStyleSpan(current) &&
+        isPlainStyleSpan(
+          current.parentElement
+        ) &&
+        current.parentElement
+          .childNodes.length === 1 &&
+        current.parentElement
+          .firstChild === current
+      ) {
+        const outer =
+          current.parentElement;
+
+        for (
+          const property
+          of [...current.style]
+        ) {
+          outer.style.setProperty(
+            property,
+            current.style
+              .getPropertyValue(property),
+            current.style
+              .getPropertyPriority(property)
+          );
+        }
+
+        while (current.firstChild) {
+          outer.insertBefore(
+            current.firstChild,
+            current
+          );
+        }
+
+        current.remove();
+        current = outer;
+      }
+
+      return current;
+    }
+
+    function removeEmptyStyleSpan(
+      span
+    ) {
+      if (
+        !span ||
+        span.hasAttribute("style")
+      ) {
+        return;
+      }
+
+      unwrapElement(span);
+    }
+
+    function wrapVisualStyle(
+      styles = {},
+      placeholder = "nội dung"
+    ) {
+      const range =
+        currentVisualRange();
+
+      if (!range) {
+        visual.focus();
+        return;
+      }
+
+      /*
+       * Logical offsets là nguồn sự thật cho selection.
+       * Lưu trước khi split/merge DOM.
+       */
+      rememberVisualRange(range);
+
+      if (range.collapsed) {
+        const wrapper =
+          document.createElement("span");
+
+        applyStyleProperties(
+          wrapper,
+          styles
+        );
+
+        if (
+          !wrapper.hasAttribute("style")
+        ) {
+          return;
+        }
+
+        wrapper.textContent =
+          placeholder;
+
+        range.insertNode(wrapper);
+        selectContents(wrapper);
+        syncVisualToSource();
+        return;
+      }
+
+      const segments =
+        visualTextSegments(range);
+
+      if (!segments.length) {
+        return;
+      }
+
+      for (
+        const segment
+        of [...segments].reverse()
+      ) {
+        const selectedNode =
+          isolateVisualTextSegment(
+            segment
+          );
+
+        if (!selectedNode) {
+          continue;
+        }
+
+        let target =
+          reusableStyleSpanForNode(
+            selectedNode
+          );
+
+        if (target) {
+          target =
+            flattenEquivalentStyleParents(
+              target
+            );
+        } else {
+          target =
+            document.createElement(
+              "span"
+            );
+
+          selectedNode.parentNode
+            .insertBefore(
+              target,
+              selectedNode
+            );
+
+          target.append(
+            selectedNode
+          );
+        }
+
+        applyStyleProperties(
+          target,
+          styles
+        );
+
+        if (
+          target.hasAttribute("style")
+        ) {
+          flattenEquivalentStyleParents(
+            target
+          );
+        } else {
+          removeEmptyStyleSpan(
+            target
+          );
+        }
+      }
+
+      syncVisualToSource();
+
+      /*
+       * Text không đổi. Khôi phục theo offsets thay vì chọn wrapper,
+       * nhờ vậy thuộc tính kế tiếp tiếp tục áp dụng cùng selection.
+       */
+      restoreVisualSelection({
+        focus: false
+      });
+    }
 
   function closestTextBlock(node) {
       const element =
