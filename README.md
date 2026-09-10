@@ -238,3 +238,26 @@ Sửa riêng phần định dạng liên tiếp:
   thao tác liên tiếp nhanh.
 
 Không thay đổi `config.js`, database hoặc các tính năng giao diện hiện có.
+
+
+## V3.18.2 — Canonical HTML Formatting Normalizer
+
+Sửa trường hợp HTML copy/paste hoặc HTML cũ chứa nhiều style lồng nhau như:
+
+`span style -> b -> span style -> br -> span style`.
+
+Editor giờ tự chuẩn hóa trước khi lưu và khi chuyển HTML/Visual:
+
+- Bọc prose inline ở cấp đầu thành block `<p>` khi cần.
+- `text-align` được đưa về block (`p`, `li`, `blockquote`...) thay vì nằm trên `span`.
+- Style giống nhau trên toàn bộ vùng text được đẩy lên một carrier chung.
+- Style con trùng với style cha được bỏ.
+- Loại các khai báo dư như `display:inline`,
+  `letter-spacing:normal`, `white-space:normal` khi không tạo khác biệt.
+- Span rỗng không còn thuộc tính được tháo bỏ.
+- Không đụng vào cấu trúc đặc biệt: Tabs, Accordion, table, code,
+  details và các interactive HTML hiện có.
+
+Nếu chỉ định dạng một phần nhỏ khác với style chung, một span con vẫn có thể
+xuất hiện vì đó là cách HTML cần thiết để override đúng phần chữ đó. Tuy nhiên
+các thuộc tính tiếp theo sẽ merge vào chính span con đó, không tạo thêm tầng.

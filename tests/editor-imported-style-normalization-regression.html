@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Imported style normalization regression</title>
+</head>
+<body>
+<div id="announcement-rich-editor">
+  <div id="announcement-format-toolbar"></div>
+  <button data-editor-view="visual">Visual</button>
+  <button data-editor-view="html">HTML</button>
+  <div data-editor-panel="visual">
+    <div id="announcement-visual-editor" contenteditable="true"></div>
+  </div>
+  <div data-editor-panel="html" hidden>
+    <textarea id="announcement-content"></textarea>
+    <pre id="announcement-html-lines"></pre>
+  </div>
+  <div id="announcement-editor-status"></div>
+  <div id="announcement-editor-count"></div>
+</div>
+
+<pre id="test-output">RUNNING</pre>
+
+<script src="../content-renderer.js"></script>
+<script src="../rich-editor.js"></script>
+<script>
+(() => {
+  const sample = `<span style="color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 14px; font-style: normal; font-family: &quot;Times New Roman&quot;, serif; letter-spacing: normal; text-align: left; text-decoration-color: initial; text-decoration-style: initial; white-space: normal; display: inline"><b><span style="color: rgb(46, 125, 50); font-size: 18px; text-align: right">Nhằm theo dõi và đánh giá tình hình sức khỏe định kỳ của học sinh, phòng Y tế sẽ tổ chức khám sức khỏe cho HS khối 6,7,8 vào ngày 10-11/09/2026.</span><br><span style="color: rgb(46, 125, 50); background-color: rgb(255, 255, 255); font-size: 18px; font-style: normal; font-family: &quot;Times New Roman&quot;, serif; letter-spacing: normal; text-align: right; text-decoration-color: initial; text-decoration-style: initial; white-space: normal; display: inline">Lịch khám :&nbsp;11:00 - 11:15 7A9 Tự học&nbsp;Thứ 6, ngày 11/09/2026</span></b><br></span>`;
+
+  const root = document.querySelector("#announcement-rich-editor");
+  const visual = document.querySelector("#announcement-visual-editor");
+  const output = document.querySelector("#test-output");
+  const failures = [];
+
+  const editor = WeeklyRichEditor.create({
+    root,
+    renderer: WeeklyContent
+  });
+
+  editor.setHtml(sample, {
+    view: "visual",
+    focus: false
+  });
+
+  const stored = editor.getHtml();
+  const styledSpans = [
+    ...visual.querySelectorAll("span[style]")
+  ];
+
+  if (styledSpans.length !== 1) {
+    failures.push(`styled-span-count-${styledSpans.length}`);
+  }
+
+  if (visual.querySelector("span[style] span[style]")) {
+    failures.push("nested-style-span");
+  }
+
+  const paragraph = visual.querySelector("p");
+  if (paragraph?.style.textAlign !== "right") {
+    failures.push(`block-align-${paragraph?.style.textAlign || "missing"}`);
+  }
+
+  if (
+    visual.querySelector(
+      "span[style*='text-align']"
+    )
+  ) {
+    failures.push("inline-text-align-remains");
+  }
+
+  for (const noise of [
+    "display: inline",
+    "letter-spacing: normal",
+    "white-space: normal",
+    "text-decoration-color: initial",
+    "text-decoration-style: initial"
+  ]) {
+    if (stored.includes(noise)) {
+      failures.push(`noise-${noise}`);
+    }
+  }
+
+  const span = styledSpans[0];
+
+  if (
+    span?.style.color !==
+    "rgb(46, 125, 50)"
+  ) {
+    failures.push("color-not-promoted");
+  }
+
+  if (
+    span?.style.fontSize !==
+    "18px"
+  ) {
+    failures.push("size-not-promoted");
+  }
+
+  if (
+    !span?.style.fontFamily.includes(
+      "Times New Roman"
+    )
+  ) {
+    failures.push("font-not-preserved");
+  }
+
+  output.textContent = failures.length
+    ? `FAIL: ${failures.join("; ")}`
+    : "PASS: imported nested styles normalized";
+
+  document.body.dataset.testStatus =
+    failures.length ? "fail" : "pass";
+})();
+</script>
+</body>
+</html>

@@ -53,14 +53,845 @@
         `translateY(${-source.scrollTop}px)`;
     }
 
+
+    const EDITOR_TEXT_BLOCK_SELECTOR =
+      "p, h2, h3, h4, h5, li, blockquote, figcaption, td, th";
+
+    const EDITOR_PROTECTED_FORMATTING_SELECTOR = [
+      "pre",
+      "code",
+      "table",
+      "details",
+      ".tabs",
+      ".enhanceable_content",
+      ".accordion",
+      "[role='tablist']",
+      "[data-accordion]",
+      "[data-notice-accordion]",
+      ".weekly-tabs-root",
+      ".weekly-accordion-root"
+    ].join(", ");
+
+    const EDITOR_INLINE_TAGS = new Set([
+      "SPAN",
+      "B",
+      "STRONG",
+      "EM",
+      "I",
+      "U",
+      "S",
+      "MARK",
+      "A",
+      "SMALL",
+      "SUP",
+      "SUB"
+    ]);
+
+    const PROMOTABLE_INLINE_STYLE_PROPERTIES = [
+      "color",
+      "font-size",
+      "font-family",
+      "font-style",
+      "font-weight",
+      "line-height",
+      "letter-spacing",
+      "white-space"
+    ];
+
+    function isProtectedFormattingContext(
+      element
+    ) {
+      return Boolean(
+        element?.closest?.(
+          EDITOR_PROTECTED_FORMATTING_SELECTOR
+        )
+      );
+    }
+
+    function isSafeStyleCarrier(
+      element
+    ) {
+      if (
+        !(element instanceof Element) ||
+        !EDITOR_INLINE_TAGS.has(
+          element.tagName
+        )
+      ) {
+        return false;
+      }
+
+      return [...element.attributes].every(
+        attribute =>
+          attribute.name === "style"
+      );
+    }
+
+    function styleDepth(
+      element
+    ) {
+      let depth = 0;
+      let current = element;
+
+      while (
+        current &&
+        current !== visual
+      ) {
+        depth += 1;
+        current = current.parentElement;
+      }
+
+      return depth;
+    }
+
+    function topLevelNeedsParagraph(
+      node
+    ) {
+      if (
+        node.nodeType === Node.TEXT_NODE
+      ) {
+        return Boolean(
+          node.nodeValue?.trim()
+        );
+      }
+
+      if (
+        node.nodeType !== Node.ELEMENT_NODE
+      ) {
+        return false;
+      }
+
+      if (
+        isProtectedFormattingContext(node)
+      ) {
+        return false;
+      }
+
+      return (
+        EDITOR_INLINE_TAGS.has(
+          node.tagName
+        ) ||
+        node.tagName === "BR"
+      );
+    }
+
+    function ensureTopLevelParagraphs() {
+      const nodes = [
+        ...visual.childNodes
+      ];
+
+      let paragraph = null;
+
+      for (const node of nodes) {
+        if (
+          !topLevelNeedsParagraph(node)
+        ) {
+          paragraph = null;
+          continue;
+        }
+
+        if (!paragraph) {
+          paragraph =
+            document.createElement("p");
+
+          visual.insertBefore(
+            paragraph,
+            node
+          );
+        }
+
+        paragraph.append(node);
+      }
+    }
+
+    function textNodesOwnedByBlock(
+      block
+    ) {
+      const walker =
+        document.createTreeWalker(
+          block,
+          NodeFilter.SHOW_TEXT
+        );
+
+      const nodes = [];
+      let node =
+        walker.nextNode();
+
+      while (node) {
+        if (
+          node.nodeValue?.trim()
+        ) {
+          const owner =
+            node.parentElement?.closest(
+              EDITOR_TEXT_BLOCK_SELECTOR
+            );
+
+          if (owner === block) {
+            nodes.push(node);
+          }
+        }
+
+        node =
+          walker.nextNode();
+      }
+
+      return nodes;
+    }
+
+    function nearestDeclaredStyle(
+      textNode,
+      stopElement,
+      property
+    ) {
+      let element =
+        textNode.parentElement;
+
+      while (
+        element &&
+        visual.contains(element)
+      ) {
+        const value =
+          element.style
+            ?.getPropertyValue(
+              property
+            )
+            ?.trim();
+
+        if (value) {
+          return {
+            element,
+            value
+          };
+        }
+
+        if (
+          element === stopElement
+        ) {
+          break;
+        }
+
+        element =
+          element.parentElement;
+      }
+
+      return null;
+    }
+
+    function normalizeBlockAlignment() {
+      for (
+        const block
+        of visual.querySelectorAll(
+          EDITOR_TEXT_BLOCK_SELECTOR
+        )
+      ) {
+        if (
+          isProtectedFormattingContext(
+            block
+          )
+        ) {
+          continue;
+        }
+
+        const textNodes =
+          textNodesOwnedByBlock(
+            block
+          );
+
+        if (!textNodes.length) {
+          continue;
+        }
+
+        const resolved =
+          textNodes.map(
+            node =>
+              nearestDeclaredStyle(
+                node,
+                block,
+                "text-align"
+              )
+          );
+
+        if (
+          resolved.some(
+            item => !item?.value
+          )
+        ) {
+          continue;
+        }
+
+        const values =
+          new Set(
+            resolved.map(
+              item =>
+                item.value.toLowerCase()
+            )
+          );
+
+        if (
+          values.size !== 1
+        ) {
+          continue;
+        }
+
+        const [alignment] =
+          values;
+
+        if (
+          ![
+            "left",
+            "center",
+            "right",
+            "justify",
+            "start",
+            "end"
+          ].includes(alignment)
+        ) {
+          continue;
+        }
+
+        block.style.setProperty(
+          "text-align",
+          alignment
+        );
+
+        const touched =
+          new Set();
+
+        for (
+          const item of resolved
+        ) {
+          let element =
+            item.element;
+
+          while (
+            element &&
+            element !== block
+          ) {
+            if (
+              element.style
+                ?.getPropertyValue(
+                  "text-align"
+                )
+            ) {
+              touched.add(element);
+            }
+
+            element =
+              element.parentElement;
+          }
+        }
+
+        for (
+          const element
+          of touched
+        ) {
+          element.style.removeProperty(
+            "text-align"
+          );
+
+          if (
+            !element.style.length
+          ) {
+            element.removeAttribute(
+              "style"
+            );
+          }
+        }
+      }
+    }
+
+    function explicitStyleWithin(
+      textNode,
+      candidate,
+      property
+    ) {
+      let element =
+        textNode.parentElement;
+
+      while (
+        element &&
+        candidate.contains(element)
+      ) {
+        const value =
+          element.style
+            ?.getPropertyValue(
+              property
+            )
+            ?.trim();
+
+        if (value) {
+          return value;
+        }
+
+        if (
+          element === candidate
+        ) {
+          break;
+        }
+
+        element =
+          element.parentElement;
+      }
+
+      return "";
+    }
+
+    function normalizeComparableStyleValue(
+      property,
+      value
+    ) {
+      const probe =
+        document.createElement("span");
+
+      probe.style.setProperty(
+        property,
+        value
+      );
+
+      return (
+        probe.style
+          .getPropertyValue(property)
+          .trim() ||
+        String(value)
+          .trim()
+          .toLowerCase()
+      );
+    }
+
+    function promoteUniformInlineStyles() {
+      const candidates = [
+        ...visual.querySelectorAll(
+          "span, b, strong, em, i, u, s, mark"
+        )
+      ]
+        .filter(
+          element =>
+            isSafeStyleCarrier(
+              element
+            ) &&
+            !isProtectedFormattingContext(
+              element
+            )
+        )
+        .sort(
+          (a, b) =>
+            styleDepth(b) -
+            styleDepth(a)
+        );
+
+      for (
+        const candidate
+        of candidates
+      ) {
+        if (
+          !candidate.isConnected
+        ) {
+          continue;
+        }
+
+        const walker =
+          document.createTreeWalker(
+            candidate,
+            NodeFilter.SHOW_TEXT
+          );
+
+        const textNodes = [];
+        let textNode =
+          walker.nextNode();
+
+        while (textNode) {
+          if (
+            textNode.nodeValue?.trim()
+          ) {
+            textNodes.push(
+              textNode
+            );
+          }
+
+          textNode =
+            walker.nextNode();
+        }
+
+        if (!textNodes.length) {
+          continue;
+        }
+
+        for (
+          const property
+          of PROMOTABLE_INLINE_STYLE_PROPERTIES
+        ) {
+          const values =
+            textNodes.map(
+              node =>
+                explicitStyleWithin(
+                  node,
+                  candidate,
+                  property
+                )
+            );
+
+          if (
+            values.some(
+              value => !value
+            )
+          ) {
+            continue;
+          }
+
+          const normalized =
+            values.map(
+              value =>
+                normalizeComparableStyleValue(
+                  property,
+                  value
+                )
+            );
+
+          if (
+            new Set(
+              normalized
+            ).size !== 1
+          ) {
+            continue;
+          }
+
+          const commonValue =
+            values[0];
+
+          candidate.style.setProperty(
+            property,
+            commonValue
+          );
+
+          for (
+            const descendant
+            of candidate.querySelectorAll(
+              "[style]"
+            )
+          ) {
+            const own =
+              descendant.style
+                .getPropertyValue(
+                  property
+                )
+                .trim();
+
+            if (
+              own &&
+              normalizeComparableStyleValue(
+                property,
+                own
+              ) ===
+                normalized[0]
+            ) {
+              descendant.style
+                .removeProperty(
+                  property
+                );
+
+              if (
+                !descendant.style.length
+              ) {
+                descendant
+                  .removeAttribute(
+                    "style"
+                  );
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function removeDuplicateInlineDeclarations() {
+      const styled = [
+        ...visual.querySelectorAll(
+          "[style]"
+        )
+      ].filter(
+        element =>
+          EDITOR_INLINE_TAGS.has(
+            element.tagName
+          ) &&
+          !isProtectedFormattingContext(
+            element
+          )
+      );
+
+      for (
+        const element
+        of styled
+      ) {
+        for (
+          const property
+          of [...element.style]
+        ) {
+          if (
+            property ===
+            "text-align"
+          ) {
+            continue;
+          }
+
+          const own =
+            element.style
+              .getPropertyValue(
+                property
+              )
+              .trim();
+
+          let ancestor =
+            element.parentElement;
+          let inheritedValue = "";
+
+          while (
+            ancestor &&
+            ancestor !== visual
+          ) {
+            const value =
+              ancestor.style
+                ?.getPropertyValue(
+                  property
+                )
+                ?.trim();
+
+            if (value) {
+              inheritedValue =
+                value;
+              break;
+            }
+
+            ancestor =
+              ancestor.parentElement;
+          }
+
+          if (
+            inheritedValue &&
+            normalizeComparableStyleValue(
+              property,
+              own
+            ) ===
+              normalizeComparableStyleValue(
+                property,
+                inheritedValue
+              )
+          ) {
+            element.style
+              .removeProperty(
+                property
+              );
+          }
+        }
+
+        if (
+          element.tagName === "SPAN" &&
+          element.style.display === "inline"
+        ) {
+          element.style.removeProperty(
+            "display"
+          );
+        }
+
+        if (
+          !element.style.length
+        ) {
+          element.removeAttribute(
+            "style"
+          );
+        }
+      }
+    }
+
+    function removeNeutralInlineNoise() {
+      for (
+        const element
+        of visual.querySelectorAll(
+          "span[style], b[style], strong[style], em[style], i[style], u[style], s[style], mark[style]"
+        )
+      ) {
+        if (
+          isProtectedFormattingContext(
+            element
+          )
+        ) {
+          continue;
+        }
+
+        const parent =
+          element.parentElement;
+
+        if (!parent) {
+          continue;
+        }
+
+        const neutralChecks = [
+          ["font-style", "normal"],
+          ["letter-spacing", "normal"],
+          ["white-space", "normal"]
+        ];
+
+        for (
+          const [property, neutral]
+          of neutralChecks
+        ) {
+          const own =
+            element.style
+              .getPropertyValue(
+                property
+              )
+              .trim()
+              .toLowerCase();
+
+          if (
+            own !== neutral
+          ) {
+            continue;
+          }
+
+          const parentComputed =
+            getComputedStyle(parent)
+              .getPropertyValue(
+                property
+              )
+              .trim()
+              .toLowerCase();
+
+          const elementComputed =
+            getComputedStyle(element)
+              .getPropertyValue(
+                property
+              )
+              .trim()
+              .toLowerCase();
+
+          if (
+            parentComputed ===
+            elementComputed
+          ) {
+            element.style
+              .removeProperty(
+                property
+              );
+          }
+        }
+
+        if (
+          !element.style
+            .getPropertyValue(
+              "text-decoration-line"
+            )
+        ) {
+          for (
+            const property
+            of [
+              "text-decoration-color",
+              "text-decoration-style"
+            ]
+          ) {
+            const value =
+              element.style
+                .getPropertyValue(
+                  property
+                )
+                .trim()
+                .toLowerCase();
+
+            if (
+              value === "initial" ||
+              value === "currentcolor" ||
+              value === "solid"
+            ) {
+              element.style
+                .removeProperty(
+                  property
+                );
+            }
+          }
+        }
+
+        if (
+          !element.style.length
+        ) {
+          element.removeAttribute(
+            "style"
+          );
+        }
+      }
+    }
+
+    function unwrapEmptyPlainSpans() {
+      let changed = true;
+
+      while (changed) {
+        changed = false;
+
+        for (
+          const span
+          of [
+            ...visual.querySelectorAll(
+              "span"
+            )
+          ].reverse()
+        ) {
+          if (
+            span.attributes.length ||
+            isProtectedFormattingContext(
+              span
+            )
+          ) {
+            continue;
+          }
+
+          unwrapElement(span);
+          changed = true;
+        }
+      }
+    }
+
+    function normalizeVisualFormatting({
+      restoreSelection = true
+    } = {}) {
+      const offsets =
+        savedVisualOffsets
+          ? {
+              ...savedVisualOffsets
+            }
+          : null;
+
+      ensureTopLevelParagraphs();
+      normalizeBlockAlignment();
+      promoteUniformInlineStyles();
+      removeDuplicateInlineDeclarations();
+      removeNeutralInlineNoise();
+      unwrapEmptyPlainSpans();
+
+      if (
+        restoreSelection &&
+        offsets
+      ) {
+        savedVisualOffsets =
+          offsets;
+
+        restoreVisualSelection({
+          focus: false
+        });
+      }
+    }
+
     function syncVisualToSource() {
-      source.value = sanitize(visual.innerHTML);
+      normalizeVisualFormatting();
+
+      source.value = sanitize(
+        visual.innerHTML
+      );
+
       updateLineNumbers();
       updateCounter();
     }
 
     function syncSourceToVisual() {
-      const clean = sanitize(source.value);
+      const clean = sanitize(
+        source.value
+      );
 
       source.value = clean;
       visual.innerHTML = clean;
@@ -72,14 +903,32 @@
         direction: "none"
       };
 
+      normalizeVisualFormatting({
+        restoreSelection: false
+      });
+
+      source.value = sanitize(
+        visual.innerHTML
+      );
+
       updateLineNumbers();
       updateCounter();
     }
 
     function currentHtml() {
-      return currentView === "visual"
-        ? sanitize(visual.innerHTML)
-        : sanitize(source.value);
+      if (
+        currentView === "visual"
+      ) {
+        normalizeVisualFormatting();
+
+        return sanitize(
+          visual.innerHTML
+        );
+      }
+
+      return sanitize(
+        source.value
+      );
     }
 
     function updateCounter() {
@@ -864,7 +1713,7 @@
       });
     }
 
-  function closestTextBlock(node) {
+    function closestTextBlock(node) {
       const element =
         node?.nodeType === Node.ELEMENT_NODE
           ? node
@@ -873,12 +1722,38 @@
       if (!element) return null;
 
       const block = element.closest(
-        "p, h2, h3, h4, h5, li, blockquote, figcaption, td, th"
+        EDITOR_TEXT_BLOCK_SELECTOR
       );
 
-      return block && visual.contains(block)
-        ? block
-        : null;
+      if (
+        block &&
+        visual.contains(block)
+      ) {
+        return block;
+      }
+
+      /*
+       * Với HTML prose dán từ Word/Google Docs có thể chỉ có div/span.
+       * Cho phép container cấu trúc thuần làm block căn lề, nhưng tuyệt đối
+       * không chạm vào tab/accordion/table/code/details.
+       */
+      const container =
+        element.closest(
+          "div, section, article"
+        );
+
+      if (
+        container &&
+        container !== visual &&
+        visual.contains(container) &&
+        !isProtectedFormattingContext(
+          container
+        )
+      ) {
+        return container;
+      }
+
+      return null;
     }
 
     function blocksForVisualRange(range) {
@@ -1767,6 +2642,21 @@
 
       source.value = clean;
       visual.innerHTML = clean;
+      savedVisualRange = null;
+      savedVisualOffsets = null;
+      savedSourceSelection = {
+        start: 0,
+        end: 0,
+        direction: "none"
+      };
+
+      normalizeVisualFormatting({
+        restoreSelection: false
+      });
+
+      source.value = sanitize(
+        visual.innerHTML
+      );
 
       updateLineNumbers();
       syncLineNumberScroll();
@@ -1796,6 +2686,7 @@
       source.value = "";
       visual.innerHTML = "";
       savedVisualRange = null;
+      savedVisualOffsets = null;
       savedSourceSelection = {
         start: 0,
         end: 0,
