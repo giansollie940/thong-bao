@@ -261,3 +261,20 @@ Editor giờ tự chuẩn hóa trước khi lưu và khi chuyển HTML/Visual:
 Nếu chỉ định dạng một phần nhỏ khác với style chung, một span con vẫn có thể
 xuất hiện vì đó là cách HTML cần thiết để override đúng phần chữ đó. Tuy nhiên
 các thuộc tính tiếp theo sẽ merge vào chính span con đó, không tạo thêm tầng.
+
+
+## V3.18.3 — Caret Typing Fix
+
+Sửa lỗi caret trong **Soạn thảo** bị kéo về bên trái sau mỗi ký tự,
+khiến ký tự mới có thể xuất hiện theo thứ tự ngược.
+
+Nguyên nhân: HTML normalizer của V3.18.2 chạy trong mỗi `input`, có thể
+split/merge/rebuild node rồi restore logical selection cũ.
+
+Bản này:
+- keystroke bình thường chỉ mirror HTML sang source;
+- không normalize DOM trong từng `input`;
+- lưu caret native ngay sau input;
+- counter ký tự/từ không mutate Visual DOM;
+- full normalizer vẫn chạy ở paste/format/save/chuyển tab;
+- đặt base direction LTR rõ ràng cho editor tiếng Việt.

@@ -139,6 +139,8 @@
   font-size: .98rem;
   line-height: 1.68;
   caret-color: var(--brand-strong);
+  direction: ltr;
+  unicode-bidi: plaintext;
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
 }

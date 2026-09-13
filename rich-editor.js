@@ -877,7 +877,49 @@
       }
     }
 
+    function visualHtmlWithoutNormalization() {
+      return sanitize(
+        visual.innerHTML
+      );
+    }
+
+    function updateCounterFromHtml(
+      html = ""
+    ) {
+      const text = renderer.toPlainText(
+        html,
+        "html"
+      );
+
+      const chars = [...text].length;
+      const words = text
+        ? text.trim().split(/\s+/).filter(Boolean).length
+        : 0;
+
+      counter.textContent =
+        `${chars} ký tự · ${words} từ`;
+    }
+
+    function syncVisualTypingToSource() {
+      /*
+       * Khi gõ chữ bình thường chỉ mirror dữ liệu.
+       * Không normalize/rebuild DOM trong mỗi input vì sẽ làm
+       * caret nhảy về offset cũ.
+       */
+      const clean =
+        visualHtmlWithoutNormalization();
+
+      source.value = clean;
+      updateLineNumbers();
+      updateCounterFromHtml(clean);
+    }
+
     function syncVisualToSource() {
+      /*
+       * Full normalizer chỉ chạy ở ranh giới an toàn:
+       * paste/format/save/chuyển tab.
+       */
+      saveVisualSelection();
       normalizeVisualFormatting();
 
       source.value = sanitize(
@@ -885,7 +927,9 @@
       );
 
       updateLineNumbers();
-      updateCounter();
+      updateCounterFromHtml(
+        source.value
+      );
     }
 
     function syncSourceToVisual() {
@@ -932,17 +976,12 @@
     }
 
     function updateCounter() {
-      const text = renderer.toPlainText(
-        currentHtml(),
-        "html"
-      );
+      const html =
+        currentView === "visual"
+          ? visualHtmlWithoutNormalization()
+          : sanitize(source.value);
 
-      const chars = [...text].length;
-      const words = text
-        ? text.trim().split(/\s+/).filter(Boolean).length
-        : 0;
-
-      counter.textContent = `${chars} ký tự · ${words} từ`;
+      updateCounterFromHtml(html);
     }
 
     function setView(view, { focus = true } = {}) {
@@ -2579,7 +2618,14 @@
 
     visual.addEventListener(
       "input",
-      syncVisualToSource
+      () => {
+        /*
+         * Browser vừa đặt caret đúng vị trí sau ký tự mới.
+         * Lưu selection đó trước rồi chỉ mirror HTML.
+         */
+        saveVisualSelection();
+        syncVisualTypingToSource();
+      }
     );
     visual.addEventListener(
       "paste",
@@ -2593,8 +2639,7 @@
     for (const eventName of [
       "keyup",
       "mouseup",
-      "focus",
-      "input"
+      "focus"
     ]) {
       visual.addEventListener(
         eventName,
