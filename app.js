@@ -51,6 +51,7 @@
 
   const appLoader = window.WeeklyLoader;
 
+  let announcementCardUid = 0;
   let announcementEditor = null;
   let announcementFormatting = null;
   let announcementFindReplace = null;
@@ -63,6 +64,13 @@
     currentWeek: null,
     currentWeekState: "none",
     categoryFilter: "all",
+    // id -> true/false for cards the reader opened or closed; others use the default.
+    announcementOpen: new Map(),
+    // Week picked in the sidebar; null = follow the featured (today's) week.
+    selectedWeekId: null,
+    viewMode: "agenda",
+    readerId: null,
+    readerOpen: false,
     schoolYearPreview: [],
     activeSchoolYear: "",
     yearFilter: "",
@@ -74,6 +82,13 @@
   const el = {
     currentWeekCard: $("#current-week-card"),
     currentAnnouncements: $("#current-announcements"),
+    toggleAllAnnouncements: $("#toggle-all-announcements"),
+    globalWeekFilter: $("#global-week-filter"),
+    backToCurrentWeek: $("#back-to-current-week"),
+    currentHeading: $("#current-heading"),
+    currentSection: $("#current-section"),
+    viewStage: $("#view-stage"),
+    viewSwitcher: $("#view-switcher"),
     categoryDashboard: $("#category-dashboard"),
     globalSchoolYearFilter: $("#global-school-year-filter"),
     categoryDialog: $("#categories-dialog"),
@@ -296,6 +311,16 @@
       });
   }
 
+  // The sidebar selection if it still belongs to the active school year, else the featured week.
+  function displayedWeek() {
+    const picked = state.weeks.find(week => week.id === state.selectedWeekId);
+    if (picked && schoolYearKey(picked) === state.activeSchoolYear) {
+      return [picked, weekState(picked)];
+    }
+    state.selectedWeekId = null;
+    return chooseFeaturedWeek(state.activeSchoolYear);
+  }
+
   function sortedWeeks() {
     return [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
   }
@@ -420,6 +445,7 @@
     state.yearFilter = state.activeSchoolYear;
     state.archiveYearFilter = state.activeSchoolYear;
     state.categoryFilter = "all";
+    state.selectedWeekId = null;
     [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek(state.activeSchoolYear);
 
     renderAll();
@@ -1161,36 +1187,38 @@
          </button>`
       : "";
 
+    const expanded = isAnnouncementExpanded(item);
+    const relativeDay = relativeDayLabel(item.event_date);
+    const bodyId = `announcement-body-${++announcementCardUid}`;
+    const preview = announcementPreview(renderedContent);
+
     return `
-      <article class="announcement-card tone-${tone(item.title + item.id)} ${item.priority === "important" ? "important" : ""}" style="${categoryStyle(category)}">
+      <article class="announcement-card is-collapsible ${expanded ? "is-expanded" : ""} tone-${tone(item.title + item.id)} ${item.priority === "important" ? "important" : ""}" style="${categoryStyle(category)}">
         <div class="announcement-inner">
           <div class="announcement-title-row">
             ${item.is_pinned ? '<span class="pin" aria-label="Đã ghim">📌</span>' : ""}
-            <h3>${escapeHtml(item.title)}</h3>
+            <h3>
+              <button
+                class="announcement-toggle"
+                type="button"
+                data-action="toggle-announcement"
+                data-id="${escapeHtml(item.id)}"
+                aria-expanded="${expanded}"
+                aria-controls="${bodyId}"
+              >${escapeHtml(item.title)}</button>
+            </h3>
             <span class="category-chip" style="${categoryStyle(category)}">
               <span aria-hidden="true">${escapeHtml(category.icon || "📌")}</span>
               ${escapeHtml(category.name)}
             </span>
             ${item.priority === "important" ? '<span class="priority-chip">Quan trọng</span>' : ""}
+            <span class="announcement-chevron" aria-hidden="true"></span>
           </div>
 
-          ${
-            item.image_path
-              ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}" aria-label="Mở ảnh của thông báo ${escapeHtml(item.title)}">
-                   <img
-                     src="${escapeHtml(getImagePublicUrl(item.image_path))}"
-                     alt="${escapeHtml(item.image_alt || item.title)}"
-                     loading="lazy"
-                     decoding="async"
-                   >
-                 </button>`
-              : ""
-          }
-
-          <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${renderedContent}</div>
+          ${preview ? `<p class="announcement-preview" aria-hidden="true">${escapeHtml(preview)}</p>` : ""}
 
           <div class="announcement-meta">
-            <span class="meta-chip">📅 ${escapeHtml(formatDate(item.event_date))}</span>
+            <span class="meta-chip ${relativeDay ? `date-chip is-${relativeDay.tone}` : ""}">📅 ${escapeHtml(formatDate(item.event_date))}${relativeDay ? ` · <strong>${relativeDay.text}</strong>` : ""}</span>
             ${
               item.category && normalizeText(item.category) !== normalizeText(category.name)
                 ? `<span class="meta-chip">🏷️ ${escapeHtml(item.category)}</span>`
@@ -1204,12 +1232,77 @@
             }
           </div>
 
-          <div class="card-actions">
-            <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
-            ${adminButtons}
+          <div class="announcement-body" id="${bodyId}">
+            <div class="announcement-body-inner">
+              ${
+                item.image_path
+                  ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}" aria-label="Mở ảnh của thông báo ${escapeHtml(item.title)}">
+                       <img
+                         src="${escapeHtml(getImagePublicUrl(item.image_path))}"
+                         alt="${escapeHtml(item.image_alt || item.title)}"
+                         loading="lazy"
+                         decoding="async"
+                       >
+                     </button>`
+                  : ""
+              }
+
+              <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${renderedContent}</div>
+
+              <div class="card-actions">
+                <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
+                ${adminButtons}
+              </div>
+            </div>
           </div>
         </div>
       </article>`;
+  }
+
+  // Plain-text teaser for collapsed cards; block/cell boundaries become spaces so
+  // table cells and list items don't run together.
+  function announcementPreview(renderedHtml) {
+    const spaced = renderedHtml.replace(/<\/?(?:p|li|td|th|tr|div|h[1-6]|br|blockquote|summary)\b[^>]*>/gi, " $& ");
+    const text = new DOMParser().parseFromString(spaced, "text/html").body.textContent || "";
+    return text.replace(/\s+/g, " ").trim().slice(0, 220);
+  }
+
+  // Pinned and important announcements open by default so key information is visible at once.
+  function isAnnouncementExpanded(item) {
+    const id = String(item.id);
+    if (state.announcementOpen.has(id)) return state.announcementOpen.get(id);
+    return Boolean(item.is_pinned) || item.priority === "important";
+  }
+
+  // "Hôm nay" / "Ngày mai" / "Còn N ngày" for events in the coming week.
+  function relativeDayLabel(dateIso) {
+    if (!dateIso) return null;
+    const days = Math.round((Date.parse(dateIso) - Date.parse(todayIso())) / 86400000);
+    if (Number.isNaN(days) || days < 0 || days > 7) return null;
+    if (days === 0) return { text: "Hôm nay", tone: "today" };
+    if (days === 1) return { text: "Ngày mai", tone: "soon" };
+    return { text: `Còn ${days} ngày`, tone: days <= 3 ? "soon" : "later" };
+  }
+
+  function setAnnouncementExpanded(card, expanded) {
+    const toggle = card.querySelector(".announcement-toggle");
+    if (!toggle) return;
+
+    card.classList.toggle("is-expanded", expanded);
+    toggle.setAttribute("aria-expanded", String(expanded));
+    state.announcementOpen.set(toggle.dataset.id, expanded);
+  }
+
+  function syncToggleAllButton() {
+    if (!el.toggleAllAnnouncements) return;
+
+    const cards = [...el.currentAnnouncements.querySelectorAll(".announcement-card.is-collapsible")];
+    const allExpanded = cards.length > 0 && cards.every(card => card.classList.contains("is-expanded"));
+
+    el.toggleAllAnnouncements.classList.toggle("hidden", cards.length < 2);
+    el.toggleAllAnnouncements.setAttribute("aria-pressed", String(allExpanded));
+    el.toggleAllAnnouncements.querySelector("span:last-child").textContent =
+      allExpanded ? "Thu gọn tất cả" : "Mở tất cả";
   }
 
   function renderCurrent() {
@@ -1222,10 +1315,21 @@
       none: "Chưa có lịch"
     };
 
+    const browsing = Boolean(state.selectedWeekId);
+    if (browsing) {
+      badgeLabels.past = "Đã kết thúc";
+      badgeLabels.upcoming = "Sắp tới";
+    }
+
     if (el.weekStateBadge) {
       el.weekStateBadge.innerHTML =
         `<span aria-hidden="true"></span> ${badgeLabels[state.currentWeekState] || badgeLabels.none}`;
     }
+
+    if (el.currentHeading) {
+      el.currentHeading.textContent = browsing ? "Tuần đang xem" : "Tuần hiện tại";
+    }
+    el.backToCurrentWeek?.classList.toggle("hidden", !browsing);
 
     if (!week) {
       el.currentWeekCard.innerHTML = '<div class="loading-card">Chưa có lịch tuần.</div>';
@@ -1234,13 +1338,14 @@
         el.categoryDashboard.innerHTML = "";
         el.categoryDashboard.classList.add("hidden");
       }
+      renderViewStage(null, [], []);
       return;
     }
 
     const labels = {
       current: "Đang diễn ra",
-      upcoming: "Chuẩn bị tuần tiếp theo",
-      past: "Tuần gần nhất"
+      upcoming: browsing ? "Sắp tới" : "Chuẩn bị tuần tiếp theo",
+      past: browsing ? "Đã kết thúc" : "Tuần gần nhất"
     };
 
     el.currentWeekCard.innerHTML = `
@@ -1253,8 +1358,11 @@
           <h3>${escapeHtml(week.title || `Tuần ${week.week_number}`)}</h3>
           <p>${escapeHtml(week.summary || "Theo dõi các thông báo quan trọng của tuần.")}</p>
           <span class="week-date">📅 ${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
-          ${week.school_year ? `<span class="week-school-year">🎓 ${escapeHtml(week.school_year)}</span>` : ""}
           <span class="week-school-year">📣 ${getItems(week.id).length} thông báo</span>
+          ${(() => {
+            const important = getItems(week.id).filter(item => item.priority === "important").length;
+            return important ? `<span class="week-school-year week-important-count">⚠️ ${important} quan trọng</span>` : "";
+          })()}
           ${isAdmin() ? `<div class="week-admin-actions">
             <button class="button button-glass button-small card-command" data-action="edit-week" data-id="${week.id}">
               <span aria-hidden="true">✎</span><span>Sửa tuần</span>
@@ -1274,8 +1382,372 @@
       : items.filter(item => categoryInfo(item).key === state.categoryFilter);
 
     el.currentAnnouncements.innerHTML = visibleItems.length
-      ? visibleItems.map(announcementCard).join("")
-      : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>';
+      ? visibleItems.map(item => announcementCard(item)).join("")
+      : `<div class="empty-state">${items.length ? "Không có thông báo trong chuyên mục này." : "Tuần này chưa có thông báo."}</div>`;
+
+    syncToggleAllButton();
+    renderViewStage(week, items, visibleItems);
+  }
+
+  /* =========================================================
+     V3.24 — View modes: Lịch tuần (mặc định) / Danh sách
+     ========================================================= */
+
+  const VIEW_MODES = ["agenda", "list"];
+  const VIEW_STORAGE_KEY = "weekly-board-view";
+  const READ_STORAGE_KEY = "weekly-board-read-v1";
+  const WEEKDAY_SHORT = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  const WEEKDAY_LONG = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+
+  function readStorage(key) {
+    try { return localStorage.getItem(key); } catch { return null; }
+  }
+
+  function writeStorage(key, value) {
+    try { localStorage.setItem(key, value); } catch { /* private mode: keep in memory only */ }
+  }
+
+  function initialViewMode() {
+    const fromUrl = new URLSearchParams(location.search).get("view");
+    const stored = readStorage(VIEW_STORAGE_KEY);
+    return VIEW_MODES.find(mode => mode === fromUrl) || VIEW_MODES.find(mode => mode === stored) || "agenda";
+  }
+
+  // Announcements this browser has opened (agenda reader). Stored per viewer only.
+  const readIds = new Set((() => {
+    try { return JSON.parse(readStorage(READ_STORAGE_KEY) || "[]"); } catch { return []; }
+  })());
+
+  function markRead(id) {
+    const key = String(id);
+    if (readIds.has(key)) return;
+    readIds.add(key);
+    writeStorage(READ_STORAGE_KEY, JSON.stringify([...readIds].slice(-500)));
+  }
+
+  function daysFromToday(iso) {
+    if (!iso) return null;
+    return Math.round((Date.parse(iso) - Date.parse(todayIso())) / 86400000);
+  }
+
+  function relativeChip(item) {
+    const rel = relativeDayLabel(item.event_date);
+    return rel ? `<span class="vm-chip is-${rel.tone}">${rel.text}</span>` : "";
+  }
+
+  function weekDays(week) {
+    const days = [];
+    for (let day = week.start_date; day <= week.end_date && days.length < 7; day = addDays(day, 1)) {
+      days.push(day);
+    }
+    return days;
+  }
+
+  function dayMonth(iso) {
+    return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  }
+
+  function weekNavHtml(week) {
+    const weeks = sortedWeeks().filter(w => schoolYearKey(w) === state.activeSchoolYear);
+    const index = weeks.findIndex(w => w.id === week.id);
+    const prev = weeks[index - 1];
+    const next = weeks[index + 1];
+
+    return `
+      <div class="vm-weeknav">
+        <button type="button" class="vm-weeknav-step" data-action="select-week" data-id="${escapeHtml(prev?.id || "")}" ${prev ? "" : "disabled"} aria-label="Tuần trước">‹</button>
+        <strong>Tuần ${escapeHtml(week.week_number)}</strong>
+        <span>${dayMonth(week.start_date)} – ${dayMonth(week.end_date)}</span>
+        <button type="button" class="vm-weeknav-step" data-action="select-week" data-id="${escapeHtml(next?.id || "")}" ${next ? "" : "disabled"} aria-label="Tuần sau">›</button>
+      </div>`;
+  }
+
+  // "Ngày 4/6 · còn 2 ngày" for the running week; a short status otherwise.
+  function weekProgressHtml(week) {
+    const today = todayIso();
+    const s = weekState(week);
+
+    if (s === "upcoming") return `<span class="vm-progress-text">Bắt đầu sau ${daysFromToday(week.start_date)} ngày</span>`;
+    if (s === "past") return '<span class="vm-progress-text">Đã kết thúc</span>';
+
+    const days = weekDays(week);
+    const index = Math.max(1, days.filter(day => day <= today).length);
+    const left = days.length - index;
+
+    return `
+      <span class="vm-progress-wrap" title="Ngày ${index} trên ${days.length} của tuần">
+        <span class="vm-progress" aria-hidden="true"><i style="width:${Math.round(index / days.length * 100)}%"></i></span>
+        <span class="vm-progress-text">Ngày ${index}/${days.length}${left ? ` · còn ${left} ngày` : " · ngày cuối"}</span>
+      </span>`;
+  }
+
+  function weekAdminHtml(week) {
+    return isAdmin() ? `
+      <span class="vm-admin">
+        <button class="button button-ghost button-small" data-action="edit-week" data-id="${week.id}">✎ Sửa tuần</button>
+        <button class="button button-danger button-small" data-action="delete-week" data-id="${week.id}">⌫ Xóa tuần</button>
+      </span>` : "";
+  }
+
+  function categoryChipsHtml(items) {
+    const counts = new Map();
+    items.forEach(item => {
+      const key = categoryInfo(item).key;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+
+    const chip = (key, label, icon, count, style = "") => `
+      <button type="button" class="vm-cat ${state.categoryFilter === key ? "is-active" : ""}" style="${style}"
+        data-action="filter-category" data-category="${escapeHtml(key)}" aria-pressed="${state.categoryFilter === key}">
+        <span aria-hidden="true">${escapeHtml(icon)}</span>${escapeHtml(label)}<b>${count}</b>
+      </button>`;
+
+    return chip("all", "Tất cả", "✨", items.length) + activeCategories()
+      .filter(category => counts.has(category.slug))
+      .map(category => chip(category.slug, category.name, category.icon || "📌", counts.get(category.slug), categoryStyle(category)))
+      .join("");
+  }
+
+  function renderViewStage(week, items, visibleItems) {
+    if (el.currentSection) el.currentSection.dataset.view = state.viewMode;
+
+    el.viewSwitcher?.querySelectorAll("[data-view]").forEach(button => {
+      button.setAttribute("aria-pressed", String(button.dataset.view === state.viewMode));
+    });
+
+    if (!el.viewStage) return;
+
+    if (state.viewMode === "list" || !week) {
+      el.viewStage.innerHTML = "";
+      return;
+    }
+
+    el.viewStage.innerHTML = agendaHtml(week, items, visibleItems);
+
+    contentInteractions.enhance(el.viewStage);
+  }
+
+  /* ---------- Lịch tuần theo ngày + khung đọc ---------- */
+
+  function agendaHtml(week, items, visibleItems) {
+    const today = todayIso();
+    const days = weekDays(week);
+    const groups = new Map(days.map(day => [day, []]));
+    const before = [];
+    const after = [];
+
+    visibleItems.forEach(item => {
+      const day = item.event_date;
+      if (day && groups.has(day)) groups.get(day).push(item);
+      else if (day && day > week.end_date) after.push(item);
+      else before.push(item);
+    });
+
+    const attention = items
+      .filter(item => {
+        const diff = daysFromToday(item.event_date);
+        return item.is_pinned || item.priority === "important" || (diff !== null && diff >= 0 && diff <= 3);
+      })
+      .sort((a, b) => String(a.event_date || "9").localeCompare(String(b.event_date || "9")));
+
+    if (!items.some(item => String(item.id) === state.readerId)) {
+      const first = visibleItems.find(item => !readIds.has(String(item.id))) || visibleItems[0];
+      state.readerId = first ? String(first.id) : null;
+    }
+
+    const strip = days.map(day => {
+      const dayItems = items.filter(item => item.event_date === day);
+      const dots = dayItems.slice(0, 4).map(item =>
+        `<i style="background:${escapeHtml(categoryDisplayColor(categoryInfo(item)))}"></i>`).join("");
+      const weekday = WEEKDAY_SHORT[dateObj(day).getDay()];
+
+      return `
+        <button type="button" class="vm-day ${day === today ? "is-today" : ""} ${day < today ? "is-past" : ""}"
+          data-action="agenda-jump" data-day="${day}" ${dayItems.length ? "" : "disabled"}
+          aria-label="${WEEKDAY_LONG[dateObj(day).getDay()]} ${dayMonth(day)}, ${dayItems.length} thông báo">
+          <small>${day === today ? "Hôm nay" : weekday}</small>
+          <b>${day.slice(8, 10)}</b>
+          <span class="vm-dots">${dots}</span>
+        </button>`;
+    }).join("");
+
+    const row = item => {
+      const category = categoryInfo(item);
+      const id = String(item.id);
+      return `
+        <button type="button" class="vm-row ${id === state.readerId ? "is-selected" : ""} ${readIds.has(id) ? "is-read" : ""} ${item.priority === "important" ? "is-important" : ""}"
+          style="${categoryStyle(category)}" data-action="open-reader" data-id="${escapeHtml(id)}" aria-pressed="${id === state.readerId}">
+          <span class="vm-unread" aria-label="${readIds.has(id) ? "" : "Chưa đọc"}"></span>
+          <span class="vm-row-main">
+            <span class="vm-row-title">${item.is_pinned ? "📌 " : ""}${escapeHtml(item.title)}</span>
+            <span class="vm-row-preview">${escapeHtml(announcementPreview(contentRenderer.renderStoredContent(item.content)))}</span>
+          </span>
+          <span class="vm-row-side">
+            ${relativeChip(item) || `<span class="vm-row-date">${item.event_date ? dayMonth(item.event_date) : ""}</span>`}
+            <span class="vm-row-cat">${escapeHtml(category.icon || "📌")}</span>
+          </span>
+        </button>`;
+    };
+
+    const group = (id, title, list) => list.length ? `
+      <section class="vm-group" id="${id}">
+        <h4>${title}</h4>
+        ${list.map(row).join("")}
+      </section>` : "";
+
+    const dayTitle = day => {
+      const label = `${WEEKDAY_LONG[dateObj(day).getDay()]} ${dayMonth(day)}`;
+      return day === today ? `Hôm nay · ${label}` : label;
+    };
+
+    const selected = items.find(item => String(item.id) === state.readerId);
+    // Counts as read once it is actually on screen: always on desktop, on phones only when opened.
+    if (selected && (state.readerOpen || !window.matchMedia("(max-width: 900px)").matches)) {
+      markRead(selected.id);
+    }
+    const unread = items.filter(item => !readIds.has(String(item.id))).length;
+
+    return `
+      <div class="vm-agenda">
+        <header class="vm-agenda-head">
+          ${weekNavHtml(week)}
+          ${weekProgressHtml(week)}
+          ${items.length ? `<span class="vm-chip ${unread ? "is-unread" : ""}">${unread ? `${unread} chưa đọc` : "Đã đọc hết"}</span>` : ""}
+          ${weekAdminHtml(week)}
+        </header>
+
+        <div class="vm-days">${strip}</div>
+
+        ${attention.length ? `
+          <div class="vm-attention">
+            <strong>⚠ Cần chú ý</strong>
+            ${attention.slice(0, 5).map(item => `
+              <button type="button" class="vm-attention-row" data-action="open-reader" data-id="${escapeHtml(item.id)}">
+                ${relativeChip(item) || (item.priority === "important" ? '<span class="vm-chip is-soon">Quan trọng</span>' : "")}
+                <span>${escapeHtml(item.title)}</span>
+              </button>`).join("")}
+          </div>` : ""}
+
+        <div class="vm-cats">${categoryChipsHtml(items)}</div>
+
+        <div class="vm-split">
+          <div class="vm-list">
+            ${visibleItems.length ? "" : `<div class="empty-state">${items.length ? "Không có thông báo trong chuyên mục này." : "Tuần này chưa có thông báo."}</div>`}
+            ${group("agenda-before", "Đang có hiệu lực", before)}
+            ${days.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
+            ${group("agenda-after", "Sắp tới (sau tuần này)", after)}
+          </div>
+
+          <aside class="vm-reader ${state.readerOpen ? "is-open" : ""}" id="vm-reader" aria-label="Nội dung thông báo">
+            ${selected ? readerHtml(selected, visibleItems) : '<p class="vm-reader-empty">Chọn một thông báo để đọc.</p>'}
+          </aside>
+        </div>
+      </div>`;
+  }
+
+  function readerHtml(item, list) {
+    const category = categoryInfo(item);
+    const contentMode = contentRenderer.getStoredMode(item.content);
+    const index = list.findIndex(x => String(x.id) === String(item.id));
+    const prev = list[index - 1];
+    const next = list[index + 1];
+
+    return `
+      <div class="vm-reader-bar">
+        <button type="button" class="vm-reader-close" data-action="close-reader">‹ Danh sách</button>
+        <span>
+          <button type="button" class="vm-step" data-action="open-reader" data-id="${escapeHtml(prev?.id || "")}" ${prev ? "" : "disabled"} aria-label="Thông báo trước">‹ Trước</button>
+          <button type="button" class="vm-step" data-action="open-reader" data-id="${escapeHtml(next?.id || "")}" ${next ? "" : "disabled"} aria-label="Thông báo sau">Sau ›</button>
+        </span>
+      </div>
+      <article class="vm-reader-body" style="${categoryStyle(category)}">
+        <div class="vm-reader-chips">
+          <span class="category-chip" style="${categoryStyle(category)}"><span aria-hidden="true">${escapeHtml(category.icon || "📌")}</span> ${escapeHtml(category.name)}</span>
+          ${item.priority === "important" ? '<span class="priority-chip">Quan trọng</span>' : ""}
+        </div>
+        <h3>${item.is_pinned ? "📌 " : ""}${escapeHtml(item.title)}</h3>
+        <p class="vm-reader-meta">📅 ${escapeHtml(formatDate(item.event_date))}${(() => {
+          const rel = relativeDayLabel(item.event_date);
+          return rel ? ` · <strong>${rel.text}</strong>` : "";
+        })()}${item.valid_from || item.valid_until ? ` · Hiệu lực ${escapeHtml(formatDate(item.valid_from || item.event_date))} → ${escapeHtml(formatDate(item.valid_until || item.valid_from || item.event_date))}` : ""}</p>
+        ${item.image_path ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}"><img src="${escapeHtml(getImagePublicUrl(item.image_path))}" alt="${escapeHtml(item.image_alt || item.title)}" loading="lazy" decoding="async"></button>` : ""}
+        <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${contentRenderer.renderStoredContent(item.content)}</div>
+        <div class="card-actions">
+          <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
+          ${isAdmin() ? `
+            <button class="button button-ghost button-small card-command" data-action="edit-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">✎</span><span>Sửa</span></button>
+            <button class="button button-danger button-small card-command" data-action="delete-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⌫</span><span>Xóa</span></button>` : ""}
+        </div>
+      </article>`;
+  }
+
+  function openReader(id) {
+    if (!id) return;
+    state.readerId = String(id);
+    state.readerOpen = true;
+    renderCurrent();
+    document.body.classList.toggle("vm-reader-locked", window.matchMedia("(max-width: 900px)").matches);
+    const reader = document.getElementById("vm-reader");
+    reader?.scrollTo({ top: 0 });
+    if (!window.matchMedia("(max-width: 900px)").matches) {
+      const box = reader?.getBoundingClientRect();
+      if (box && (box.top < 0 || box.top > window.innerHeight * .6)) {
+        reader.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }
+
+  function closeReader() {
+    state.readerOpen = false;
+    document.body.classList.remove("vm-reader-locked");
+    document.getElementById("vm-reader")?.classList.remove("is-open");
+  }
+
+  function setViewMode(mode) {
+    if (!VIEW_MODES.includes(mode)) return;
+    state.viewMode = mode;
+    writeStorage(VIEW_STORAGE_KEY, mode);
+    closeReader();
+    renderCurrent();
+    enhanceRenderedContent();
+  }
+
+  function renderWeekPicker() {
+    const select = el.globalWeekFilter;
+    if (!select) return;
+
+    const weeks = sortedWeeks().filter(week => schoolYearKey(week) === state.activeSchoolYear);
+    if (!weeks.length) {
+      select.innerHTML = '<option value="">Chưa có tuần</option>';
+      select.disabled = true;
+      return;
+    }
+
+    select.innerHTML = weeks.map(week => {
+      // Short label so it fits the sidebar; "●" marks the week in progress.
+      const isCurrent = weekState(week) === "current";
+      const dayMonth = iso => iso.slice(8, 10) + "/" + iso.slice(5, 7);
+      return `<option value="${escapeHtml(week.id)}"${isCurrent ? ' title="Tuần đang diễn ra"' : ""}>Tuần ${escapeHtml(week.week_number)} · ${dayMonth(week.start_date)}–${dayMonth(week.end_date)}${isCurrent ? " ●" : ""}</option>`;
+    }).join("");
+    select.disabled = false;
+    select.value = state.currentWeek?.id || "";
+  }
+
+  // Show a week's announcements in the main panel (weekId null = back to the featured week).
+  function selectWeek(weekId) {
+    const week = weekId ? state.weeks.find(w => w.id === weekId) : null;
+    const [featured] = chooseFeaturedWeek(state.activeSchoolYear);
+
+    state.selectedWeekId = week && week.id !== featured?.id ? week.id : null;
+    state.readerId = null;
+    closeReader();
+    state.categoryFilter = "all";
+    [state.currentWeek, state.currentWeekState] = displayedWeek();
+
+    renderWeekPicker();
+    renderCurrent();
+    enhanceRenderedContent();
+    el.currentSection?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function renderYearStrip() {
@@ -1343,6 +1815,28 @@
           </div>
         </article>`;
     }).join("");
+
+    scrollYearStripToCurrent();
+  }
+
+  // Bring the current (or next) week into view inside the horizontal "Lịch năm học" strip.
+  // Only the strip scrolls, never the page.
+  function scrollYearStripToCurrent() {
+    const strip = el.yearStrip;
+    const card = strip.querySelector(".year-week-card.current, .year-week-card.upcoming");
+    if (!card) return;
+
+    requestAnimationFrame(() => {
+      const stripBox = strip.getBoundingClientRect();
+      const cardBox = card.getBoundingClientRect();
+
+      if (strip.scrollHeight > strip.clientHeight) {
+        strip.scrollTop += cardBox.top - stripBox.top - (strip.clientHeight - cardBox.height) / 2;
+      }
+      if (strip.scrollWidth > strip.clientWidth) {
+        strip.scrollLeft += cardBox.left - stripBox.left - (strip.clientWidth - cardBox.width) / 2;
+      }
+    });
   }
 
   function renderArchives() {
@@ -1422,6 +1916,7 @@
     renderAdmin();
     renderConnection();
     renderGlobalSchoolYearSwitcher();
+    renderWeekPicker();
     renderCurrent();
     renderSchoolYearSelectors();
     renderYearStrip();
@@ -1485,7 +1980,7 @@
       }
       state.yearFilter = state.activeSchoolYear;
       state.archiveYearFilter = state.activeSchoolYear;
-      [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek(state.activeSchoolYear);
+      [state.currentWeek, state.currentWeekState] = displayedWeek();
       scheduleRenderAll();
     } finally {
       endLoading?.();
@@ -2206,7 +2701,7 @@
     el.archiveDialogContent.innerHTML = `
       <p class="muted">${escapeHtml(week.summary || "Không có tóm tắt riêng.")}</p>
       <div class="announcement-list">
-        ${items.length ? items.map(announcementCard).join("") : '<div class="empty-state">Không có thông báo.</div>'}
+        ${items.length ? items.map(item => announcementCard(item)).join("") : '<div class="empty-state">Không có thông báo.</div>'}
       </div>`;
 
     el.archiveDialog.showModal();
@@ -2274,11 +2769,48 @@
       return;
     }
 
+    if (action === "set-view") {
+      setViewMode(button.dataset.view);
+      return;
+    }
+
+    if (action === "open-reader") {
+      openReader(id);
+      return;
+    }
+
+    if (action === "close-reader") {
+      closeReader();
+      return;
+    }
+
+    if (action === "agenda-jump") {
+      document.getElementById(`agenda-day-${button.dataset.day}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    if (action === "toggle-announcement") {
+      const card = button.closest(".announcement-card");
+      if (card) setAnnouncementExpanded(card, !card.classList.contains("is-expanded"));
+      syncToggleAllButton();
+      return;
+    }
+
+    if (action === "toggle-all-announcements") {
+      const cards = [...el.currentAnnouncements.querySelectorAll(".announcement-card.is-collapsible")];
+      const expand = !cards.every(card => card.classList.contains("is-expanded"));
+      cards.forEach(card => setAnnouncementExpanded(card, expand));
+      syncToggleAllButton();
+      return;
+    }
+
     if (action === "copy-announcement") copyAnnouncement(id);
     if (action === "open-image") openImageViewer(id);
     if (action === "delete-announcement") deleteAnnouncement(id);
     if (action === "delete-week") deleteWeek(id);
-    if (action === "open-archive" || action === "view-week") openArchive(id);
+    if (action === "open-archive") openArchive(id);
+    if (action === "view-week" || action === "select-week") selectWeek(id);
+    if (action === "back-to-current-week") selectWeek(null);
 
     if (action === "edit-announcement") {
       const item = state.announcements.find(x => x.id === id);
@@ -2367,6 +2899,10 @@
       applyGlobalSchoolYear(el.globalSchoolYearFilter.value);
     });
 
+    el.globalWeekFilter?.addEventListener("change", () => {
+      selectWeek(el.globalWeekFilter.value);
+    });
+
     el.announcementForm.addEventListener("submit", saveAnnouncement);
     el.weekForm.addEventListener("submit", saveWeek);
     el.bulkForm.addEventListener("submit", saveBulk);
@@ -2424,6 +2960,10 @@
   }
 
   async function init() {
+    state.viewMode = initialViewMode();
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && state.readerOpen) closeReader();
+    });
     initTheme();
 
     announcementEditor =

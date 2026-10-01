@@ -296,3 +296,82 @@ database hay `config.js`.
   (trước đây bị header che mất).
 - **Hero trên điện thoại:** ô số tuần nhỏ lại (72px) để tiêu đề và mô tả có đủ chỗ.
 - **Dark mode:** số đếm trên chip chuyên mục đọc được (trước là chữ sáng trên nền sáng).
+
+
+## V3.20 — Dashboard Layout
+
+Bố cục mới theo dạng dashboard, phần lớn bằng CSS trong `dashboard-layout.css`;
+`app.js` chỉ thêm phần thu gọn/mở rộng thẻ thông báo. Không đổi database hay `config.js`.
+
+- **Máy tính (≥1180px) chia 2 cột:** bên trái là tuần hiện tại và danh sách thông báo,
+  có độ rộng vừa phải nên dễ đọc. Bên phải là **Lịch năm học**, dính theo khi cuộn,
+  hiển thị mỗi tuần thành một dòng gọn, tuần hiện tại được tô nổi bật và tự cuộn vào giữa.
+  **Lưu trữ** nằm bên dưới, dạng lưới gọn hơn.
+- **Thẻ thông báo thu gọn:** mặc định chỉ hiện tiêu đề, chuyên mục, 2 dòng xem trước
+  và ngày/hiệu lực. Bấm vào tiêu đề (hoặc Enter/Space) để mở đầy đủ nội dung, ảnh và nút
+  Sao chép/Sửa/Xóa. Nút **Mở tất cả / Thu gọn tất cả** ở đầu danh sách. Trạng thái mở
+  được giữ khi đổi bộ lọc chuyên mục.
+- **Một ô Năm học duy nhất:** chỉ còn ô ở thanh bên; ô trùng ở Lịch năm học và Lưu trữ
+  được ẩn (vẫn đồng bộ theo ô thanh bên).
+- Điện thoại/tablet giữ thứ tự một cột; dải tuần ngang tự cuộn tới tuần hiện tại.
+- Sửa lỗi cũ: `map(announcementCard)` truyền nhầm chỉ số làm `showWeek`, khiến các
+  thẻ (trừ thẻ đầu) hiện thừa chip "Đăng tại Tuần …".
+
+
+## V3.21 — Ưu tiên thông tin
+
+- Thông báo **được ghim** hoặc **Quan trọng** mở sẵn; các thông báo khác thu gọn.
+  Người xem vẫn mở/thu gọn tùy ý, trạng thái được giữ khi đổi bộ lọc.
+- Chip ngày ghi thêm **Hôm nay / Ngày mai / Còn N ngày** (trong 7 ngày tới),
+  tô đỏ, cam hoặc xanh theo mức gấp.
+- Thẻ Quan trọng có viền cam để nổi bật ngay cả khi đang thu gọn.
+- Khung tuần hiện tại thấp hơn trên máy tính, có thêm chip **⚠️ N quan trọng**.
+  Bỏ chip năm học vì đã có ô Năm học ở thanh bên; trên điện thoại bỏ dòng trạng thái
+  trùng với nhãn cạnh tiêu đề.
+
+
+## V3.22 — Chọn tuần bằng dropdown
+
+Bỏ cột "Lịch năm học" bên phải của V3.20; trang chính quay lại một cột.
+
+- Dưới ô **Năm học** ở thanh bên có ô **Tuần** dạng dropdown, liệt kê các tuần của năm học
+  đang chọn (`Tuần 04 · 28/09–03/10`, dấu `●` là tuần đang diễn ra).
+- Chọn một tuần thì phần chính hiển thị tuần đó: tiêu đề đổi thành **Tuần đang xem**,
+  nhãn trạng thái đổi theo ("Đã kết thúc" / "Sắp tới"), và có nút **↩ Về tuần hiện tại**.
+- Trên tablet, hai ô Năm học và Tuần nằm cùng hàng trên thanh trên cùng; trên điện thoại,
+  chúng nằm cạnh nhau ở hàng thứ hai.
+- Nút **Xem** trong mục Lịch năm học cũng chọn tuần theo cách này (không mở hộp thoại nữa).
+- Tuần đang chọn được giữ khi dữ liệu tải lại; đổi năm học sẽ quay về tuần hiện tại.
+- Mục **Lưu trữ** vẫn mở hộp thoại "Xem lại" như trước.
+
+
+## V3.23 — Bản mẫu hai kiểu hiển thị mới (để chọn)
+
+Nút **☰ Danh sách · 🗓 Lịch tuần · ▦ Bảng ô** ở đầu mục Tuần hiện tại. Mặc định vẫn là
+Danh sách; lựa chọn được nhớ trên máy người xem (có thể mở thẳng bằng `?view=agenda` hoặc
+`?view=bento`). Code nằm trong `app.js` (mục "V3.23 — View modes") và `view-modes.css`.
+
+**🗓 Lịch tuần** (hướng 2 + 1):
+- Thanh **‹ Tuần 04 ›** để chuyển tuần; dải ngày T2 → T7, hôm nay tô xanh, chấm màu theo chuyên mục.
+- Khối **⚠ Cần chú ý**: thông báo quan trọng/ghim và sự kiện trong 3 ngày tới.
+- Danh sách gọn nhóm theo ngày diễn ra ("Đang có hiệu lực", từng ngày, "Sắp tới") và
+  **khung đọc** bên phải với nút Trước/Sau. Trên điện thoại khung đọc mở toàn màn hình.
+- Chấm xanh **chưa đọc**: lưu trên trình duyệt của người xem (localStorage), không lưu lên Supabase.
+
+**▦ Bảng ô** (hướng 3):
+- Ô tuần có ‹ › chuyển tuần, thanh tiến độ "Ngày 4/6", số thông báo / quan trọng.
+- Ô **Quan trọng nhất**, ô **Sắp diễn ra** (7 ngày tới, đếm ngược), ô **Mới đăng**.
+- Ô chuyên mục có số lượng, bấm để lọc danh sách thẻ bên dưới; "Đọc ngay" mở và cuộn tới thẻ.
+
+Sửa thêm: trên điện thoại/tablet, khung Quản trị trước đây luôn mở đè lên đầu trang;
+giờ là một hàng nút gọn dưới thanh trên cùng.
+
+
+## V3.24 — Lịch tuần là giao diện mặc định
+
+Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai bản mẫu của V3.23.
+
+- Mặc định mở **🗓 Lịch tuần**; **☰ Danh sách** (thẻ thu gọn như V3.21) vẫn là lựa chọn phụ,
+  được nhớ trên máy người xem. Link cũ `?view=bento` tự chuyển về Lịch tuần.
+- Bỏ chế độ **Bảng ô**; chỉ giữ thanh tiến độ tuần **"Ngày 4/6 · còn 2 ngày"**, đặt cạnh ‹ Tuần ›.
+- Khối "Cần chú ý" chia 2 cột trên màn hình rộng; tuần không có thông báo không hiện chip đã đọc.
