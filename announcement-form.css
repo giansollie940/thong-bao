@@ -14,26 +14,14 @@
   background: transparent;
 }
 
-#announcement-dialog::backdrop {
-  background: rgba(18, 31, 52, .52);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
 #announcement-dialog .modal-card {
   width: 100%;
   max-width: none;
   max-height: min(92vh, 900px);
   max-height: min(92dvh, 900px);
   margin: 0;
-  padding: 24px;
   overflow-x: hidden;
-  overflow-y: auto;
   visibility: visible;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: var(--surface-solid);
-  box-shadow: 0 18px 54px rgba(25, 46, 40, .18);
   scrollbar-gutter: stable;
   overscroll-behavior-y: contain;
 }
@@ -174,79 +162,26 @@
   }
 }
 
-
 /* =========================================================
    V3.16.14 — macOS-inspired announcement composer
    ========================================================= */
-#announcement-dialog::backdrop {
-  background: rgba(15, 20, 28, .48);
-  -webkit-backdrop-filter: blur(10px) saturate(115%);
-  backdrop-filter: blur(10px) saturate(115%);
-}
 
 #announcement-dialog .modal-card {
   padding: 0;
-  border: 1px solid rgba(119, 130, 146, .24);
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--surface-solid) 96%, #f4f5f7);
-  box-shadow: 0 28px 80px rgba(14, 22, 34, .28), 0 2px 10px rgba(14, 22, 34, .12);
 }
 
-.mac-window-header {
-  position: sticky;
-  z-index: 25;
-  top: 0;
-  display: grid;
-  grid-template-columns: 112px minmax(0, 1fr) 112px;
-  align-items: center;
-  min-height: 66px;
-  padding: 10px 18px;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
-  background: color-mix(in srgb, var(--surface-solid) 78%, transparent);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  backdrop-filter: blur(24px) saturate(150%);
-}
-
-.mac-traffic-lights {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mac-traffic-light {
-  display: inline-block;
-  width: 13px;
-  height: 13px;
-  flex: 0 0 13px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .09);
-}
-.mac-close { background: #ff5f57; cursor: pointer; }
-.mac-minimize { background: #febc2e; }
-.mac-maximize { background: #28c840; }
-.mac-close:hover, .mac-close:focus-visible, .mac-close:active { transform: none !important; filter: brightness(.95); }
-.mac-close:focus-visible { outline: 3px solid color-mix(in srgb, #ff5f57 28%, transparent); outline-offset: 3px; }
-
-.mac-window-title { min-width: 0; text-align: center; }
-.mac-window-title h2 { margin: 1px 0 0; font-size: 1rem; font-weight: 760; letter-spacing: -.01em; }
-.mac-window-kicker { display: block; color: var(--muted); font-size: .62rem; font-weight: 800; letter-spacing: .12em; }
+.mac-window-title { min-width: 0; }
+.mac-window-title h2 { margin: 1px 0 0; font-weight: 760; }
+.mac-window-kicker { display: block; font-weight: 800; }
 
 #announcement-dialog .mac-form-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
-  padding: 18px 20px 10px;
 }
 
 .mac-form-section {
   min-width: 0;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
-  border-radius: 15px;
-  background: color-mix(in srgb, var(--surface-solid) 88%, var(--surface-soft));
-  box-shadow: 0 1px 2px rgba(20, 31, 45, .04), inset 0 1px 0 rgba(255, 255, 255, .62);
 }
 
 .mac-section-heading {
@@ -263,9 +198,6 @@
   width: 28px;
   height: 28px;
   flex: 0 0 28px;
-  border-radius: 8px;
-  color: var(--brand-strong);
-  background: color-mix(in srgb, var(--brand-soft) 62%, #fff);
   font-size: .8rem;
 }
 
@@ -311,10 +243,6 @@
   min-height: 66px;
   margin-top: 8px;
   padding: 10px 20px;
-  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
-  background: color-mix(in srgb, var(--surface-solid) 82%, transparent);
-  -webkit-backdrop-filter: blur(24px) saturate(145%);
-  backdrop-filter: blur(24px) saturate(145%);
 }
 .mac-modal-footer .form-message { flex: 1 1 auto; margin: 0; font-size: .75rem; }
 .mac-footer-actions { display: flex; align-items: center; gap: 9px; margin-left: auto; }
@@ -325,7 +253,7 @@ html[data-theme="dark"] .mac-window-header,
 html[data-theme="dark"] .mac-modal-footer {
   background: color-mix(in srgb, #20242a 88%, transparent);
 }
-html[data-theme="dark"] .mac-form-section { background: #272c32; border-color: #3b424b; box-shadow: inset 0 1px 0 rgba(255,255,255,.035); }
+html[data-theme="dark"] .mac-form-section { border-color: #3b424b; box-shadow: inset 0 1px 0 rgba(255,255,255,.035); }
 html[data-theme="dark"] .mac-section-icon { background: #303b3a; }
 
 @media (max-width: 720px) {
@@ -341,8 +269,6 @@ html[data-theme="dark"] .mac-section-icon { background: #303b3a; }
 @media (max-width: 480px) {
   .mac-window-header { grid-template-columns: 68px minmax(0, 1fr) 68px; }
   .mac-window-kicker { display: none; }
-  .mac-traffic-lights { gap: 6px; }
-  .mac-traffic-light { width: 11px; height: 11px; flex-basis: 11px; }
   .mac-modal-footer { align-items: stretch; flex-direction: column; gap: 7px; }
   .mac-footer-actions { width: 100%; }
   .mac-footer-actions .button { flex: 1 1 0; }

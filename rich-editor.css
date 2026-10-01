@@ -400,7 +400,6 @@ html[data-theme="dark"] .html-line-numbers {
   }
 }
 
-
 /* V3.16.14 — macOS editor surface */
 .mac-segmented-control {
   width: min(320px, calc(100% - 24px));
@@ -430,8 +429,6 @@ html[data-theme="dark"] .html-line-numbers {
 #announcement-dialog .canvas-rich-editor {
   border: 1px solid color-mix(in srgb, var(--line) 86%, #b9bec5);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--surface-solid) 97%, #f7f7f8);
-  box-shadow: 0 8px 28px rgba(20, 29, 40, .08), inset 0 1px 0 rgba(255,255,255,.72);
 }
 #announcement-dialog .canvas-format-toolbar {
   background: color-mix(in srgb, var(--surface-soft) 76%, #f1f1f2);
@@ -440,8 +437,6 @@ html[data-theme="dark"] .html-line-numbers {
 }
 #announcement-dialog .visual-rich-editor { background: color-mix(in srgb, var(--surface-solid) 98%, #fbfbfc); }
 #announcement-dialog .editor-statusbar { min-height: 30px; background: color-mix(in srgb, var(--surface-soft) 72%, #f4f4f5); font-size: .68rem; }
-#announcement-dialog .editor-view-tab:is(:hover,:active,:focus-visible),
-#announcement-dialog .format-button:is(:hover,:active,:focus-visible) { transform: none !important; }
 
 html[data-theme="dark"] .mac-segmented-control { background: #1d2025; border-color: #3a4149; }
 html[data-theme="dark"] .mac-segmented-control .editor-view-tab.active { background: #343a42; border-color: #4a535d; color: #f2f4f6; }

@@ -959,22 +959,6 @@
       updateCounter();
     }
 
-    function currentHtml() {
-      if (
-        currentView === "visual"
-      ) {
-        normalizeVisualFormatting();
-
-        return sanitize(
-          visual.innerHTML
-        );
-      }
-
-      return sanitize(
-        source.value
-      );
-    }
-
     function updateCounter() {
       const html =
         currentView === "visual"

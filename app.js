@@ -1628,20 +1628,21 @@
               </button>`).join("")}
           </div>` : ""}
 
-        <div class="vm-cats">${categoryChipsHtml(items)}</div>
+        ${items.length ? `
+          <div class="vm-cats">${categoryChipsHtml(items)}</div>
 
-        <div class="vm-split">
-          <div class="vm-list">
-            ${visibleItems.length ? "" : `<div class="empty-state">${items.length ? "Không có thông báo trong chuyên mục này." : "Tuần này chưa có thông báo."}</div>`}
-            ${group("agenda-before", "Đang có hiệu lực", before)}
-            ${days.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
-            ${group("agenda-after", "Sắp tới (sau tuần này)", after)}
-          </div>
+          <div class="vm-split">
+            <div class="vm-list">
+              ${visibleItems.length ? "" : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>'}
+              ${group("agenda-before", "Đang có hiệu lực", before)}
+              ${days.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
+              ${group("agenda-after", "Sắp tới (sau tuần này)", after)}
+            </div>
 
-          <aside class="vm-reader ${state.readerOpen ? "is-open" : ""}" id="vm-reader" aria-label="Nội dung thông báo">
-            ${selected ? readerHtml(selected, visibleItems) : '<p class="vm-reader-empty">Chọn một thông báo để đọc.</p>'}
-          </aside>
-        </div>
+            <aside class="vm-reader ${state.readerOpen ? "is-open" : ""}" id="vm-reader" aria-label="Nội dung thông báo">
+              ${selected ? readerHtml(selected, visibleItems) : '<p class="vm-reader-empty">Chọn một thông báo để đọc.</p>'}
+            </aside>
+          </div>` : '<div class="empty-state">Tuần này chưa có thông báo.</div>'}
       </div>`;
   }
 
@@ -1746,6 +1747,7 @@
 
     renderWeekPicker();
     renderCurrent();
+    renderYearStrip();
     enhanceRenderedContent();
     el.currentSection?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -1791,39 +1793,38 @@
 
     el.yearStrip.innerHTML = weeks.map(week => {
       const s = weekState(week);
-      const label =
-        s === "current" ? "● Hiện tại" :
-        s === "upcoming" ? "Sắp tới" :
-        "✓ Đã qua";
-      const announcementCount = getItems(week.id).length;
+      const label = s === "current" ? "Hiện tại" : s === "upcoming" ? "Sắp tới" : "Đã qua";
+      const count = getItems(week.id).length;
+      const shown = week.id === state.currentWeek?.id;
 
       return `
-        <article class="year-week-card ${s}">
-          <div class="year-week-head">
-            <strong>Tuần ${escapeHtml(week.week_number)}</strong>
-            <span class="week-count-badge">${announcementCount} thông báo</span>
-          </div>
-          <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
-          ${week.school_year ? `<small class="year-week-school-year">${escapeHtml(week.school_year)}</small>` : ""}
-          <span class="year-week-state">${label}</span>
-          <div class="year-week-actions">
-            <button class="mini-action mini-view" data-action="view-week" data-id="${week.id}" aria-label="Xem Tuần ${escapeHtml(week.week_number)}">Xem</button>
-            ${isAdmin() ? `
+        <article class="year-week-card ${s} ${shown ? "is-shown" : ""}">
+          <button class="year-week-main" type="button" data-action="view-week" data-id="${week.id}"
+            aria-label="Xem Tuần ${escapeHtml(week.week_number)}" ${shown ? 'aria-current="true"' : ""}>
+            <span class="year-week-head">
+              <strong>Tuần ${escapeHtml(week.week_number)}</strong>
+              <span class="year-week-state">${label}</span>
+            </span>
+            <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
+            <span class="week-count-badge ${count ? "has-items" : ""}">${count} thông báo</span>
+          </button>
+          ${isAdmin() ? `
+            <span class="year-week-actions">
               <button class="mini-action" data-action="edit-week" data-id="${week.id}" aria-label="Sửa Tuần ${escapeHtml(week.week_number)}">✏️</button>
               <button class="mini-action mini-danger" data-action="delete-week" data-id="${week.id}" aria-label="Xóa Tuần ${escapeHtml(week.week_number)}">🗑️</button>
-            ` : ""}
-          </div>
+            </span>` : ""}
         </article>`;
     }).join("");
 
     scrollYearStripToCurrent();
   }
 
-  // Bring the current (or next) week into view inside the horizontal "Lịch năm học" strip.
+  // Bring the week shown above (else the current/next week) into view inside the horizontal strip.
   // Only the strip scrolls, never the page.
   function scrollYearStripToCurrent() {
     const strip = el.yearStrip;
-    const card = strip.querySelector(".year-week-card.current, .year-week-card.upcoming");
+    const card = strip.querySelector(".year-week-card.is-shown")
+      || strip.querySelector(".year-week-card.current, .year-week-card.upcoming");
     if (!card) return;
 
     requestAnimationFrame(() => {
@@ -1883,27 +1884,22 @@
 
       return `
         <article class="archive-card">
-          <div style="padding:20px 20px 0" class="archive-summary-head">
-            <div>
-              <div class="archive-year-kicker">${escapeHtml(schoolYearLabel(schoolYearKey(week)))}</div>
-              <h3 class="archive-week-name">Tuần ${escapeHtml(week.week_number)}</h3>
-              <span class="archive-date">${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
-            </div>
-            <span class="archive-count-chip">${items.length} thông báo</span>
-          </div>
-          <div style="padding:0 20px">
-            <p class="archive-summary-text">${escapeHtml(week.summary || "Tuần đã qua.")}</p>
+          <button class="archive-main" type="button" data-action="open-archive" data-id="${week.id}"
+            aria-label="Xem lại Tuần ${escapeHtml(week.week_number)}">
+            <span class="archive-head">
+              <strong class="archive-week-name">Tuần ${escapeHtml(week.week_number)}</strong>
+              <span class="archive-count-chip ${items.length ? "has-items" : ""}">${items.length} thông báo</span>
+            </span>
+            <span class="archive-date">${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
             ${items.length
-              ? `<ul class="archive-peek">${items.slice(0,3).map(x => `<li>${escapeHtml(x.title)}</li>`).join("")}</ul>`
-              : '<p class="muted">Không có thông báo.</p>'}
-          </div>
-          <div class="archive-card-footer">
-            <button class="text-button" data-action="open-archive" data-id="${week.id}">Xem lại →</button>
-            ${isAdmin() ? `<span class="archive-admin-actions">
-              <button class="text-button" data-action="edit-week" data-id="${week.id}">Sửa tuần</button>
-              <button class="text-button danger-text" data-action="delete-week" data-id="${week.id}">Xóa tuần</button>
+              ? `<span class="archive-peek">${items.slice(0, 2).map(x => escapeHtml(x.title)).join(" · ")}${items.length > 2 ? ` · +${items.length - 2}` : ""}</span>`
+              : ""}
+          </button>
+          ${isAdmin() ? `
+            <span class="archive-admin-actions">
+              <button class="text-button" data-action="edit-week" data-id="${week.id}">Sửa</button>
+              <button class="text-button danger-text" data-action="delete-week" data-id="${week.id}">Xóa</button>
             </span>` : ""}
-          </div>
         </article>`;
     }).join("");
   }

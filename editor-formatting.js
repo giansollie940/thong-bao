@@ -416,6 +416,15 @@
       button.setAttribute("aria-pressed", String(nextActive));
     });
 
+    // Keep B / I / U / S in sync with the text under the caret.
+    const visualEditor = root.querySelector("#announcement-visual-editor");
+    document.addEventListener("selectionchange", () => {
+      const anchor = document.getSelection()?.anchorNode;
+      if (visualEditor && anchor && visualEditor.contains(anchor)) {
+        updateInlineButtonStates();
+      }
+    });
+
     clearButton.addEventListener("click", () => {
       runWithSelection(() => {
         editor.clearFormatting();
