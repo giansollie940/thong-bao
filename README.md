@@ -343,3 +343,25 @@ Bỏ cột "Lịch năm học" bên phải của V3.20; trang chính quay lại 
 - Nút **Xem** trong mục Lịch năm học cũng chọn tuần theo cách này (không mở hộp thoại nữa).
 - Tuần đang chọn được giữ khi dữ liệu tải lại; đổi năm học sẽ quay về tuần hiện tại.
 - Mục **Lưu trữ** vẫn mở hộp thoại "Xem lại" như trước.
+
+
+## V3.23 — Bản mẫu hai kiểu hiển thị mới (để chọn)
+
+Nút **☰ Danh sách · 🗓 Lịch tuần · ▦ Bảng ô** ở đầu mục Tuần hiện tại. Mặc định vẫn là
+Danh sách; lựa chọn được nhớ trên máy người xem (có thể mở thẳng bằng `?view=agenda` hoặc
+`?view=bento`). Code nằm trong `app.js` (mục "V3.23 — View modes") và `view-modes.css`.
+
+**🗓 Lịch tuần** (hướng 2 + 1):
+- Thanh **‹ Tuần 04 ›** để chuyển tuần; dải ngày T2 → T7, hôm nay tô xanh, chấm màu theo chuyên mục.
+- Khối **⚠ Cần chú ý**: thông báo quan trọng/ghim và sự kiện trong 3 ngày tới.
+- Danh sách gọn nhóm theo ngày diễn ra ("Đang có hiệu lực", từng ngày, "Sắp tới") và
+  **khung đọc** bên phải với nút Trước/Sau. Trên điện thoại khung đọc mở toàn màn hình.
+- Chấm xanh **chưa đọc**: lưu trên trình duyệt của người xem (localStorage), không lưu lên Supabase.
+
+**▦ Bảng ô** (hướng 3):
+- Ô tuần có ‹ › chuyển tuần, thanh tiến độ "Ngày 4/6", số thông báo / quan trọng.
+- Ô **Quan trọng nhất**, ô **Sắp diễn ra** (7 ngày tới, đếm ngược), ô **Mới đăng**.
+- Ô chuyên mục có số lượng, bấm để lọc danh sách thẻ bên dưới; "Đọc ngay" mở và cuộn tới thẻ.
+
+Sửa thêm: trên điện thoại/tablet, khung Quản trị trước đây luôn mở đè lên đầu trang;
+giờ là một hàng nút gọn dưới thanh trên cùng.

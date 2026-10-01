@@ -68,6 +68,9 @@
     announcementOpen: new Map(),
     // Week picked in the sidebar; null = follow the featured (today's) week.
     selectedWeekId: null,
+    viewMode: "list",
+    readerId: null,
+    readerOpen: false,
     schoolYearPreview: [],
     activeSchoolYear: "",
     yearFilter: "",
@@ -84,6 +87,8 @@
     backToCurrentWeek: $("#back-to-current-week"),
     currentHeading: $("#current-heading"),
     currentSection: $("#current-section"),
+    viewStage: $("#view-stage"),
+    viewSwitcher: $("#view-switcher"),
     categoryDashboard: $("#category-dashboard"),
     globalSchoolYearFilter: $("#global-school-year-filter"),
     categoryDialog: $("#categories-dialog"),
@@ -1333,6 +1338,7 @@
         el.categoryDashboard.innerHTML = "";
         el.categoryDashboard.classList.add("hidden");
       }
+      renderViewStage(null, [], []);
       return;
     }
 
@@ -1380,6 +1386,429 @@
       : `<div class="empty-state">${items.length ? "Không có thông báo trong chuyên mục này." : "Tuần này chưa có thông báo."}</div>`;
 
     syncToggleAllButton();
+    renderViewStage(week, items, visibleItems);
+  }
+
+  /* =========================================================
+     V3.23 — View modes (prototype): Danh sách / Lịch tuần / Bảng ô
+     ========================================================= */
+
+  const VIEW_MODES = ["list", "agenda", "bento"];
+  const VIEW_STORAGE_KEY = "weekly-board-view";
+  const READ_STORAGE_KEY = "weekly-board-read-v1";
+  const WEEKDAY_SHORT = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  const WEEKDAY_LONG = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+
+  function readStorage(key) {
+    try { return localStorage.getItem(key); } catch { return null; }
+  }
+
+  function writeStorage(key, value) {
+    try { localStorage.setItem(key, value); } catch { /* private mode: keep in memory only */ }
+  }
+
+  function initialViewMode() {
+    const fromUrl = new URLSearchParams(location.search).get("view");
+    const stored = readStorage(VIEW_STORAGE_KEY);
+    return VIEW_MODES.find(mode => mode === fromUrl) || VIEW_MODES.find(mode => mode === stored) || "list";
+  }
+
+  // Announcements this browser has opened (agenda reader). Stored per viewer only.
+  const readIds = new Set((() => {
+    try { return JSON.parse(readStorage(READ_STORAGE_KEY) || "[]"); } catch { return []; }
+  })());
+
+  function markRead(id) {
+    const key = String(id);
+    if (readIds.has(key)) return;
+    readIds.add(key);
+    writeStorage(READ_STORAGE_KEY, JSON.stringify([...readIds].slice(-500)));
+  }
+
+  function daysFromToday(iso) {
+    if (!iso) return null;
+    return Math.round((Date.parse(iso) - Date.parse(todayIso())) / 86400000);
+  }
+
+  function relativeChip(item) {
+    const rel = relativeDayLabel(item.event_date);
+    return rel ? `<span class="vm-chip is-${rel.tone}">${rel.text}</span>` : "";
+  }
+
+  function weekDays(week) {
+    const days = [];
+    for (let day = week.start_date; day <= week.end_date && days.length < 7; day = addDays(day, 1)) {
+      days.push(day);
+    }
+    return days;
+  }
+
+  function dayMonth(iso) {
+    return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  }
+
+  function weekNavHtml(week, { showNumber = true } = {}) {
+    const weeks = sortedWeeks().filter(w => schoolYearKey(w) === state.activeSchoolYear);
+    const index = weeks.findIndex(w => w.id === week.id);
+    const prev = weeks[index - 1];
+    const next = weeks[index + 1];
+
+    return `
+      <div class="vm-weeknav">
+        <button type="button" class="vm-weeknav-step" data-action="select-week" data-id="${escapeHtml(prev?.id || "")}" ${prev ? "" : "disabled"} aria-label="Tuần trước">‹</button>
+        ${showNumber ? `<strong>Tuần ${escapeHtml(week.week_number)}</strong>` : ""}
+        <span>${dayMonth(week.start_date)} – ${dayMonth(week.end_date)}</span>
+        <button type="button" class="vm-weeknav-step" data-action="select-week" data-id="${escapeHtml(next?.id || "")}" ${next ? "" : "disabled"} aria-label="Tuần sau">›</button>
+      </div>`;
+  }
+
+  function weekAdminHtml(week) {
+    return isAdmin() ? `
+      <span class="vm-admin">
+        <button class="button button-ghost button-small" data-action="edit-week" data-id="${week.id}">✎ Sửa tuần</button>
+        <button class="button button-danger button-small" data-action="delete-week" data-id="${week.id}">⌫ Xóa tuần</button>
+      </span>` : "";
+  }
+
+  function categoryChipsHtml(items) {
+    const counts = new Map();
+    items.forEach(item => {
+      const key = categoryInfo(item).key;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+
+    const chip = (key, label, icon, count, style = "") => `
+      <button type="button" class="vm-cat ${state.categoryFilter === key ? "is-active" : ""}" style="${style}"
+        data-action="filter-category" data-category="${escapeHtml(key)}" aria-pressed="${state.categoryFilter === key}">
+        <span aria-hidden="true">${escapeHtml(icon)}</span>${escapeHtml(label)}<b>${count}</b>
+      </button>`;
+
+    return chip("all", "Tất cả", "✨", items.length) + activeCategories()
+      .filter(category => counts.has(category.slug))
+      .map(category => chip(category.slug, category.name, category.icon || "📌", counts.get(category.slug), categoryStyle(category)))
+      .join("");
+  }
+
+  function renderViewStage(week, items, visibleItems) {
+    if (el.currentSection) el.currentSection.dataset.view = state.viewMode;
+
+    el.viewSwitcher?.querySelectorAll("[data-view]").forEach(button => {
+      button.setAttribute("aria-pressed", String(button.dataset.view === state.viewMode));
+    });
+
+    if (!el.viewStage) return;
+
+    if (state.viewMode === "list" || !week) {
+      el.viewStage.innerHTML = "";
+      return;
+    }
+
+    el.viewStage.innerHTML = state.viewMode === "agenda"
+      ? agendaHtml(week, items, visibleItems)
+      : bentoHtml(week, items);
+
+    contentInteractions.enhance(el.viewStage);
+  }
+
+  /* ---------- Lịch tuần theo ngày + khung đọc ---------- */
+
+  function agendaHtml(week, items, visibleItems) {
+    const today = todayIso();
+    const days = weekDays(week);
+    const groups = new Map(days.map(day => [day, []]));
+    const before = [];
+    const after = [];
+
+    visibleItems.forEach(item => {
+      const day = item.event_date;
+      if (day && groups.has(day)) groups.get(day).push(item);
+      else if (day && day > week.end_date) after.push(item);
+      else before.push(item);
+    });
+
+    const attention = items
+      .filter(item => {
+        const diff = daysFromToday(item.event_date);
+        return item.is_pinned || item.priority === "important" || (diff !== null && diff >= 0 && diff <= 3);
+      })
+      .sort((a, b) => String(a.event_date || "9").localeCompare(String(b.event_date || "9")));
+
+    if (!items.some(item => String(item.id) === state.readerId)) {
+      const first = visibleItems.find(item => !readIds.has(String(item.id))) || visibleItems[0];
+      state.readerId = first ? String(first.id) : null;
+    }
+
+    const strip = days.map(day => {
+      const dayItems = items.filter(item => item.event_date === day);
+      const dots = dayItems.slice(0, 4).map(item =>
+        `<i style="background:${escapeHtml(categoryDisplayColor(categoryInfo(item)))}"></i>`).join("");
+      const weekday = WEEKDAY_SHORT[dateObj(day).getDay()];
+
+      return `
+        <button type="button" class="vm-day ${day === today ? "is-today" : ""} ${day < today ? "is-past" : ""}"
+          data-action="agenda-jump" data-day="${day}" ${dayItems.length ? "" : "disabled"}
+          aria-label="${WEEKDAY_LONG[dateObj(day).getDay()]} ${dayMonth(day)}, ${dayItems.length} thông báo">
+          <small>${day === today ? "Hôm nay" : weekday}</small>
+          <b>${day.slice(8, 10)}</b>
+          <span class="vm-dots">${dots}</span>
+        </button>`;
+    }).join("");
+
+    const row = item => {
+      const category = categoryInfo(item);
+      const id = String(item.id);
+      return `
+        <button type="button" class="vm-row ${id === state.readerId ? "is-selected" : ""} ${readIds.has(id) ? "is-read" : ""} ${item.priority === "important" ? "is-important" : ""}"
+          style="${categoryStyle(category)}" data-action="open-reader" data-id="${escapeHtml(id)}" aria-pressed="${id === state.readerId}">
+          <span class="vm-unread" aria-label="${readIds.has(id) ? "" : "Chưa đọc"}"></span>
+          <span class="vm-row-main">
+            <span class="vm-row-title">${item.is_pinned ? "📌 " : ""}${escapeHtml(item.title)}</span>
+            <span class="vm-row-preview">${escapeHtml(announcementPreview(contentRenderer.renderStoredContent(item.content)))}</span>
+          </span>
+          <span class="vm-row-side">
+            ${relativeChip(item) || `<span class="vm-row-date">${item.event_date ? dayMonth(item.event_date) : ""}</span>`}
+            <span class="vm-row-cat">${escapeHtml(category.icon || "📌")}</span>
+          </span>
+        </button>`;
+    };
+
+    const group = (id, title, list) => list.length ? `
+      <section class="vm-group" id="${id}">
+        <h4>${title}</h4>
+        ${list.map(row).join("")}
+      </section>` : "";
+
+    const dayTitle = day => {
+      const label = `${WEEKDAY_LONG[dateObj(day).getDay()]} ${dayMonth(day)}`;
+      return day === today ? `Hôm nay · ${label}` : label;
+    };
+
+    const selected = items.find(item => String(item.id) === state.readerId);
+    // Counts as read once it is actually on screen: always on desktop, on phones only when opened.
+    if (selected && (state.readerOpen || !window.matchMedia("(max-width: 900px)").matches)) {
+      markRead(selected.id);
+    }
+    const unread = items.filter(item => !readIds.has(String(item.id))).length;
+
+    return `
+      <div class="vm-agenda">
+        <header class="vm-agenda-head">
+          ${weekNavHtml(week)}
+          <span class="vm-chip ${unread ? "is-unread" : ""}">${unread ? `${unread} chưa đọc` : "Đã đọc hết"}</span>
+          ${weekAdminHtml(week)}
+        </header>
+
+        <div class="vm-days">${strip}</div>
+
+        ${attention.length ? `
+          <div class="vm-attention">
+            <strong>⚠ Cần chú ý</strong>
+            ${attention.slice(0, 5).map(item => `
+              <button type="button" class="vm-attention-row" data-action="open-reader" data-id="${escapeHtml(item.id)}">
+                ${relativeChip(item) || (item.priority === "important" ? '<span class="vm-chip is-soon">Quan trọng</span>' : "")}
+                <span>${escapeHtml(item.title)}</span>
+              </button>`).join("")}
+          </div>` : ""}
+
+        <div class="vm-cats">${categoryChipsHtml(items)}</div>
+
+        <div class="vm-split">
+          <div class="vm-list">
+            ${visibleItems.length ? "" : `<div class="empty-state">${items.length ? "Không có thông báo trong chuyên mục này." : "Tuần này chưa có thông báo."}</div>`}
+            ${group("agenda-before", "Đang có hiệu lực", before)}
+            ${days.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
+            ${group("agenda-after", "Sắp tới (sau tuần này)", after)}
+          </div>
+
+          <aside class="vm-reader ${state.readerOpen ? "is-open" : ""}" id="vm-reader" aria-label="Nội dung thông báo">
+            ${selected ? readerHtml(selected, visibleItems) : '<p class="vm-reader-empty">Chọn một thông báo để đọc.</p>'}
+          </aside>
+        </div>
+      </div>`;
+  }
+
+  function readerHtml(item, list) {
+    const category = categoryInfo(item);
+    const contentMode = contentRenderer.getStoredMode(item.content);
+    const index = list.findIndex(x => String(x.id) === String(item.id));
+    const prev = list[index - 1];
+    const next = list[index + 1];
+
+    return `
+      <div class="vm-reader-bar">
+        <button type="button" class="vm-reader-close" data-action="close-reader">‹ Danh sách</button>
+        <span>
+          <button type="button" class="vm-step" data-action="open-reader" data-id="${escapeHtml(prev?.id || "")}" ${prev ? "" : "disabled"} aria-label="Thông báo trước">‹ Trước</button>
+          <button type="button" class="vm-step" data-action="open-reader" data-id="${escapeHtml(next?.id || "")}" ${next ? "" : "disabled"} aria-label="Thông báo sau">Sau ›</button>
+        </span>
+      </div>
+      <article class="vm-reader-body" style="${categoryStyle(category)}">
+        <div class="vm-reader-chips">
+          <span class="category-chip" style="${categoryStyle(category)}"><span aria-hidden="true">${escapeHtml(category.icon || "📌")}</span> ${escapeHtml(category.name)}</span>
+          ${item.priority === "important" ? '<span class="priority-chip">Quan trọng</span>' : ""}
+        </div>
+        <h3>${item.is_pinned ? "📌 " : ""}${escapeHtml(item.title)}</h3>
+        <p class="vm-reader-meta">📅 ${escapeHtml(formatDate(item.event_date))}${(() => {
+          const rel = relativeDayLabel(item.event_date);
+          return rel ? ` · <strong>${rel.text}</strong>` : "";
+        })()}${item.valid_from || item.valid_until ? ` · Hiệu lực ${escapeHtml(formatDate(item.valid_from || item.event_date))} → ${escapeHtml(formatDate(item.valid_until || item.valid_from || item.event_date))}` : ""}</p>
+        ${item.image_path ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}"><img src="${escapeHtml(getImagePublicUrl(item.image_path))}" alt="${escapeHtml(item.image_alt || item.title)}" loading="lazy" decoding="async"></button>` : ""}
+        <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${contentRenderer.renderStoredContent(item.content)}</div>
+        <div class="card-actions">
+          <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
+          ${isAdmin() ? `
+            <button class="button button-ghost button-small card-command" data-action="edit-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">✎</span><span>Sửa</span></button>
+            <button class="button button-danger button-small card-command" data-action="delete-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⌫</span><span>Xóa</span></button>` : ""}
+        </div>
+      </article>`;
+  }
+
+  function openReader(id) {
+    if (!id) return;
+    state.readerId = String(id);
+    state.readerOpen = true;
+    renderCurrent();
+    document.body.classList.toggle("vm-reader-locked", window.matchMedia("(max-width: 900px)").matches);
+    const reader = document.getElementById("vm-reader");
+    reader?.scrollTo({ top: 0 });
+    if (!window.matchMedia("(max-width: 900px)").matches) {
+      const box = reader?.getBoundingClientRect();
+      if (box && (box.top < 0 || box.top > window.innerHeight * .6)) {
+        reader.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }
+
+  function closeReader() {
+    state.readerOpen = false;
+    document.body.classList.remove("vm-reader-locked");
+    document.getElementById("vm-reader")?.classList.remove("is-open");
+  }
+
+  /* ---------- Bảng ô (Bento) ---------- */
+
+  function bentoHtml(week, items) {
+    const today = todayIso();
+    const s = weekState(week);
+    const days = weekDays(week);
+    const important = items.filter(item => item.priority === "important").length;
+    const top = items.find(item => item.is_pinned || item.priority === "important") || items[0];
+
+    let progress = "";
+    if (s === "current") {
+      const index = Math.max(1, days.indexOf(today) + 1 || days.filter(day => day <= today).length);
+      const left = days.length - index;
+      progress = `
+        <div class="vm-progress" role="img" aria-label="Ngày ${index} trên ${days.length}"><i style="width:${Math.round(index / days.length * 100)}%"></i></div>
+        <small>Ngày ${index}/${days.length}${left ? ` · còn ${left} ngày` : " · ngày cuối tuần"}</small>`;
+    } else if (s === "upcoming") {
+      progress = `<small>Bắt đầu sau ${daysFromToday(week.start_date)} ngày</small>`;
+    } else {
+      progress = "<small>Tuần đã kết thúc</small>";
+    }
+
+    const upcoming = items
+      .filter(item => {
+        const diff = daysFromToday(item.event_date);
+        return diff !== null && diff >= 0 && diff <= 7;
+      })
+      .sort((a, b) => a.event_date.localeCompare(b.event_date))
+      .slice(0, 4);
+
+    const latest = [...items]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 3);
+
+    const counts = new Map();
+    items.forEach(item => {
+      const key = categoryInfo(item).key;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+
+    const categoryTiles = activeCategories()
+      .filter(category => counts.has(category.slug))
+      .map(category => `
+        <button type="button" class="vm-tile vm-tile-cat ${state.categoryFilter === category.slug ? "is-active" : ""}" style="${categoryStyle(category)}"
+          data-action="filter-category" data-category="${escapeHtml(category.slug)}" aria-pressed="${state.categoryFilter === category.slug}">
+          <span class="vm-cat-icon" aria-hidden="true">${escapeHtml(category.icon || "📌")}</span>
+          <span>${escapeHtml(category.name)}</span>
+          <b>${counts.get(category.slug)}</b>
+        </button>`).join("");
+
+    const linkRow = item => `
+      <button type="button" class="vm-link-row" data-action="bento-open" data-id="${escapeHtml(item.id)}">
+        ${relativeChip(item)}<span>${escapeHtml(item.title)}</span>
+      </button>`;
+
+    return `
+      <div class="vm-bento">
+        <section class="vm-tile vm-tile-hero">
+          ${weekNavHtml(week, { showNumber: false })}
+          <h3>Tuần ${escapeHtml(week.week_number)}</h3>
+          <p>${escapeHtml(week.summary || `${formatDate(week.start_date)} → ${formatDate(week.end_date)}`)}</p>
+          ${progress}
+          <div class="vm-hero-chips">
+            <span>📣 ${items.length} thông báo</span>
+            ${important ? `<span class="is-warn">⚠️ ${important} quan trọng</span>` : ""}
+          </div>
+          ${weekAdminHtml(week)}
+        </section>
+
+        ${top ? `
+          <section class="vm-tile vm-tile-top" style="${categoryStyle(categoryInfo(top))}">
+            <h5>${top.priority === "important" || top.is_pinned ? "📌 Quan trọng nhất" : "Nổi bật"}</h5>
+            <h3>${escapeHtml(top.title)}</h3>
+            <p>${escapeHtml(announcementPreview(contentRenderer.renderStoredContent(top.content)))}</p>
+            <div class="vm-tile-foot">
+              ${relativeChip(top)}
+              <button type="button" class="button button-small" data-action="bento-open" data-id="${escapeHtml(top.id)}">Đọc ngay →</button>
+            </div>
+          </section>` : `<section class="vm-tile vm-tile-top"><h5>Tuần này</h5><p>Chưa có thông báo.</p></section>`}
+
+        <section class="vm-tile vm-tile-upcoming">
+          <h5>⏰ Sắp diễn ra</h5>
+          ${upcoming.length ? upcoming.map(linkRow).join("") : '<p class="vm-muted">Không có sự kiện trong 7 ngày tới.</p>'}
+        </section>
+
+        <section class="vm-tile vm-tile-latest">
+          <h5>🆕 Mới đăng</h5>
+          ${latest.length ? latest.map(linkRow).join("") : '<p class="vm-muted">Chưa có thông báo.</p>'}
+        </section>
+
+        <div class="vm-bento-cats">
+          <button type="button" class="vm-tile vm-tile-cat ${state.categoryFilter === "all" ? "is-active" : ""}" data-action="filter-category" data-category="all" aria-pressed="${state.categoryFilter === "all"}">
+            <span class="vm-cat-icon" aria-hidden="true">✨</span><span>Tất cả</span><b>${items.length}</b>
+          </button>
+          ${categoryTiles}
+        </div>
+      </div>`;
+  }
+
+  // Open a card in the list under the bento grid.
+  function bentoOpen(id) {
+    let toggle = el.currentAnnouncements.querySelector(`.announcement-toggle[data-id="${CSS.escape(String(id))}"]`);
+    if (!toggle && state.categoryFilter !== "all") {
+      state.categoryFilter = "all";
+      renderCurrent();
+      toggle = el.currentAnnouncements.querySelector(`.announcement-toggle[data-id="${CSS.escape(String(id))}"]`);
+    }
+    const card = toggle?.closest(".announcement-card");
+    if (!card) return;
+
+    setAnnouncementExpanded(card, true);
+    syncToggleAllButton();
+    card.classList.add("is-flash");
+    setTimeout(() => card.classList.remove("is-flash"), 1400);
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function setViewMode(mode) {
+    if (!VIEW_MODES.includes(mode)) return;
+    state.viewMode = mode;
+    writeStorage(VIEW_STORAGE_KEY, mode);
+    closeReader();
+    renderCurrent();
+    enhanceRenderedContent();
   }
 
   function renderWeekPicker() {
@@ -1409,6 +1838,8 @@
     const [featured] = chooseFeaturedWeek(state.activeSchoolYear);
 
     state.selectedWeekId = week && week.id !== featured?.id ? week.id : null;
+    state.readerId = null;
+    closeReader();
     state.categoryFilter = "all";
     [state.currentWeek, state.currentWeekState] = displayedWeek();
 
@@ -2437,6 +2868,31 @@
       return;
     }
 
+    if (action === "set-view") {
+      setViewMode(button.dataset.view);
+      return;
+    }
+
+    if (action === "open-reader") {
+      openReader(id);
+      return;
+    }
+
+    if (action === "close-reader") {
+      closeReader();
+      return;
+    }
+
+    if (action === "agenda-jump") {
+      document.getElementById(`agenda-day-${button.dataset.day}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    if (action === "bento-open") {
+      bentoOpen(id);
+      return;
+    }
+
     if (action === "toggle-announcement") {
       const card = button.closest(".announcement-card");
       if (card) setAnnouncementExpanded(card, !card.classList.contains("is-expanded"));
@@ -2608,6 +3064,10 @@
   }
 
   async function init() {
+    state.viewMode = initialViewMode();
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && state.readerOpen) closeReader();
+    });
     initTheme();
 
     announcementEditor =

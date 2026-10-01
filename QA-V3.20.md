@@ -31,3 +31,13 @@ Kiểm thử bằng Chromium (Playwright) với Supabase giả lập (10 tuần,
 - [x] Tablet: 2 ô cùng hàng trên thanh trên cùng; điện thoại: 2 ô cạnh nhau ở hàng 2.
 - [x] Thanh bên thu gọn chỉ hiện biểu tượng 📅.
 - [x] 1440 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.
+
+## V3.23 — Bản mẫu Lịch tuần / Bảng ô
+
+- [x] Nút chuyển kiểu hiển thị; lựa chọn được nhớ sau khi tải lại; `?view=` hoạt động.
+- [x] Lịch tuần: dải ngày, Cần chú ý (tối đa 5), lọc chuyên mục, nhóm theo ngày, khung đọc, Trước/Sau.
+- [x] Chưa đọc: đếm đúng; trên điện thoại chỉ tính đã đọc khi mở khung đọc; Esc / "‹ Danh sách" đóng khung đọc.
+- [x] ‹ › đổi tuần, đồng bộ với dropdown Tuần.
+- [x] Bảng ô: 8 ô; lọc theo ô chuyên mục; "Đọc ngay" / ô Mới đăng mở đúng thẻ (tự bỏ lọc nếu cần).
+- [x] Admin: Sửa/Xóa trong khung đọc và ô tuần; hàng nút Quản trị trên điện thoại không đè nội dung.
+- [x] 1440 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.

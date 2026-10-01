@@ -1,0 +1,897 @@
+/* =========================================================
+   V3.23 — View modes (prototype)
+   Danh sách (mặc định) · Lịch tuần theo ngày + khung đọc · Bảng ô (Bento)
+   ========================================================= */
+
+/* ---------- Switcher ---------- */
+
+.view-switcher {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--mac-line);
+  border-radius: 12px;
+  background: var(--mac-card-soft);
+  box-shadow: var(--mac-highlight);
+}
+
+.view-switcher button {
+  min-height: 30px;
+  padding: 4px 11px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--mac-muted);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 680;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.view-switcher button[aria-pressed="true"] {
+  background: var(--mac-card-solid);
+  color: var(--mac-text);
+  box-shadow: 0 1px 4px rgba(34, 50, 78, .12);
+}
+
+/* ---------- What each mode shows ---------- */
+
+.current-section[data-view="agenda"] #current-week-card,
+.current-section[data-view="agenda"] #category-dashboard,
+.current-section[data-view="agenda"] .dashboard-subheading,
+.current-section[data-view="agenda"] #current-announcements,
+.current-section[data-view="bento"] #current-week-card,
+.current-section[data-view="bento"] #category-dashboard {
+  display: none !important;
+}
+
+.current-section[data-view="bento"] .dashboard-subheading {
+  margin-top: 22px;
+}
+
+/* ---------- Shared bits ---------- */
+
+.vm-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-height: 22px;
+  padding: 1px 8px;
+  border: 1px solid var(--mac-line);
+  border-radius: 999px;
+  background: var(--mac-card-solid);
+  color: var(--mac-muted);
+  font-size: .7rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.vm-chip.is-today { border-color: rgba(255, 69, 58, .35); background: color-mix(in srgb, #ff453a 10%, var(--mac-card-solid)); color: #b42318; }
+.vm-chip.is-soon { border-color: rgba(255, 159, 10, .38); background: color-mix(in srgb, var(--mac-orange) 12%, var(--mac-card-solid)); color: #9a5800; }
+.vm-chip.is-later { border-color: color-mix(in srgb, var(--mac-blue) 28%, var(--mac-line)); color: color-mix(in srgb, var(--mac-blue) 80%, var(--mac-text)); }
+.vm-chip.is-unread { border-color: color-mix(in srgb, var(--mac-blue) 30%, var(--mac-line)); background: color-mix(in srgb, var(--mac-blue) 10%, var(--mac-card-solid)); color: color-mix(in srgb, var(--mac-blue) 85%, var(--mac-text)); }
+html[data-theme="dark"] .vm-chip.is-today { color: #ff9a92; }
+html[data-theme="dark"] .vm-chip.is-soon { color: #ffc56b; }
+
+.vm-weeknav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.vm-weeknav strong {
+  font-size: 1.05rem;
+}
+
+.vm-weeknav span {
+  color: var(--mac-muted);
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.vm-weeknav-step {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--mac-line);
+  border-radius: 9px;
+  background: var(--mac-card-solid);
+  color: var(--mac-text);
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+
+.vm-weeknav-step:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.vm-admin {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.vm-muted {
+  margin: 0;
+  color: var(--mac-muted);
+  font-size: .84rem;
+}
+
+.announcement-card.is-flash {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mac-blue) 45%, transparent), var(--mac-shadow-soft);
+}
+
+/* =========================================================
+   Lịch tuần theo ngày + khung đọc
+   ========================================================= */
+
+.vm-agenda {
+  display: grid;
+  gap: 12px;
+}
+
+.vm-agenda-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.vm-agenda-head .vm-admin {
+  margin-left: auto;
+}
+
+.vm-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+.vm-day {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  min-height: 74px;
+  padding: 8px 4px;
+  border: 1px solid var(--mac-line);
+  border-radius: 14px;
+  background: var(--mac-card);
+  color: var(--mac-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.vm-day:disabled {
+  cursor: default;
+}
+
+.vm-day small {
+  color: var(--mac-muted);
+  font-size: .7rem;
+  font-weight: 700;
+}
+
+.vm-day b {
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.vm-day.is-past {
+  opacity: .62;
+}
+
+.vm-day.is-today {
+  border-color: transparent;
+  background: linear-gradient(150deg, #1d7a57, #2fae7d);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(29, 122, 87, .28);
+}
+
+.vm-day.is-today small {
+  color: #d9f5e8;
+}
+
+.vm-dots {
+  display: flex;
+  gap: 3px;
+  min-height: 7px;
+}
+
+.vm-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.vm-day.is-today .vm-dots i {
+  box-shadow: 0 0 0 1.5px #fff;
+}
+
+.vm-attention {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 159, 10, .35);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--mac-orange) 7%, var(--mac-card-solid));
+}
+
+.vm-attention > strong {
+  color: #9a5800;
+  font-size: .84rem;
+}
+
+html[data-theme="dark"] .vm-attention > strong { color: #ffc56b; }
+
+.vm-attention-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 3px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--mac-text);
+  font: inherit;
+  font-size: .86rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vm-attention-row:hover {
+  background: color-mix(in srgb, var(--mac-orange) 10%, transparent);
+}
+
+.vm-cats {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.vm-cat {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--category-color, var(--mac-blue)) 22%, var(--mac-line));
+  border-radius: 999px;
+  background: var(--mac-card-solid);
+  color: var(--mac-text);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.vm-cat b {
+  color: var(--mac-muted);
+  font-size: .72rem;
+}
+
+.vm-cat.is-active {
+  border-color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 60%, var(--mac-line));
+  background: color-mix(in srgb, var(--category-color, var(--mac-blue)) 14%, var(--mac-card-solid));
+}
+
+.vm-split {
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.vm-list {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.vm-group {
+  display: grid;
+  gap: 6px;
+  scroll-margin-top: 90px;
+}
+
+.vm-group h4 {
+  margin: 10px 2px 2px;
+  color: var(--mac-muted);
+  font-size: .7rem;
+  font-weight: 780;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.vm-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px 10px 10px;
+  border: 1px solid var(--mac-line);
+  border-radius: 12px;
+  background: var(--mac-card);
+  color: var(--mac-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 3px 0 0 var(--category-color, var(--mac-blue));
+}
+
+.vm-row:hover {
+  border-color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 35%, var(--mac-line));
+}
+
+.vm-row.is-selected {
+  border-color: color-mix(in srgb, var(--mac-blue) 45%, var(--mac-line));
+  background: color-mix(in srgb, var(--mac-blue) 8%, var(--mac-card-solid));
+}
+
+.vm-row.is-important {
+  box-shadow: inset 3px 0 0 var(--mac-orange);
+}
+
+.vm-unread {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--mac-blue);
+}
+
+.vm-row.is-read .vm-unread {
+  background: transparent;
+}
+
+.vm-row-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vm-row-title {
+  font-size: .9rem;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.vm-row.is-read .vm-row-title {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--mac-text) 80%, var(--mac-muted));
+}
+
+.vm-row-preview {
+  overflow: hidden;
+  color: var(--mac-muted);
+  font-size: .78rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vm-row-side {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.vm-row-date {
+  color: var(--mac-muted);
+  font-size: .72rem;
+  font-weight: 650;
+}
+
+.vm-row-cat {
+  font-size: .85rem;
+}
+
+.vm-reader {
+  position: sticky;
+  top: 82px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  border: 1px solid var(--mac-line);
+  border-radius: 18px;
+  background: var(--mac-card-solid);
+  box-shadow: var(--mac-shadow-soft);
+  scrollbar-width: thin;
+}
+
+.vm-reader-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--mac-line);
+  background: var(--mac-glass-strong);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.vm-reader-bar > span {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.vm-reader-close {
+  display: none;
+}
+
+.vm-step,
+.vm-reader-close {
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid var(--mac-line);
+  border-radius: 9px;
+  background: var(--mac-card-solid);
+  color: var(--mac-text);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.vm-step:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.vm-reader-body {
+  padding: 16px 20px 18px;
+}
+
+.vm-reader-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vm-reader-body h3 {
+  margin: 10px 0 4px;
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+
+.vm-reader-meta {
+  margin: 0 0 12px;
+  color: var(--mac-muted);
+  font-size: .82rem;
+}
+
+.vm-reader-meta strong {
+  color: #9a5800;
+}
+
+.vm-reader-empty {
+  margin: 0;
+  padding: 40px 20px;
+  color: var(--mac-muted);
+  text-align: center;
+}
+
+/* Phone / tablet: list only; the reader slides in full screen. */
+@media (max-width: 900px) {
+  .vm-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vm-reader {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 220ms ease, visibility 0s linear 220ms;
+  }
+
+  .vm-reader.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 220ms ease;
+  }
+
+  .vm-reader-close {
+    display: inline-flex;
+  }
+
+  body.vm-reader-locked {
+    overflow: hidden;
+  }
+
+  .vm-days {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .vm-day {
+    flex: 0 0 64px;
+    min-height: 66px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vm-reader { transition: none !important; }
+}
+
+/* =========================================================
+   Bảng ô (Bento)
+   ========================================================= */
+
+.vm-bento {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "hero top      top"
+    "hero upcoming latest"
+    "cats cats     cats";
+  gap: 12px;
+}
+
+.vm-tile {
+  position: relative;
+  min-width: 0;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid var(--mac-line);
+  border-radius: 20px;
+  background: var(--mac-card);
+  color: var(--mac-text);
+  box-shadow: var(--mac-shadow-soft), var(--mac-highlight);
+}
+
+.vm-tile h5 {
+  margin: 0 0 8px;
+  color: var(--mac-muted);
+  font-size: .7rem;
+  font-weight: 780;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.vm-tile-hero {
+  grid-area: hero;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 300px;
+  border: 0;
+  background:
+    linear-gradient(160deg, rgba(18, 84, 66, .86) 0%, rgba(24, 98, 77, .62) 55%, rgba(39, 125, 97, .18) 100%),
+    url("mint-garden-hero.svg") 70% bottom / cover no-repeat;
+  color: #fff;
+}
+
+.vm-tile-hero .vm-weeknav span { color: #d9f5e8; }
+.vm-tile-hero .vm-weeknav-step { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.14); color: #fff; }
+.vm-tile-hero .vm-weeknav strong { font-size: 1.15rem; }
+
+.vm-tile-hero h3 {
+  margin: 6px 0 0;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  text-shadow: 0 1px 3px rgba(10, 48, 38, .4);
+}
+
+.vm-tile-hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, .92);
+  font-size: .92rem;
+}
+
+.vm-tile-hero small {
+  color: #e2f7ee;
+  font-weight: 650;
+}
+
+.vm-progress {
+  height: 9px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .28);
+}
+
+.vm-progress i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: #fff;
+}
+
+.vm-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.vm-hero-chips span {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, .34);
+  border-radius: 999px;
+  background: rgba(12, 66, 52, .32);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.vm-hero-chips .is-warn {
+  border-color: rgba(255, 210, 140, .6);
+  background: rgba(150, 82, 0, .4);
+}
+
+.vm-tile-hero .vm-admin .button {
+  background: rgba(255, 255, 255, .9);
+}
+
+.vm-tile-top {
+  grid-area: top;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-color: color-mix(in srgb, var(--mac-orange) 30%, var(--mac-line));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mac-orange) 7%, transparent), transparent 70%),
+    var(--mac-card-solid);
+}
+
+.vm-tile-top h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.vm-tile-top p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--mac-muted);
+  font-size: .9rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.vm-tile-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.vm-tile-upcoming { grid-area: upcoming; }
+.vm-tile-latest { grid-area: latest; }
+
+.vm-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--mac-text);
+  font: inherit;
+  font-size: .86rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vm-link-row span:last-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vm-link-row:hover {
+  background: var(--mac-card-soft);
+}
+
+.vm-bento-cats {
+  grid-area: cats;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.vm-tile-cat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 20%, var(--mac-line));
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vm-tile-cat b {
+  margin-left: auto;
+  font-size: 1.4rem;
+  color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 80%, var(--mac-text));
+}
+
+.vm-cat-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--category-color, var(--mac-blue)) 14%, var(--mac-card-solid));
+}
+
+.vm-tile-cat.is-active {
+  border-color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 60%, var(--mac-line));
+  background: color-mix(in srgb, var(--category-color, var(--mac-blue)) 10%, var(--mac-card-solid));
+}
+
+@media (max-width: 900px) {
+  .vm-bento {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero     hero"
+      "top      top"
+      "upcoming latest"
+      "cats     cats";
+  }
+
+  .vm-tile-hero {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 620px) {
+  .vm-bento {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "hero" "top" "upcoming" "latest" "cats";
+  }
+
+  .vm-bento-cats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-switcher button {
+    padding-inline: 8px;
+    font-size: .74rem;
+  }
+}
+
+/* The switcher takes the heading's right side on phones; the status badge is in the stage. */
+@media (max-width: 620px) {
+  .current-section > .section-heading {
+    flex-wrap: wrap;
+  }
+
+  .section-heading-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Bento: the category tiles replace the filter row, so keep the list heading clear of them. */
+.current-section[data-view="bento"] .category-dashboard + .dashboard-subheading {
+  margin-top: 26px;
+}
+
+/* Agenda / Bento show the week status inside the stage; drop the duplicate badge on phones. */
+@media (max-width: 620px) {
+  .current-section:not([data-view="list"]) .section-heading-actions .live-badge {
+    display: none !important;
+  }
+}
+
+/* =========================================================
+   Phone/tablet admin tools: an inline row under the top bar
+   (previously an always-open dropdown that covered the page).
+   ========================================================= */
+
+@media (max-width: 820px) {
+  .app-sidebar {
+    grid-template-areas:
+      "brand nav year week actions"
+      "admin admin admin admin admin";
+  }
+
+  .sidebar-admin,
+  .sidebar-admin:not(.hidden) {
+    position: static;
+    grid-area: admin;
+    width: auto;
+    max-height: none;
+    margin: 2px 0 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .sidebar-admin.hidden {
+    display: none !important;
+  }
+
+  .sidebar-admin-actions {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .sidebar-admin-actions .sidebar-admin-mini {
+    display: contents;
+  }
+
+  .sidebar-admin-actions .sidebar-command,
+  .sidebar-admin-actions .sidebar-mini-command {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    min-height: 36px;
+    padding: 4px 10px 4px 5px;
+    border: 1px solid var(--mac-line);
+    border-radius: 999px;
+    background: var(--mac-card-solid);
+    white-space: nowrap;
+  }
+
+  .sidebar-admin-actions .sidebar-command small {
+    display: none;
+  }
+
+  .sidebar-admin-actions .sidebar-command strong,
+  .sidebar-admin-actions .sidebar-mini-command > span:last-child {
+    display: inline;
+    font-size: .78rem;
+  }
+
+  .sidebar-admin-actions .sidebar-command-icon,
+  .sidebar-admin-actions .sidebar-mini-command > span:first-child {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: .8rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-sidebar {
+    grid-template-areas:
+      "brand nav  nav  actions"
+      "year  year week week"
+      "admin admin admin admin";
+  }
+}
+
+/* Minty steps aside while the full-screen reader is open on phones. */
+body.vm-reader-locked .pet-companion,
+body.vm-reader-locked .pet-restore {
+  display: none !important;
+}
