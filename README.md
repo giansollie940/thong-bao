@@ -278,3 +278,21 @@ Bản này:
 - counter ký tự/từ không mutate Visual DOM;
 - full normalizer vẫn chạy ở paste/format/save/chuyển tab;
 - đặt base direction LTR rõ ràng cho editor tiếng Việt.
+
+
+## V3.19 — UI Polish
+
+Sửa các lỗi giao diện còn sót lại do nhiều lớp CSS chồng nhau.
+Phần sửa được tách riêng vào `ui-polish.css` (nạp sau cùng), không đổi JS,
+database hay `config.js`.
+
+- **Hero tuần hiện tại:** thêm lớp phủ xanh đậm phía sau chữ để chữ trắng
+  đọc rõ trên nền Mint Garden sáng; chip ngày/năm học/số thông báo dùng nền tối hơn.
+- **Minty:** chuyển xuống góc phải dưới, không còn đè lên badge "Tuần gần nhất",
+  ô tìm kiếm hay tiêu đề mục; footer chừa chỗ cho Minty.
+- **Header tablet/điện thoại:** gọn lại một hàng (logo · điều hướng · năm học ·
+  giao diện/đăng nhập); dưới 480px năm học xuống hàng riêng toàn chiều rộng.
+  Header không còn sticky để ô tìm kiếm nổi luôn hiển thị khi cuộn
+  (trước đây bị header che mất).
+- **Hero trên điện thoại:** ô số tuần nhỏ lại (72px) để tiêu đề và mô tả có đủ chỗ.
+- **Dark mode:** số đếm trên chip chuyên mục đọc được (trước là chữ sáng trên nền sáng).
