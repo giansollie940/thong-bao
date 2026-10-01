@@ -21,3 +21,14 @@ Kiểm thử bằng Chromium (Playwright) với Supabase giả lập (10 tuần,
 - [x] Chip ngày: "Hôm nay" (đỏ), "Ngày mai"/"Còn 2–3 ngày" (cam), "Còn 4–7 ngày" (xanh); ngày đã qua không gắn nhãn.
 - [x] Khung tuần có chip "⚠️ N quan trọng" khi N > 0.
 - [x] 1440 / 1280 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.
+
+## V3.22 — Chọn tuần ở thanh bên trái
+
+- [x] Không còn cột bên phải; Lịch năm học là dải ngang như trước.
+- [x] Danh sách tuần ở thanh bên: tuần hiện tại có chấm xanh, tuần đang xem được tô; danh sách tự cuộn tới tuần đang xem.
+- [x] Chọn tuần đã qua / sắp tới: tiêu đề "Tuần đang xem", nhãn "Đã kết thúc" / "Sắp tới", có nút "Về tuần hiện tại".
+- [x] "Về tuần hiện tại" và đổi năm học đưa về tuần hiện tại.
+- [x] Nút "Xem" trong Lịch năm học chọn tuần (máy tính và điện thoại), không mở hộp thoại.
+- [x] Tuần không có thông báo: "Tuần này chưa có thông báo.", khoảng cách dưới khung tuần đúng.
+- [x] Thanh bên thu gọn và màn hình ≤820px ẩn danh sách tuần.
+- [x] 1440 / 1280 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.

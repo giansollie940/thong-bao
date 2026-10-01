@@ -328,3 +328,17 @@ Bố cục mới theo dạng dashboard, phần lớn bằng CSS trong `dashboard
 - Khung tuần hiện tại thấp hơn trên máy tính, có thêm chip **⚠️ N quan trọng**.
   Bỏ chip năm học vì đã có ô Năm học ở thanh bên; trên điện thoại bỏ dòng trạng thái
   trùng với nhãn cạnh tiêu đề.
+
+
+## V3.22 — Chọn tuần ở thanh bên trái
+
+Bỏ cột "Lịch năm học" bên phải của V3.20; trang chính quay lại một cột.
+
+- Thanh bên trái có danh sách **Chọn tuần** của năm học đang chọn: mỗi dòng gồm tuần,
+  ngày và số thông báo. Tuần đang diễn ra có chấm xanh, tuần đang xem được tô xanh dương.
+- Bấm một tuần thì phần chính hiển thị tuần đó: tiêu đề đổi thành **Tuần đang xem**,
+  nhãn trạng thái đổi theo ("Đã kết thúc" / "Sắp tới"), và có nút **↩ Về tuần hiện tại**.
+- Nút **Xem** trong mục Lịch năm học cũng chọn tuần theo cách này (không mở hộp thoại nữa);
+  trên điện thoại/tablet, nơi thanh bên thu thành thanh trên cùng, chọn tuần bằng nút này.
+- Tuần đang chọn được giữ khi dữ liệu tải lại; đổi năm học sẽ quay về tuần hiện tại.
+- Mục **Lưu trữ** vẫn mở hộp thoại "Xem lại" như trước.

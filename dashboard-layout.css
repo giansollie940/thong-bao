@@ -1,7 +1,7 @@
 /* =========================================================
    V3.20 — Dashboard Layout
    - Thẻ thông báo thu gọn / mở rộng.
-   - Máy tính rộng: 2 cột (nội dung tuần + lịch năm học dính bên phải).
+   - Chọn tuần ở thanh bên trái.
    - Chỉ dùng ô Năm học ở thanh bên cho toàn ứng dụng.
    ========================================================= */
 
@@ -206,161 +206,6 @@
   gap: 12px;
 }
 
-/* ---------- Wide screens: two-column dashboard ---------- */
-
-@media (min-width: 1180px) {
-  .dashboard-main {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(270px, 24vw, 320px);
-    grid-template-areas:
-      "banner  banner"
-      "current rail"
-      "search  rail"
-      "archive archive";
-    grid-template-rows: auto auto auto auto;
-    column-gap: 28px;
-    align-items: start;
-  }
-
-  #connection-banner { grid-area: banner; }
-  #current-section { grid-area: current; min-width: 0; }
-  #search-results-section { grid-area: search; min-width: 0; }
-  #archive-section { grid-area: archive; }
-
-  #year-section {
-    grid-area: rail;
-    position: sticky;
-    top: 82px;
-    display: flex;
-    flex-direction: column;
-    max-height: calc(100vh - 100px);
-    margin-top: 0;
-    padding: 16px 14px 14px;
-    overflow: hidden;
-    border: 1px solid var(--mac-line);
-    border-radius: 20px;
-    background: var(--mac-glass-strong);
-    box-shadow: var(--mac-shadow-soft), var(--mac-highlight);
-    content-visibility: visible;
-  }
-
-  #year-section .section-heading {
-    margin: 0 0 4px;
-    padding: 0 2px;
-  }
-
-  #year-section .section-heading h2 {
-    font-size: 1.12rem;
-  }
-
-  #year-section .school-year-toolbar {
-    margin: 0 2px 10px;
-  }
-
-  #year-section .year-strip {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    gap: 6px;
-    min-height: 0;
-    margin: 0 -4px;
-    padding: 2px 4px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-  }
-
-  /* Week rows: [Tuần 04 · dates]  [state]  [Xem] */
-  #year-section .year-week-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "head  actions"
-      "dates actions";
-    align-items: center;
-    flex: 0 0 auto;
-    gap: 1px 8px;
-    width: auto;
-    min-width: 0;
-    min-height: 0;
-    padding: 9px 10px 9px 12px;
-    border-radius: 12px;
-    box-shadow: none;
-  }
-
-  #year-section .year-week-card::before,
-  #year-section .year-week-card::after {
-    display: none;
-  }
-
-  #year-section .year-week-head {
-    grid-area: head;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-  }
-
-  #year-section .year-week-head strong {
-    font-size: .92rem;
-  }
-
-  #year-section .week-count-badge {
-    padding: 1px 6px;
-    font-size: .66rem;
-  }
-
-  #year-section .year-week-card > small {
-    grid-area: dates;
-    margin: 0;
-    font-size: .74rem;
-  }
-
-  #year-section .year-week-state {
-    display: none;
-  }
-
-  #year-section .year-week-actions {
-    grid-area: actions;
-    display: flex;
-    gap: 4px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-
-  #year-section .mini-action {
-    min-height: 30px;
-    padding: 4px 10px;
-    font-size: .76rem;
-  }
-
-  #year-section .year-week-card.current {
-    border-color: color-mix(in srgb, var(--mac-mint) 55%, var(--mac-line));
-    background: color-mix(in srgb, var(--mac-mint) 14%, var(--mac-card-solid));
-    box-shadow: inset 3px 0 0 var(--mac-mint);
-  }
-
-  #year-section .year-week-card.past {
-    opacity: .78;
-  }
-
-  #year-section .year-week-card.past:hover {
-    opacity: 1;
-  }
-
-  #archive-section {
-    margin-top: 40px;
-  }
-}
-
-/* Leave room for Minty (bottom-right) under the sticky rail while it is shown. */
-@media (min-width: 1180px) {
-  body:has(#pet-companion:not([hidden])) #year-section {
-    max-height: calc(100vh - 82px - 178px);
-  }
-}
-
 /* =========================================================
    V3.21 — Information first
    ========================================================= */
@@ -458,5 +303,193 @@ html[data-theme="dark"] .date-chip.is-soon { color: #ffc56b; }
   /* The section badge already states the week status. */
   .week-details > .eyebrow {
     display: none;
+  }
+}
+
+/* =========================================================
+   V3.22 — Week picker in the left sidebar
+   ========================================================= */
+
+.sidebar-weeks {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 150px;
+  margin: 12px 0 10px;
+}
+
+.sidebar-weeks-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px 6px;
+  color: var(--mac-muted);
+  font-size: .62rem;
+  font-weight: 760;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.sidebar-weeks-heading small {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.sidebar-weeks-list {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  margin: 0 -4px;
+  padding: 2px 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.sidebar-week {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1px 8px;
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 0;
+  padding: 6px 9px 6px 11px;
+  line-height: 1.25;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  color: var(--mac-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.sidebar-week:hover {
+  background: rgba(255, 255, 255, .42);
+}
+
+.sidebar-week strong {
+  font-size: .84rem;
+  font-weight: 680;
+}
+
+.sidebar-week small {
+  grid-column: 1;
+  color: var(--mac-muted);
+  font-size: .7rem;
+}
+
+.sidebar-week-count {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mac-card-soft);
+  color: var(--mac-muted);
+  font-size: .68rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sidebar-week-count.has-items {
+  background: color-mix(in srgb, var(--mac-blue) 12%, var(--mac-card-solid));
+  color: color-mix(in srgb, var(--mac-blue) 82%, var(--mac-text));
+}
+
+.sidebar-week.is-past strong {
+  color: color-mix(in srgb, var(--mac-text) 72%, var(--mac-muted));
+}
+
+/* Today's week keeps a green dot even when another week is selected. */
+.sidebar-week.is-current strong::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--mac-mint);
+  vertical-align: 1px;
+}
+
+.sidebar-week[aria-current="true"] {
+  border-color: color-mix(in srgb, var(--mac-blue) 30%, var(--mac-line));
+  background: color-mix(in srgb, var(--mac-blue) 11%, var(--mac-card-solid));
+  box-shadow: inset 3px 0 0 var(--mac-blue);
+}
+
+html[data-theme="dark"] .sidebar-week:hover {
+  background: rgba(255, 255, 255, .06);
+}
+
+.sidebar-weeks-empty {
+  padding: 6px;
+  color: var(--mac-muted);
+  font-size: .76rem;
+}
+
+/* Collapsed icon rail and the phone/tablet top bar have no room for the list;
+   there the "Lịch năm học" strip's "Xem" buttons pick the week instead. */
+.app-shell.sidebar-collapsed .sidebar-weeks {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .sidebar-weeks {
+    display: none;
+  }
+}
+
+.back-to-week-button.hidden {
+  display: none;
+}
+
+.section-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.back-to-week-button {
+  min-height: 32px;
+  padding: 5px 12px;
+  border: 1px solid var(--mac-line);
+  border-radius: 999px;
+  background: var(--mac-card-solid);
+  font-size: .8rem;
+  font-weight: 650;
+}
+
+/* Keep spacing under the banner when the category filter row is hidden (empty week). */
+.current-section .dashboard-subheading {
+  margin-top: 18px;
+}
+
+.current-section .category-dashboard:not(.hidden) + .dashboard-subheading {
+  margin-top: 0;
+}
+
+/* "Tuần 01" + count badge stay on one line in the horizontal week strip. */
+.year-strip {
+  grid-auto-columns: minmax(200px, 220px);
+}
+
+@media (max-width: 620px) {
+  .section-heading-actions .live-badge {
+    display: none;
+  }
+
+  .section-heading-actions .back-to-week-button.hidden + .live-badge {
+    display: inline-flex;
   }
 }

@@ -66,6 +66,8 @@
     categoryFilter: "all",
     // id -> true/false for cards the reader opened or closed; others use the default.
     announcementOpen: new Map(),
+    // Week picked in the sidebar; null = follow the featured (today's) week.
+    selectedWeekId: null,
     schoolYearPreview: [],
     activeSchoolYear: "",
     yearFilter: "",
@@ -78,6 +80,11 @@
     currentWeekCard: $("#current-week-card"),
     currentAnnouncements: $("#current-announcements"),
     toggleAllAnnouncements: $("#toggle-all-announcements"),
+    sidebarWeeksList: $("#sidebar-weeks-list"),
+    sidebarWeeksCount: $("#sidebar-weeks-count"),
+    backToCurrentWeek: $("#back-to-current-week"),
+    currentHeading: $("#current-heading"),
+    currentSection: $("#current-section"),
     categoryDashboard: $("#category-dashboard"),
     globalSchoolYearFilter: $("#global-school-year-filter"),
     categoryDialog: $("#categories-dialog"),
@@ -300,6 +307,16 @@
       });
   }
 
+  // The sidebar selection if it still belongs to the active school year, else the featured week.
+  function displayedWeek() {
+    const picked = state.weeks.find(week => week.id === state.selectedWeekId);
+    if (picked && schoolYearKey(picked) === state.activeSchoolYear) {
+      return [picked, weekState(picked)];
+    }
+    state.selectedWeekId = null;
+    return chooseFeaturedWeek(state.activeSchoolYear);
+  }
+
   function sortedWeeks() {
     return [...state.weeks].sort((a, b) => a.start_date.localeCompare(b.start_date));
   }
@@ -424,6 +441,7 @@
     state.yearFilter = state.activeSchoolYear;
     state.archiveYearFilter = state.activeSchoolYear;
     state.categoryFilter = "all";
+    state.selectedWeekId = null;
     [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek(state.activeSchoolYear);
 
     renderAll();
@@ -1293,10 +1311,21 @@
       none: "Chưa có lịch"
     };
 
+    const browsing = Boolean(state.selectedWeekId);
+    if (browsing) {
+      badgeLabels.past = "Đã kết thúc";
+      badgeLabels.upcoming = "Sắp tới";
+    }
+
     if (el.weekStateBadge) {
       el.weekStateBadge.innerHTML =
         `<span aria-hidden="true"></span> ${badgeLabels[state.currentWeekState] || badgeLabels.none}`;
     }
+
+    if (el.currentHeading) {
+      el.currentHeading.textContent = browsing ? "Tuần đang xem" : "Tuần hiện tại";
+    }
+    el.backToCurrentWeek?.classList.toggle("hidden", !browsing);
 
     if (!week) {
       el.currentWeekCard.innerHTML = '<div class="loading-card">Chưa có lịch tuần.</div>';
@@ -1310,8 +1339,8 @@
 
     const labels = {
       current: "Đang diễn ra",
-      upcoming: "Chuẩn bị tuần tiếp theo",
-      past: "Tuần gần nhất"
+      upcoming: browsing ? "Sắp tới" : "Chuẩn bị tuần tiếp theo",
+      past: browsing ? "Đã kết thúc" : "Tuần gần nhất"
     };
 
     el.currentWeekCard.innerHTML = `
@@ -1349,9 +1378,69 @@
 
     el.currentAnnouncements.innerHTML = visibleItems.length
       ? visibleItems.map(item => announcementCard(item)).join("")
-      : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>';
+      : `<div class="empty-state">${items.length ? "Không có thông báo trong chuyên mục này." : "Tuần này chưa có thông báo."}</div>`;
 
     syncToggleAllButton();
+  }
+
+  function renderSidebarWeeks() {
+    if (!el.sidebarWeeksList) return;
+
+    const weeks = sortedWeeks().filter(week => schoolYearKey(week) === state.activeSchoolYear);
+    if (el.sidebarWeeksCount) el.sidebarWeeksCount.textContent = weeks.length ? `${weeks.length} tuần` : "";
+
+    if (!weeks.length) {
+      el.sidebarWeeksList.innerHTML = '<p class="sidebar-weeks-empty">Chưa có tuần nào.</p>';
+      return;
+    }
+
+    const shownId = state.currentWeek?.id;
+    el.sidebarWeeksList.innerHTML = weeks.map(week => {
+      const s = weekState(week);
+      const count = getItems(week.id).length;
+      const stateLabel = s === "current" ? "đang diễn ra" : s === "upcoming" ? "sắp tới" : "đã qua";
+
+      return `
+        <button
+          class="sidebar-week is-${s}"
+          type="button"
+          data-action="select-week"
+          data-id="${escapeHtml(week.id)}"
+          aria-current="${week.id === shownId}"
+          aria-label="Tuần ${escapeHtml(week.week_number)}, ${formatDate(week.start_date)} đến ${formatDate(week.end_date)}, ${count} thông báo, ${stateLabel}"
+        >
+          <strong>Tuần ${escapeHtml(week.week_number)}</strong>
+          <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
+          <span class="sidebar-week-count ${count ? "has-items" : ""}" aria-hidden="true">${count}</span>
+        </button>`;
+    }).join("");
+
+    const active = el.sidebarWeeksList.querySelector('[aria-current="true"]');
+    if (active) {
+      requestAnimationFrame(() => {
+        const list = el.sidebarWeeksList;
+        const listBox = list.getBoundingClientRect();
+        const box = active.getBoundingClientRect();
+        if (box.top < listBox.top || box.bottom > listBox.bottom) {
+          list.scrollTop += box.top - listBox.top - (list.clientHeight - box.height) / 2;
+        }
+      });
+    }
+  }
+
+  // Show a week's announcements in the main panel (weekId null = back to the featured week).
+  function selectWeek(weekId) {
+    const week = weekId ? state.weeks.find(w => w.id === weekId) : null;
+    const [featured] = chooseFeaturedWeek(state.activeSchoolYear);
+
+    state.selectedWeekId = week && week.id !== featured?.id ? week.id : null;
+    state.categoryFilter = "all";
+    [state.currentWeek, state.currentWeekState] = displayedWeek();
+
+    renderSidebarWeeks();
+    renderCurrent();
+    enhanceRenderedContent();
+    el.currentSection?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function renderYearStrip() {
@@ -1520,6 +1609,7 @@
     renderAdmin();
     renderConnection();
     renderGlobalSchoolYearSwitcher();
+    renderSidebarWeeks();
     renderCurrent();
     renderSchoolYearSelectors();
     renderYearStrip();
@@ -1583,7 +1673,7 @@
       }
       state.yearFilter = state.activeSchoolYear;
       state.archiveYearFilter = state.activeSchoolYear;
-      [state.currentWeek, state.currentWeekState] = chooseFeaturedWeek(state.activeSchoolYear);
+      [state.currentWeek, state.currentWeekState] = displayedWeek();
       scheduleRenderAll();
     } finally {
       endLoading?.();
@@ -2391,7 +2481,9 @@
     if (action === "open-image") openImageViewer(id);
     if (action === "delete-announcement") deleteAnnouncement(id);
     if (action === "delete-week") deleteWeek(id);
-    if (action === "open-archive" || action === "view-week") openArchive(id);
+    if (action === "open-archive") openArchive(id);
+    if (action === "view-week" || action === "select-week") selectWeek(id);
+    if (action === "back-to-current-week") selectWeek(null);
 
     if (action === "edit-announcement") {
       const item = state.announcements.find(x => x.id === id);

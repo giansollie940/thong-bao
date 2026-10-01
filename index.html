@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="macos-glossy.css?v=3.18.0">
   <link rel="stylesheet" href="pet-companion.css?v=3.17.1">
   <link rel="stylesheet" href="ui-polish.css?v=3.19.0">
-  <link rel="stylesheet" href="dashboard-layout.css?v=3.20.0">
+  <link rel="stylesheet" href="dashboard-layout.css?v=3.22.0">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -94,6 +94,14 @@
           <select id="global-school-year-filter" aria-label="Chọn năm học để xem toàn bộ ứng dụng"></select>
         </label>
       </div>
+
+      <section class="sidebar-weeks" aria-labelledby="sidebar-weeks-heading">
+        <div class="sidebar-weeks-heading">
+          <span id="sidebar-weeks-heading">Chọn tuần</span>
+          <small id="sidebar-weeks-count"></small>
+        </div>
+        <div class="sidebar-weeks-list" id="sidebar-weeks-list"></div>
+      </section>
 
       <section class="sidebar-admin hidden" id="admin-toolbar" aria-label="Công cụ quản trị">
         <div class="sidebar-section-heading">
@@ -194,7 +202,10 @@
           <p class="eyebrow">TỔNG QUAN</p>
           <h2 id="current-heading">Tuần hiện tại</h2>
         </div>
-        <span class="live-badge" id="week-state-badge"><span aria-hidden="true"></span> Đang hoạt động</span>
+        <div class="section-heading-actions">
+          <button class="text-button back-to-week-button hidden" id="back-to-current-week" type="button" data-action="back-to-current-week">↩ Về tuần hiện tại</button>
+          <span class="live-badge" id="week-state-badge"><span aria-hidden="true"></span> Đang hoạt động</span>
+        </div>
       </div>
 
       <article class="week-hero" id="current-week-card" aria-live="polite">
@@ -1164,7 +1175,7 @@
   <script src="editor-find-replace.js?v=3.17.1"></script>
   <script src="loading-diamond.js?v=3.17.1"></script>
   <script src="sidebar-collapse.js?v=3.17.1"></script>
-  <script src="app.js?v=3.20.0"></script>
+  <script src="app.js?v=3.22.0"></script>
   <script src="pet-companion.js?v=3.17.1"></script>
 </body>
 </html>
