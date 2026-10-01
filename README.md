@@ -316,3 +316,15 @@ Bố cục mới theo dạng dashboard, phần lớn bằng CSS trong `dashboard
 - Điện thoại/tablet giữ thứ tự một cột; dải tuần ngang tự cuộn tới tuần hiện tại.
 - Sửa lỗi cũ: `map(announcementCard)` truyền nhầm chỉ số làm `showWeek`, khiến các
   thẻ (trừ thẻ đầu) hiện thừa chip "Đăng tại Tuần …".
+
+
+## V3.21 — Ưu tiên thông tin
+
+- Thông báo **được ghim** hoặc **Quan trọng** mở sẵn; các thông báo khác thu gọn.
+  Người xem vẫn mở/thu gọn tùy ý, trạng thái được giữ khi đổi bộ lọc.
+- Chip ngày ghi thêm **Hôm nay / Ngày mai / Còn N ngày** (trong 7 ngày tới),
+  tô đỏ, cam hoặc xanh theo mức gấp.
+- Thẻ Quan trọng có viền cam để nổi bật ngay cả khi đang thu gọn.
+- Khung tuần hiện tại thấp hơn trên máy tính, có thêm chip **⚠️ N quan trọng**.
+  Bỏ chip năm học vì đã có ô Năm học ở thanh bên; trên điện thoại bỏ dòng trạng thái
+  trùng với nhãn cạnh tiêu đề.

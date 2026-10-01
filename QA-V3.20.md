@@ -14,3 +14,10 @@ Kiểm thử bằng Chromium (Playwright) với Supabase giả lập (10 tuần,
 - [x] Chế độ Admin: nút Sửa/Xóa nằm trong phần mở rộng của thẻ.
 - [x] Chỉ còn ô Năm học ở thanh bên hiển thị.
 - [x] Không có lỗi JavaScript.
+
+## V3.21 — Ưu tiên thông tin
+
+- [x] Thẻ ghim/Quan trọng mở sẵn; thẻ thường thu gọn; bấm để đảo trạng thái.
+- [x] Chip ngày: "Hôm nay" (đỏ), "Ngày mai"/"Còn 2–3 ngày" (cam), "Còn 4–7 ngày" (xanh); ngày đã qua không gắn nhãn.
+- [x] Khung tuần có chip "⚠️ N quan trọng" khi N > 0.
+- [x] 1440 / 1280 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.

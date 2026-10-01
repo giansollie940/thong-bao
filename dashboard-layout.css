@@ -360,3 +360,103 @@
     max-height: calc(100vh - 82px - 178px);
   }
 }
+
+/* =========================================================
+   V3.21 — Information first
+   ========================================================= */
+
+/* Compact current-week banner: same art, less height, so announcements start higher. */
+@media (min-width: 821px) {
+  .week-hero,
+  .week-hero-content {
+    min-height: 0;
+  }
+
+  .week-hero-content {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 20px;
+    align-items: center;
+    padding: 20px 26px;
+  }
+
+  .week-number {
+    width: 96px;
+    min-width: 0;
+    min-height: 96px;
+    border-radius: 22px;
+  }
+
+  .week-number strong {
+    font-size: 2.5rem;
+  }
+
+  .week-details h3 {
+    margin-bottom: 4px;
+    font-size: clamp(1.5rem, 2.4vw, 1.95rem);
+  }
+
+  .week-details p {
+    margin-bottom: 10px;
+  }
+
+  .week-date,
+  .week-school-year {
+    padding: 4px 9px;
+    font-size: .84rem;
+  }
+
+  .current-section .category-dashboard {
+    margin: 12px 0 16px;
+  }
+}
+
+.week-important-count {
+  border-color: rgba(255, 196, 110, .55) !important;
+  background: rgba(150, 82, 0, .38) !important;
+}
+
+/* Important announcements stand out even before reading the chips. */
+.announcement-card.important {
+  border-color: color-mix(in srgb, var(--mac-orange) 38%, var(--mac-line));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mac-orange) 16%, transparent),
+    var(--mac-shadow-soft),
+    var(--mac-highlight);
+}
+
+.announcement-card.important::before {
+  width: 5px;
+  background: linear-gradient(180deg, var(--mac-orange), color-mix(in srgb, var(--mac-orange) 55%, #fff));
+}
+
+/* Relative date ("Hôm nay", "Ngày mai", "Còn 3 ngày"). */
+.date-chip strong {
+  font-weight: 800;
+}
+
+.date-chip.is-today {
+  border-color: rgba(255, 69, 58, .35);
+  background: color-mix(in srgb, #ff453a 10%, var(--mac-card-solid));
+  color: #b42318;
+}
+
+.date-chip.is-soon {
+  border-color: rgba(255, 159, 10, .35);
+  background: color-mix(in srgb, var(--mac-orange) 11%, var(--mac-card-solid));
+  color: #9a5800;
+}
+
+.date-chip.is-later {
+  border-color: color-mix(in srgb, var(--mac-blue) 28%, var(--mac-line));
+  color: color-mix(in srgb, var(--mac-blue) 80%, var(--mac-text));
+}
+
+html[data-theme="dark"] .date-chip.is-today { color: #ff9a92; }
+html[data-theme="dark"] .date-chip.is-soon { color: #ffc56b; }
+
+@media (max-width: 620px) {
+  /* The section badge already states the week status. */
+  .week-details > .eyebrow {
+    display: none;
+  }
+}

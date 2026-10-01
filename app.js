@@ -64,7 +64,8 @@
     currentWeek: null,
     currentWeekState: "none",
     categoryFilter: "all",
-    expandedAnnouncements: new Set(),
+    // id -> true/false for cards the reader opened or closed; others use the default.
+    announcementOpen: new Map(),
     schoolYearPreview: [],
     activeSchoolYear: "",
     yearFilter: "",
@@ -1164,7 +1165,8 @@
          </button>`
       : "";
 
-    const expanded = state.expandedAnnouncements.has(String(item.id));
+    const expanded = isAnnouncementExpanded(item);
+    const relativeDay = relativeDayLabel(item.event_date);
     const bodyId = `announcement-body-${++announcementCardUid}`;
     const preview = announcementPreview(renderedContent);
 
@@ -1194,7 +1196,7 @@
           ${preview ? `<p class="announcement-preview" aria-hidden="true">${escapeHtml(preview)}</p>` : ""}
 
           <div class="announcement-meta">
-            <span class="meta-chip">📅 ${escapeHtml(formatDate(item.event_date))}</span>
+            <span class="meta-chip ${relativeDay ? `date-chip is-${relativeDay.tone}` : ""}">📅 ${escapeHtml(formatDate(item.event_date))}${relativeDay ? ` · <strong>${relativeDay.text}</strong>` : ""}</span>
             ${
               item.category && normalizeText(item.category) !== normalizeText(category.name)
                 ? `<span class="meta-chip">🏷️ ${escapeHtml(item.category)}</span>`
@@ -1243,15 +1245,30 @@
     return text.replace(/\s+/g, " ").trim().slice(0, 220);
   }
 
+  // Pinned and important announcements open by default so key information is visible at once.
+  function isAnnouncementExpanded(item) {
+    const id = String(item.id);
+    if (state.announcementOpen.has(id)) return state.announcementOpen.get(id);
+    return Boolean(item.is_pinned) || item.priority === "important";
+  }
+
+  // "Hôm nay" / "Ngày mai" / "Còn N ngày" for events in the coming week.
+  function relativeDayLabel(dateIso) {
+    if (!dateIso) return null;
+    const days = Math.round((Date.parse(dateIso) - Date.parse(todayIso())) / 86400000);
+    if (Number.isNaN(days) || days < 0 || days > 7) return null;
+    if (days === 0) return { text: "Hôm nay", tone: "today" };
+    if (days === 1) return { text: "Ngày mai", tone: "soon" };
+    return { text: `Còn ${days} ngày`, tone: days <= 3 ? "soon" : "later" };
+  }
+
   function setAnnouncementExpanded(card, expanded) {
     const toggle = card.querySelector(".announcement-toggle");
     if (!toggle) return;
 
     card.classList.toggle("is-expanded", expanded);
     toggle.setAttribute("aria-expanded", String(expanded));
-
-    if (expanded) state.expandedAnnouncements.add(toggle.dataset.id);
-    else state.expandedAnnouncements.delete(toggle.dataset.id);
+    state.announcementOpen.set(toggle.dataset.id, expanded);
   }
 
   function syncToggleAllButton() {
@@ -1307,8 +1324,11 @@
           <h3>${escapeHtml(week.title || `Tuần ${week.week_number}`)}</h3>
           <p>${escapeHtml(week.summary || "Theo dõi các thông báo quan trọng của tuần.")}</p>
           <span class="week-date">📅 ${formatDate(week.start_date)} — ${formatDate(week.end_date)}</span>
-          ${week.school_year ? `<span class="week-school-year">🎓 ${escapeHtml(week.school_year)}</span>` : ""}
           <span class="week-school-year">📣 ${getItems(week.id).length} thông báo</span>
+          ${(() => {
+            const important = getItems(week.id).filter(item => item.priority === "important").length;
+            return important ? `<span class="week-school-year week-important-count">⚠️ ${important} quan trọng</span>` : "";
+          })()}
           ${isAdmin() ? `<div class="week-admin-actions">
             <button class="button button-glass button-small card-command" data-action="edit-week" data-id="${week.id}">
               <span aria-hidden="true">✎</span><span>Sửa tuần</span>
