@@ -51,6 +51,7 @@
 
   const appLoader = window.WeeklyLoader;
 
+  let announcementCardUid = 0;
   let announcementEditor = null;
   let announcementFormatting = null;
   let announcementFindReplace = null;
@@ -63,6 +64,7 @@
     currentWeek: null,
     currentWeekState: "none",
     categoryFilter: "all",
+    expandedAnnouncements: new Set(),
     schoolYearPreview: [],
     activeSchoolYear: "",
     yearFilter: "",
@@ -74,6 +76,7 @@
   const el = {
     currentWeekCard: $("#current-week-card"),
     currentAnnouncements: $("#current-announcements"),
+    toggleAllAnnouncements: $("#toggle-all-announcements"),
     categoryDashboard: $("#category-dashboard"),
     globalSchoolYearFilter: $("#global-school-year-filter"),
     categoryDialog: $("#categories-dialog"),
@@ -1161,33 +1164,34 @@
          </button>`
       : "";
 
+    const expanded = state.expandedAnnouncements.has(String(item.id));
+    const bodyId = `announcement-body-${++announcementCardUid}`;
+    const preview = announcementPreview(renderedContent);
+
     return `
-      <article class="announcement-card tone-${tone(item.title + item.id)} ${item.priority === "important" ? "important" : ""}" style="${categoryStyle(category)}">
+      <article class="announcement-card is-collapsible ${expanded ? "is-expanded" : ""} tone-${tone(item.title + item.id)} ${item.priority === "important" ? "important" : ""}" style="${categoryStyle(category)}">
         <div class="announcement-inner">
           <div class="announcement-title-row">
             ${item.is_pinned ? '<span class="pin" aria-label="Đã ghim">📌</span>' : ""}
-            <h3>${escapeHtml(item.title)}</h3>
+            <h3>
+              <button
+                class="announcement-toggle"
+                type="button"
+                data-action="toggle-announcement"
+                data-id="${escapeHtml(item.id)}"
+                aria-expanded="${expanded}"
+                aria-controls="${bodyId}"
+              >${escapeHtml(item.title)}</button>
+            </h3>
             <span class="category-chip" style="${categoryStyle(category)}">
               <span aria-hidden="true">${escapeHtml(category.icon || "📌")}</span>
               ${escapeHtml(category.name)}
             </span>
             ${item.priority === "important" ? '<span class="priority-chip">Quan trọng</span>' : ""}
+            <span class="announcement-chevron" aria-hidden="true"></span>
           </div>
 
-          ${
-            item.image_path
-              ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}" aria-label="Mở ảnh của thông báo ${escapeHtml(item.title)}">
-                   <img
-                     src="${escapeHtml(getImagePublicUrl(item.image_path))}"
-                     alt="${escapeHtml(item.image_alt || item.title)}"
-                     loading="lazy"
-                     decoding="async"
-                   >
-                 </button>`
-              : ""
-          }
-
-          <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${renderedContent}</div>
+          ${preview ? `<p class="announcement-preview" aria-hidden="true">${escapeHtml(preview)}</p>` : ""}
 
           <div class="announcement-meta">
             <span class="meta-chip">📅 ${escapeHtml(formatDate(item.event_date))}</span>
@@ -1204,12 +1208,62 @@
             }
           </div>
 
-          <div class="card-actions">
-            <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
-            ${adminButtons}
+          <div class="announcement-body" id="${bodyId}">
+            <div class="announcement-body-inner">
+              ${
+                item.image_path
+                  ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}" aria-label="Mở ảnh của thông báo ${escapeHtml(item.title)}">
+                       <img
+                         src="${escapeHtml(getImagePublicUrl(item.image_path))}"
+                         alt="${escapeHtml(item.image_alt || item.title)}"
+                         loading="lazy"
+                         decoding="async"
+                       >
+                     </button>`
+                  : ""
+              }
+
+              <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${renderedContent}</div>
+
+              <div class="card-actions">
+                <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
+                ${adminButtons}
+              </div>
+            </div>
           </div>
         </div>
       </article>`;
+  }
+
+  // Plain-text teaser for collapsed cards; block/cell boundaries become spaces so
+  // table cells and list items don't run together.
+  function announcementPreview(renderedHtml) {
+    const spaced = renderedHtml.replace(/<\/?(?:p|li|td|th|tr|div|h[1-6]|br|blockquote|summary)\b[^>]*>/gi, " $& ");
+    const text = new DOMParser().parseFromString(spaced, "text/html").body.textContent || "";
+    return text.replace(/\s+/g, " ").trim().slice(0, 220);
+  }
+
+  function setAnnouncementExpanded(card, expanded) {
+    const toggle = card.querySelector(".announcement-toggle");
+    if (!toggle) return;
+
+    card.classList.toggle("is-expanded", expanded);
+    toggle.setAttribute("aria-expanded", String(expanded));
+
+    if (expanded) state.expandedAnnouncements.add(toggle.dataset.id);
+    else state.expandedAnnouncements.delete(toggle.dataset.id);
+  }
+
+  function syncToggleAllButton() {
+    if (!el.toggleAllAnnouncements) return;
+
+    const cards = [...el.currentAnnouncements.querySelectorAll(".announcement-card.is-collapsible")];
+    const allExpanded = cards.length > 0 && cards.every(card => card.classList.contains("is-expanded"));
+
+    el.toggleAllAnnouncements.classList.toggle("hidden", cards.length < 2);
+    el.toggleAllAnnouncements.setAttribute("aria-pressed", String(allExpanded));
+    el.toggleAllAnnouncements.querySelector("span:last-child").textContent =
+      allExpanded ? "Thu gọn tất cả" : "Mở tất cả";
   }
 
   function renderCurrent() {
@@ -1274,8 +1328,10 @@
       : items.filter(item => categoryInfo(item).key === state.categoryFilter);
 
     el.currentAnnouncements.innerHTML = visibleItems.length
-      ? visibleItems.map(announcementCard).join("")
+      ? visibleItems.map(item => announcementCard(item)).join("")
       : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>';
+
+    syncToggleAllButton();
   }
 
   function renderYearStrip() {
@@ -1343,6 +1399,28 @@
           </div>
         </article>`;
     }).join("");
+
+    scrollYearRailToCurrent();
+  }
+
+  // Bring the current (or next) week into view inside the week list: the vertical rail on
+  // wide screens, the horizontal strip on smaller ones. Only the list scrolls, never the page.
+  function scrollYearRailToCurrent() {
+    const strip = el.yearStrip;
+    const card = strip.querySelector(".year-week-card.current, .year-week-card.upcoming");
+    if (!card) return;
+
+    requestAnimationFrame(() => {
+      const stripBox = strip.getBoundingClientRect();
+      const cardBox = card.getBoundingClientRect();
+
+      if (strip.scrollHeight > strip.clientHeight) {
+        strip.scrollTop += cardBox.top - stripBox.top - (strip.clientHeight - cardBox.height) / 2;
+      }
+      if (strip.scrollWidth > strip.clientWidth) {
+        strip.scrollLeft += cardBox.left - stripBox.left - (strip.clientWidth - cardBox.width) / 2;
+      }
+    });
   }
 
   function renderArchives() {
@@ -2206,7 +2284,7 @@
     el.archiveDialogContent.innerHTML = `
       <p class="muted">${escapeHtml(week.summary || "Không có tóm tắt riêng.")}</p>
       <div class="announcement-list">
-        ${items.length ? items.map(announcementCard).join("") : '<div class="empty-state">Không có thông báo.</div>'}
+        ${items.length ? items.map(item => announcementCard(item)).join("") : '<div class="empty-state">Không có thông báo.</div>'}
       </div>`;
 
     el.archiveDialog.showModal();
@@ -2271,6 +2349,21 @@
 
     if (action === "delete-category") {
       deleteCategory(id);
+      return;
+    }
+
+    if (action === "toggle-announcement") {
+      const card = button.closest(".announcement-card");
+      if (card) setAnnouncementExpanded(card, !card.classList.contains("is-expanded"));
+      syncToggleAllButton();
+      return;
+    }
+
+    if (action === "toggle-all-announcements") {
+      const cards = [...el.currentAnnouncements.querySelectorAll(".announcement-card.is-collapsible")];
+      const expand = !cards.every(card => card.classList.contains("is-expanded"));
+      cards.forEach(card => setAnnouncementExpanded(card, expand));
+      syncToggleAllButton();
       return;
     }
 

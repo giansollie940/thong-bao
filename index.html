@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="macos-glossy.css?v=3.18.0">
   <link rel="stylesheet" href="pet-companion.css?v=3.17.1">
   <link rel="stylesheet" href="ui-polish.css?v=3.19.0">
+  <link rel="stylesheet" href="dashboard-layout.css?v=3.20.0">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="512x512">
@@ -207,6 +208,13 @@
           <p class="eyebrow">MỚI NHẤT</p>
           <h3>Thông báo trong tuần</h3>
         </div>
+        <button
+          class="text-button toggle-all-button hidden"
+          id="toggle-all-announcements"
+          type="button"
+          data-action="toggle-all-announcements"
+          aria-pressed="false"
+        ><span aria-hidden="true">↕</span><span>Mở tất cả</span></button>
       </div>
 
       <div class="announcement-list" id="current-announcements" aria-live="polite"></div>
@@ -1156,7 +1164,7 @@
   <script src="editor-find-replace.js?v=3.17.1"></script>
   <script src="loading-diamond.js?v=3.17.1"></script>
   <script src="sidebar-collapse.js?v=3.17.1"></script>
-  <script src="app.js?v=3.18.0"></script>
+  <script src="app.js?v=3.20.0"></script>
   <script src="pet-companion.js?v=3.17.1"></script>
 </body>
 </html>

@@ -1,0 +1,362 @@
+/* =========================================================
+   V3.20 — Dashboard Layout
+   - Thẻ thông báo thu gọn / mở rộng.
+   - Máy tính rộng: 2 cột (nội dung tuần + lịch năm học dính bên phải).
+   - Chỉ dùng ô Năm học ở thanh bên cho toàn ứng dụng.
+   ========================================================= */
+
+/* ---------- One global school-year selector ---------- */
+
+/* The sidebar selector already drives both sections (state.yearFilter / archiveYearFilter
+   follow state.activeSchoolYear), so the per-section copies are hidden. */
+.school-year-toolbar .school-year-filter {
+  display: none;
+}
+
+.school-year-toolbar,
+.archive-year-toolbar {
+  display: block;
+  min-height: 0;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.school-year-summary {
+  margin: 0;
+  color: var(--mac-muted);
+  font-size: .8rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* ---------- Collapsible announcement cards ---------- */
+
+.dashboard-subheading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toggle-all-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--mac-line);
+  border-radius: 999px;
+  background: var(--mac-card-solid);
+  color: var(--mac-text);
+  font-size: .8rem;
+  font-weight: 650;
+  box-shadow: var(--mac-highlight);
+  cursor: pointer;
+}
+
+.toggle-all-button:hover {
+  border-color: var(--mac-line-strong);
+}
+
+.toggle-all-button.hidden {
+  display: none;
+}
+
+.announcement-card.is-collapsible .announcement-title-row {
+  position: relative;
+  align-items: center;
+  padding-right: 34px;
+}
+
+.announcement-card.is-collapsible .announcement-title-row h3 {
+  margin: 0;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.36;
+}
+
+.announcement-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The whole title row is the click target. */
+.announcement-toggle::after {
+  content: "";
+  position: absolute;
+  inset: -8px -10px;
+  z-index: 1;
+  border-radius: 12px;
+}
+
+.announcement-toggle:focus-visible {
+  outline: none;
+}
+
+.announcement-toggle:focus-visible::after {
+  outline: 3px solid color-mix(in srgb, var(--mac-blue) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.announcement-chevron {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: -14px;
+  border: 1px solid var(--mac-line);
+  border-radius: 50%;
+  background: var(--mac-card-solid);
+  transition: transform 200ms ease, background 150ms ease;
+}
+
+.announcement-chevron::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-top: -3px;
+  border-right: 2px solid var(--mac-muted);
+  border-bottom: 2px solid var(--mac-muted);
+  transform: rotate(45deg);
+}
+
+.announcement-card.is-collapsible:hover .announcement-chevron {
+  background: color-mix(in srgb, var(--category-color, var(--mac-blue)) 12%, var(--mac-card-solid));
+}
+
+.announcement-card.is-expanded .announcement-chevron {
+  transform: rotate(180deg);
+}
+
+.announcement-preview {
+  display: -webkit-box;
+  margin: 8px 0 0;
+  overflow: hidden;
+  color: var(--mac-muted);
+  font-size: .9rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.announcement-card.is-expanded .announcement-preview {
+  display: none;
+}
+
+.announcement-card.is-collapsible .announcement-meta {
+  margin-top: 10px;
+}
+
+/* Animate height with the 0fr → 1fr grid trick; visibility keeps hidden content out of tab order. */
+.announcement-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 220ms ease, visibility 0s linear 220ms;
+}
+
+.announcement-body-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.announcement-card.is-expanded .announcement-body {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition: grid-template-rows 220ms ease, visibility 0s;
+}
+
+.announcement-card.is-expanded .announcement-body-inner {
+  padding-top: 4px;
+}
+
+.announcement-card.is-collapsible .announcement-image-button {
+  margin-top: 12px;
+}
+
+.announcement-card.is-collapsible .card-actions {
+  margin-top: 4px;
+}
+
+/* ---------- Week calendar: compact rows ---------- */
+
+.year-week-card .year-week-school-year {
+  display: none;
+}
+
+/* ---------- Archive: denser grid ---------- */
+
+.archive-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+/* ---------- Wide screens: two-column dashboard ---------- */
+
+@media (min-width: 1180px) {
+  .dashboard-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(270px, 24vw, 320px);
+    grid-template-areas:
+      "banner  banner"
+      "current rail"
+      "search  rail"
+      "archive archive";
+    grid-template-rows: auto auto auto auto;
+    column-gap: 28px;
+    align-items: start;
+  }
+
+  #connection-banner { grid-area: banner; }
+  #current-section { grid-area: current; min-width: 0; }
+  #search-results-section { grid-area: search; min-width: 0; }
+  #archive-section { grid-area: archive; }
+
+  #year-section {
+    grid-area: rail;
+    position: sticky;
+    top: 82px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 100px);
+    margin-top: 0;
+    padding: 16px 14px 14px;
+    overflow: hidden;
+    border: 1px solid var(--mac-line);
+    border-radius: 20px;
+    background: var(--mac-glass-strong);
+    box-shadow: var(--mac-shadow-soft), var(--mac-highlight);
+    content-visibility: visible;
+  }
+
+  #year-section .section-heading {
+    margin: 0 0 4px;
+    padding: 0 2px;
+  }
+
+  #year-section .section-heading h2 {
+    font-size: 1.12rem;
+  }
+
+  #year-section .school-year-toolbar {
+    margin: 0 2px 10px;
+  }
+
+  #year-section .year-strip {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: 6px;
+    min-height: 0;
+    margin: 0 -4px;
+    padding: 2px 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  /* Week rows: [Tuần 04 · dates]  [state]  [Xem] */
+  #year-section .year-week-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head  actions"
+      "dates actions";
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 1px 8px;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 9px 10px 9px 12px;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+
+  #year-section .year-week-card::before,
+  #year-section .year-week-card::after {
+    display: none;
+  }
+
+  #year-section .year-week-head {
+    grid-area: head;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  #year-section .year-week-head strong {
+    font-size: .92rem;
+  }
+
+  #year-section .week-count-badge {
+    padding: 1px 6px;
+    font-size: .66rem;
+  }
+
+  #year-section .year-week-card > small {
+    grid-area: dates;
+    margin: 0;
+    font-size: .74rem;
+  }
+
+  #year-section .year-week-state {
+    display: none;
+  }
+
+  #year-section .year-week-actions {
+    grid-area: actions;
+    display: flex;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  #year-section .mini-action {
+    min-height: 30px;
+    padding: 4px 10px;
+    font-size: .76rem;
+  }
+
+  #year-section .year-week-card.current {
+    border-color: color-mix(in srgb, var(--mac-mint) 55%, var(--mac-line));
+    background: color-mix(in srgb, var(--mac-mint) 14%, var(--mac-card-solid));
+    box-shadow: inset 3px 0 0 var(--mac-mint);
+  }
+
+  #year-section .year-week-card.past {
+    opacity: .78;
+  }
+
+  #year-section .year-week-card.past:hover {
+    opacity: 1;
+  }
+
+  #archive-section {
+    margin-top: 40px;
+  }
+}
+
+/* Leave room for Minty (bottom-right) under the sticky rail while it is shown. */
+@media (min-width: 1180px) {
+  body:has(#pet-companion:not([hidden])) #year-section {
+    max-height: calc(100vh - 82px - 178px);
+  }
+}

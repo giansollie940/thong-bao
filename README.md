@@ -296,3 +296,23 @@ database hay `config.js`.
   (trước đây bị header che mất).
 - **Hero trên điện thoại:** ô số tuần nhỏ lại (72px) để tiêu đề và mô tả có đủ chỗ.
 - **Dark mode:** số đếm trên chip chuyên mục đọc được (trước là chữ sáng trên nền sáng).
+
+
+## V3.20 — Dashboard Layout
+
+Bố cục mới theo dạng dashboard, phần lớn bằng CSS trong `dashboard-layout.css`;
+`app.js` chỉ thêm phần thu gọn/mở rộng thẻ thông báo. Không đổi database hay `config.js`.
+
+- **Máy tính (≥1180px) chia 2 cột:** bên trái là tuần hiện tại và danh sách thông báo,
+  có độ rộng vừa phải nên dễ đọc. Bên phải là **Lịch năm học**, dính theo khi cuộn,
+  hiển thị mỗi tuần thành một dòng gọn, tuần hiện tại được tô nổi bật và tự cuộn vào giữa.
+  **Lưu trữ** nằm bên dưới, dạng lưới gọn hơn.
+- **Thẻ thông báo thu gọn:** mặc định chỉ hiện tiêu đề, chuyên mục, 2 dòng xem trước
+  và ngày/hiệu lực. Bấm vào tiêu đề (hoặc Enter/Space) để mở đầy đủ nội dung, ảnh và nút
+  Sao chép/Sửa/Xóa. Nút **Mở tất cả / Thu gọn tất cả** ở đầu danh sách. Trạng thái mở
+  được giữ khi đổi bộ lọc chuyên mục.
+- **Một ô Năm học duy nhất:** chỉ còn ô ở thanh bên; ô trùng ở Lịch năm học và Lưu trữ
+  được ẩn (vẫn đồng bộ theo ô thanh bên).
+- Điện thoại/tablet giữ thứ tự một cột; dải tuần ngang tự cuộn tới tuần hiện tại.
+- Sửa lỗi cũ: `map(announcementCard)` truyền nhầm chỉ số làm `showWeek`, khiến các
+  thẻ (trừ thẻ đầu) hiện thừa chip "Đăng tại Tuần …".
