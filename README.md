@@ -1,47 +1,39 @@
-# Bảng Thông Báo Theo Tuần — V3.16
+# Bảng Thông Báo Theo Tuần — V3.26
 
-V3.16 là bản gom ổn định sau chuỗi V3.15.x, tập trung vào ba phần:
-**Rich Editor**, **Tabs** và **Accordion**.
+Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
+dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
+khối "Cần chú ý" và khung đọc nội dung; **Danh sách** là kiểu hiển thị phụ.
 
 ## Cấu trúc frontend
 
 ```text
-index.html
-styles.css
-controls.css
-announcement-form.css
-rich-editor.css
-rich-editor.js
-content-renderer.css
-content-renderer.js
-content-interactions.css
-content-interactions.js
-app.js
-pet-companion.css
-pet-companion.js
-favicon.ico
-favicon.png
-favicon-64.png
-mint-garden-hero.svg
-mint-garden-pattern.svg
-config.example.js
-schema.sql
-supabase/
+index.html                    khung trang, hộp thoại, thứ tự nạp CSS/JS
+config.js                     URL + publishable key của Supabase (không chứa secret)
+
+app.js                        dữ liệu, Supabase, CRUD, render; Lịch tuần (mục "View modes")
+content-renderer.js / .css    sanitize + render nội dung thông báo (HTML/Markdown)
+content-interactions.js / .css  Tabs + Accordion trong nội dung
+rich-editor.js / .css         trình soạn thảo Soạn thảo ↔ HTML
+editor-formatting.js / .css   thanh định dạng (font, cỡ, màu, căn lề, B/I/U/S)
+editor-find-replace.js / .css Tìm & thay thế trong trình soạn thảo
+loading-diamond.js / .css     hiệu ứng tải
+sidebar-collapse.js           thu gọn thanh bên, ô tìm kiếm nổi
+pet-companion.js / .css       Minty
+
+styles.css                    lớp giao diện gốc (V2.x–V3.x)
+controls.css                  nút, ô nhập
+announcement-form.css         form đăng/sửa thông báo
+macos-glossy.css              lớp giao diện macOS (V3.17–V3.18)
+app-layout.css                bố cục hiện tại (V3.19+), nạp sau cùng
+
+mint-garden-hero.webp         ảnh khung tuần
+mint-garden-pattern.webp      nền lặp
+favicon.ico / favicon.png / favicon-64.png
+docs/qa/                      danh sách kiểm thử từng phiên bản
 ```
 
-### Phân trách nhiệm
-
-- `app.js`: dữ liệu, Supabase, CRUD, render ứng dụng.
-- `content-renderer.js`: sanitize HTML, Markdown cũ, render và plain text.
-- `content-interactions.js`: tabs + accordion sau khi nội dung đã render.
-- `content-renderer.css`: kiểu chữ/bảng/ảnh của nội dung.
-- `content-interactions.css`: giao diện tabs + accordion.
-- `rich-editor.js`: editor Soạn thảo ↔ HTML.
-- `rich-editor.css`: giao diện editor.
-- `announcement-form.css`: layout riêng của form đăng/chỉnh sửa thông báo.
-
-V3.16 không còn nhét Tabs/Accordion vào `content-renderer.js`, nên phần
-sanitize và phần tương tác không phụ thuộc lẫn nhau.
+CSS được nạp theo thứ tự trong `index.html`; file sau ghi đè file trước.
+Chỉnh giao diện hiện tại trong `app-layout.css`.
 
 ## Rich Editor
 
@@ -105,28 +97,20 @@ alignment... được giữ để giao diện HTML không bị biến từ ngang
 
 ## Database
 
-V3.16 **không thay đổi schema**. Tiếp tục dùng:
-
-```text
-schema.sql
-```
-
-Không cần chạy migration mới khi nâng từ V3.15.8.
+Dùng các bảng `weeks`, `announcements`, `categories` và bucket ảnh
+`announcement-images` trên Supabase. Từ V3.16 đến V3.26 **không thay đổi schema**.
 
 ## Deploy GitHub Pages
 
-1. Giữ lại `config.js` đang chạy trên repo hiện tại.
-2. Thay các file frontend bằng bản V3.16.
-3. Đảm bảo có thêm:
-   - `content-interactions.js`
-   - `content-interactions.css`
-4. Không đưa service-role key, admin password hoặc secret key lên GitHub.
+1. Giữ nguyên `config.js` đang chạy.
+2. Gộp nhánh vào `main`; GitHub Pages tự cập nhật.
+3. Không đưa service-role key, admin password hoặc secret key lên GitHub.
 
-`config.example.js` chỉ là file mẫu; `config.js` thật không nằm trong ZIP này.
+Mỗi lần đổi CSS/JS, tăng số `?v=` trong `index.html` để trình duyệt tải bản mới.
 
 ## QA
 
-Xem `QA-V3.16.md` để biết các bài kiểm thử đã chạy.
+Danh sách kiểm thử từng phiên bản nằm trong `docs/qa/`.
 
 
 ## V3.16.1 — Find & Replace
@@ -382,3 +366,31 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
 - Cột danh sách trong Lịch tuần co theo màn hình (≈32%, 280–420px) thay vì cố định 400px.
 - Lề trang mỏng hơn; giới hạn chiều rộng nội dung tăng từ 1260px lên 1480px.
 - Khung đọc: 1280px 525 → 644px, 1366px 611 → 700px, 1440px 685 → 748px, 1920px 772 → 990px.
+
+
+## V3.26 — Tối ưu giao diện và làm sạch code
+
+**Giao diện**
+- Lịch năm học: thẻ tuần gọn (tuần, trạng thái, ngày, số thông báo), bấm cả thẻ để xem;
+  tuần đang xem được viền xanh và dải tự cuộn tới.
+- Lưu trữ: thẻ gọn một khối (tuần, ngày, 2 tiêu đề đầu), bấm cả thẻ để "Xem lại";
+  trên điện thoại cao khoảng 70px thay vì khoảng 350px.
+- Tuần không có thông báo: chỉ hiện một dòng "Tuần này chưa có thông báo.",
+  không còn chip "Tất cả 0" và khung đọc trống.
+- Chân trang có màu nền cho chế độ tối; bỏ dải nền thừa sau dải thẻ tuần.
+- Trình soạn thảo: nút B / I / U / S sáng theo định dạng tại vị trí con trỏ
+  (hàm đã có nhưng trước đây chưa được gọi).
+
+**Hiệu năng**
+- Ảnh nền SVG (2,6 MB + 110 KB) đổi sang WebP (71 KB + 4 KB).
+- Favicon 512px (412 KB × 2) thu về 192px/64px; `favicon.ico` 232 KB → 9 KB.
+- Tổng dung lượng ảnh khoảng 3,8 MB → 140 KB.
+
+**Làm sạch code**
+- CSS: bỏ khoảng 4.100 dòng: rule cho giao diện cũ không còn phần tử nào dùng
+  (header, hero, search-panel, toolbar V2.x…) và khai báo bị ghi đè hoàn toàn
+  bởi rule cùng selector nạp sau. Kiểm chứng bằng ảnh chụp 17 trạng thái trước/sau.
+- Gộp `ui-polish.css`, `dashboard-layout.css`, `view-modes.css`,
+  `floating-search-island.css` thành `app-layout.css`; CSS ô tìm kiếm nạp tĩnh thay vì bằng JS.
+- Bỏ inline style trong thẻ Lưu trữ; bỏ hàm `currentHtml` không dùng.
+- Dùng chung một số phiên bản `?v=3.26.0` cho mọi file CSS/JS; QA chuyển vào `docs/qa/`.

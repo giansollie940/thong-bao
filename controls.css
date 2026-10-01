@@ -12,26 +12,9 @@
 }
 
 /* Sidebar brand */
-.sidebar-logo {
-  display: grid;
-  place-items: center;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  overflow: hidden;
-  border: 1px solid rgba(74, 165, 137, .20);
-  border-radius: 14px;
-  background: #eefaf5;
-  box-shadow:
-    0 7px 18px rgba(47, 119, 96, .12),
-    inset 0 1px 0 rgba(255, 255, 255, .75);
-}
 
 .sidebar-logo img {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 /* Shared */
@@ -93,20 +76,7 @@
 /* Primary CTA — gradient sweep */
 .button-primary {
   min-height: 44px;
-  border: 1px solid rgba(42, 135, 105, .22);
   border-radius: 14px;
-  color: #fff;
-  background:
-    linear-gradient(
-      105deg,
-      transparent 0 32%,
-      rgba(255,255,255,.20) 44%,
-      transparent 58%
-    ) -180% 0 / 220% 100% no-repeat,
-    linear-gradient(135deg, #62c7a5, #3aa17d);
-  box-shadow:
-    0 9px 20px rgba(56,151,119,.18),
-    inset 0 1px 0 rgba(255,255,255,.22);
   transition:
     background-position var(--motion-slow) var(--motion-ease),
     transform var(--motion-base) var(--motion-ease),
@@ -124,18 +94,8 @@
 }
 
 /* Secondary / Soft — calm fill */
-.button-secondary,
-.button-soft {
-  border: 1px solid var(--line);
+.button-secondary {
   border-radius: 14px;
-  color: var(--text);
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--brand-soft) 76%, transparent),
-      color-mix(in srgb, var(--brand-soft) 76%, transparent)
-    ) left center / 0 100% no-repeat,
-    var(--surface-solid);
   transition:
     background-size var(--motion-base) var(--motion-ease),
     transform var(--motion-base) var(--motion-ease),
@@ -143,37 +103,11 @@
     box-shadow var(--motion-base) var(--motion-ease);
 }
 
-.button-secondary:is(:hover, :focus-visible),
-.button-soft:is(:hover, :focus-visible) {
+.button-secondary:is(:hover, :focus-visible) {
   background-size: 100% 100%, 100% 100%;
   border-color: color-mix(in srgb, var(--brand) 28%, var(--line));
   transform: translateY(-1px);
   box-shadow: 0 7px 18px rgba(57,112,94,.08);
-}
-
-/* Accent — cool gradient slide */
-.button-accent {
-  border: 1px solid #cfe1fb;
-  color: #356b87;
-  background:
-    linear-gradient(
-      110deg,
-      rgba(164,224,208,.34),
-      rgba(173,216,255,.30)
-    ) -120% 0 / 65% 100% no-repeat,
-    linear-gradient(135deg, #edf6ff, #eaf8f2);
-  transition:
-    background-position var(--motion-slow) var(--motion-ease),
-    transform var(--motion-base) var(--motion-ease),
-    border-color var(--motion-base) var(--motion-ease),
-    box-shadow var(--motion-base) var(--motion-ease);
-}
-
-.button-accent:is(:hover, :focus-visible) {
-  background-position: 120% 0, 0 0;
-  transform: translateY(-1px);
-  border-color: #bcd7f6;
-  box-shadow: 0 8px 20px rgba(85,128,147,.10);
 }
 
 /* Danger — controlled warning glow */
@@ -258,10 +192,6 @@
 }
 
 /* Sidebar — sliding rail + icon nudge */
-.sidebar-link,
-.sidebar-action {
-  min-height: 44px;
-}
 
 .sidebar-link::before,
 .sidebar-action::before {
@@ -298,20 +228,6 @@
 }
 
 /* Category filters — pill fill */
-.category-filter {
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--brand) 14%, transparent),
-      color-mix(in srgb, var(--brand) 14%, transparent)
-    ) left center / 0 100% no-repeat,
-    var(--surface-solid);
-  transition:
-    background-size var(--motion-base) var(--motion-ease),
-    transform var(--motion-base) var(--motion-ease),
-    border-color var(--motion-base) var(--motion-ease),
-    color var(--motion-base) var(--motion-ease);
-}
 
 .category-filter:is(:hover, :focus-visible) {
   background-size: 100% 100%, 100% 100%;
@@ -359,13 +275,6 @@
 .topbar-search-button,
 .mini-action {
   min-height: 40px;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(77,190,154,.13),
-      rgba(77,190,154,.13)
-    ) left center / 0 100% no-repeat,
-    var(--surface-solid);
   transition:
     background-size var(--motion-base) var(--motion-ease),
     transform var(--motion-base) var(--motion-ease),
@@ -470,7 +379,6 @@ input[type="radio"] {
 
 /* Dark mode */
 html[data-theme="dark"] .button-secondary,
-html[data-theme="dark"] .button-soft,
 html[data-theme="dark"] .format-button,
 html[data-theme="dark"] .topbar-search-button,
 html[data-theme="dark"] .mini-action {

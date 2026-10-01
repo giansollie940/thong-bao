@@ -2,15 +2,6 @@
   const STORAGE_KEY = "weekly-sidebar-collapsed";
   const desktopQuery = window.matchMedia("(min-width: 821px)");
 
-  function ensureFloatingSearchStyles() {
-    if (document.querySelector('link[data-search-island-style="true"]')) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "floating-search-island.css?v=3.17.2";
-    link.dataset.searchIslandStyle = "true";
-    document.head.append(link);
-  }
-
   function moveSearchIntoIsland(shell) {
     const workspace = shell.querySelector(".app-workspace");
     const main = shell.querySelector("#main-content");
@@ -38,8 +29,6 @@
     const sidebar = document.querySelector("#app-sidebar");
     const toggle = document.querySelector("#sidebar-toggle");
     if (!shell || !sidebar || !toggle) return;
-
-    ensureFloatingSearchStyles();
 
     // Keep the toggle outside the scrollable sidebar so it cannot be clipped.
     if (toggle.parentElement === sidebar) {
