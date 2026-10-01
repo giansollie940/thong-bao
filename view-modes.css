@@ -1,6 +1,6 @@
 /* =========================================================
-   V3.23 — View modes (prototype)
-   Danh sách (mặc định) · Lịch tuần theo ngày + khung đọc · Bảng ô (Bento)
+   V3.24 — View modes
+   Lịch tuần theo ngày + khung đọc (mặc định) · Danh sách
    ========================================================= */
 
 /* ---------- Switcher ---------- */
@@ -39,14 +39,8 @@
 .current-section[data-view="agenda"] #current-week-card,
 .current-section[data-view="agenda"] #category-dashboard,
 .current-section[data-view="agenda"] .dashboard-subheading,
-.current-section[data-view="agenda"] #current-announcements,
-.current-section[data-view="bento"] #current-week-card,
-.current-section[data-view="bento"] #category-dashboard {
+.current-section[data-view="agenda"] #current-announcements {
   display: none !important;
-}
-
-.current-section[data-view="bento"] .dashboard-subheading {
-  margin-top: 22px;
 }
 
 /* ---------- Shared bits ---------- */
@@ -530,253 +524,35 @@ html[data-theme="dark"] .vm-attention > strong { color: #ffc56b; }
   .vm-reader { transition: none !important; }
 }
 
-/* =========================================================
-   Bảng ô (Bento)
-   ========================================================= */
+/* ---------- Week progress ("Ngày 4/6 · còn 2 ngày") ---------- */
 
-.vm-bento {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas:
-    "hero top      top"
-    "hero upcoming latest"
-    "cats cats     cats";
-  gap: 12px;
-}
-
-.vm-tile {
-  position: relative;
-  min-width: 0;
-  padding: 16px;
-  overflow: hidden;
-  border: 1px solid var(--mac-line);
-  border-radius: 20px;
-  background: var(--mac-card);
-  color: var(--mac-text);
-  box-shadow: var(--mac-shadow-soft), var(--mac-highlight);
-}
-
-.vm-tile h5 {
-  margin: 0 0 8px;
-  color: var(--mac-muted);
-  font-size: .7rem;
-  font-weight: 780;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-}
-
-.vm-tile-hero {
-  grid-area: hero;
-  display: flex;
-  flex-direction: column;
+.vm-progress-wrap {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  min-height: 300px;
-  border: 0;
-  background:
-    linear-gradient(160deg, rgba(18, 84, 66, .86) 0%, rgba(24, 98, 77, .62) 55%, rgba(39, 125, 97, .18) 100%),
-    url("mint-garden-hero.svg") 70% bottom / cover no-repeat;
-  color: #fff;
-}
-
-.vm-tile-hero .vm-weeknav span { color: #d9f5e8; }
-.vm-tile-hero .vm-weeknav-step { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.14); color: #fff; }
-.vm-tile-hero .vm-weeknav strong { font-size: 1.15rem; }
-
-.vm-tile-hero h3 {
-  margin: 6px 0 0;
-  font-size: clamp(1.8rem, 3vw, 2.4rem);
-  line-height: 1.05;
-  letter-spacing: -.02em;
-  text-shadow: 0 1px 3px rgba(10, 48, 38, .4);
-}
-
-.vm-tile-hero p {
-  margin: 0;
-  color: rgba(255, 255, 255, .92);
-  font-size: .92rem;
-}
-
-.vm-tile-hero small {
-  color: #e2f7ee;
-  font-weight: 650;
 }
 
 .vm-progress {
-  height: 9px;
-  margin-top: 6px;
+  display: block;
+  width: 84px;
+  height: 7px;
   overflow: hidden;
   border-radius: 99px;
-  background: rgba(255, 255, 255, .28);
+  background: color-mix(in srgb, var(--mac-mint) 18%, var(--mac-card-soft));
 }
 
 .vm-progress i {
   display: block;
   height: 100%;
   border-radius: 99px;
-  background: #fff;
+  background: linear-gradient(90deg, #2fae7d, #1d7a57);
 }
 
-.vm-hero-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: auto;
-}
-
-.vm-hero-chips span {
-  padding: 4px 10px;
-  border: 1px solid rgba(255, 255, 255, .34);
-  border-radius: 999px;
-  background: rgba(12, 66, 52, .32);
-  font-size: .8rem;
-  font-weight: 700;
-}
-
-.vm-hero-chips .is-warn {
-  border-color: rgba(255, 210, 140, .6);
-  background: rgba(150, 82, 0, .4);
-}
-
-.vm-tile-hero .vm-admin .button {
-  background: rgba(255, 255, 255, .9);
-}
-
-.vm-tile-top {
-  grid-area: top;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-color: color-mix(in srgb, var(--mac-orange) 30%, var(--mac-line));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--mac-orange) 7%, transparent), transparent 70%),
-    var(--mac-card-solid);
-}
-
-.vm-tile-top h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.3;
-}
-
-.vm-tile-top p {
-  display: -webkit-box;
-  margin: 0;
-  overflow: hidden;
+.vm-progress-text {
   color: var(--mac-muted);
-  font-size: .9rem;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-
-.vm-tile-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 6px;
-}
-
-.vm-tile-upcoming { grid-area: upcoming; }
-.vm-tile-latest { grid-area: latest; }
-
-.vm-link-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 34px;
-  padding: 4px 6px;
-  border: 0;
-  border-radius: 9px;
-  background: none;
-  color: var(--mac-text);
-  font: inherit;
-  font-size: .86rem;
-  text-align: left;
-  cursor: pointer;
-}
-
-.vm-link-row span:last-child {
-  overflow: hidden;
+  font-size: .78rem;
+  font-weight: 650;
   white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.vm-link-row:hover {
-  background: var(--mac-card-soft);
-}
-
-.vm-bento-cats {
-  grid-area: cats;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.vm-tile-cat {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 20%, var(--mac-line));
-  font: inherit;
-  font-size: .9rem;
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-}
-
-.vm-tile-cat b {
-  margin-left: auto;
-  font-size: 1.4rem;
-  color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 80%, var(--mac-text));
-}
-
-.vm-cat-icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--category-color, var(--mac-blue)) 14%, var(--mac-card-solid));
-}
-
-.vm-tile-cat.is-active {
-  border-color: color-mix(in srgb, var(--category-color, var(--mac-blue)) 60%, var(--mac-line));
-  background: color-mix(in srgb, var(--category-color, var(--mac-blue)) 10%, var(--mac-card-solid));
-}
-
-@media (max-width: 900px) {
-  .vm-bento {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas:
-      "hero     hero"
-      "top      top"
-      "upcoming latest"
-      "cats     cats";
-  }
-
-  .vm-tile-hero {
-    min-height: 220px;
-  }
-}
-
-@media (max-width: 620px) {
-  .vm-bento {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "hero" "top" "upcoming" "latest" "cats";
-  }
-
-  .vm-bento-cats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .view-switcher button {
-    padding-inline: 8px;
-    font-size: .74rem;
-  }
 }
 
 /* The switcher takes the heading's right side on phones; the status badge is in the stage. */
@@ -791,12 +567,7 @@ html[data-theme="dark"] .vm-attention > strong { color: #ffc56b; }
   }
 }
 
-/* Bento: the category tiles replace the filter row, so keep the list heading clear of them. */
-.current-section[data-view="bento"] .category-dashboard + .dashboard-subheading {
-  margin-top: 26px;
-}
-
-/* Agenda / Bento show the week status inside the stage; drop the duplicate badge on phones. */
+/* Agenda shows the week status inside the stage; drop the duplicate badge on phones. */
 @media (max-width: 620px) {
   .current-section:not([data-view="list"]) .section-heading-actions .live-badge {
     display: none !important;
@@ -894,4 +665,16 @@ html[data-theme="dark"] .vm-attention > strong { color: #ffc56b; }
 body.vm-reader-locked .pet-companion,
 body.vm-reader-locked .pet-restore {
   display: none !important;
+}
+
+/* Wide screens: "Cần chú ý" rows in two columns so the list starts higher. */
+@media (min-width: 1100px) {
+  .vm-attention {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+
+  .vm-attention > strong {
+    grid-column: 1 / -1;
+  }
 }

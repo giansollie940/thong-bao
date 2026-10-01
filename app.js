@@ -68,7 +68,7 @@
     announcementOpen: new Map(),
     // Week picked in the sidebar; null = follow the featured (today's) week.
     selectedWeekId: null,
-    viewMode: "list",
+    viewMode: "agenda",
     readerId: null,
     readerOpen: false,
     schoolYearPreview: [],
@@ -1390,10 +1390,10 @@
   }
 
   /* =========================================================
-     V3.23 — View modes (prototype): Danh sách / Lịch tuần / Bảng ô
+     V3.24 — View modes: Lịch tuần (mặc định) / Danh sách
      ========================================================= */
 
-  const VIEW_MODES = ["list", "agenda", "bento"];
+  const VIEW_MODES = ["agenda", "list"];
   const VIEW_STORAGE_KEY = "weekly-board-view";
   const READ_STORAGE_KEY = "weekly-board-read-v1";
   const WEEKDAY_SHORT = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
@@ -1410,7 +1410,7 @@
   function initialViewMode() {
     const fromUrl = new URLSearchParams(location.search).get("view");
     const stored = readStorage(VIEW_STORAGE_KEY);
-    return VIEW_MODES.find(mode => mode === fromUrl) || VIEW_MODES.find(mode => mode === stored) || "list";
+    return VIEW_MODES.find(mode => mode === fromUrl) || VIEW_MODES.find(mode => mode === stored) || "agenda";
   }
 
   // Announcements this browser has opened (agenda reader). Stored per viewer only.
@@ -1447,7 +1447,7 @@
     return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
   }
 
-  function weekNavHtml(week, { showNumber = true } = {}) {
+  function weekNavHtml(week) {
     const weeks = sortedWeeks().filter(w => schoolYearKey(w) === state.activeSchoolYear);
     const index = weeks.findIndex(w => w.id === week.id);
     const prev = weeks[index - 1];
@@ -1456,10 +1456,29 @@
     return `
       <div class="vm-weeknav">
         <button type="button" class="vm-weeknav-step" data-action="select-week" data-id="${escapeHtml(prev?.id || "")}" ${prev ? "" : "disabled"} aria-label="Tuần trước">‹</button>
-        ${showNumber ? `<strong>Tuần ${escapeHtml(week.week_number)}</strong>` : ""}
+        <strong>Tuần ${escapeHtml(week.week_number)}</strong>
         <span>${dayMonth(week.start_date)} – ${dayMonth(week.end_date)}</span>
         <button type="button" class="vm-weeknav-step" data-action="select-week" data-id="${escapeHtml(next?.id || "")}" ${next ? "" : "disabled"} aria-label="Tuần sau">›</button>
       </div>`;
+  }
+
+  // "Ngày 4/6 · còn 2 ngày" for the running week; a short status otherwise.
+  function weekProgressHtml(week) {
+    const today = todayIso();
+    const s = weekState(week);
+
+    if (s === "upcoming") return `<span class="vm-progress-text">Bắt đầu sau ${daysFromToday(week.start_date)} ngày</span>`;
+    if (s === "past") return '<span class="vm-progress-text">Đã kết thúc</span>';
+
+    const days = weekDays(week);
+    const index = Math.max(1, days.filter(day => day <= today).length);
+    const left = days.length - index;
+
+    return `
+      <span class="vm-progress-wrap" title="Ngày ${index} trên ${days.length} của tuần">
+        <span class="vm-progress" aria-hidden="true"><i style="width:${Math.round(index / days.length * 100)}%"></i></span>
+        <span class="vm-progress-text">Ngày ${index}/${days.length}${left ? ` · còn ${left} ngày` : " · ngày cuối"}</span>
+      </span>`;
   }
 
   function weekAdminHtml(week) {
@@ -1503,9 +1522,7 @@
       return;
     }
 
-    el.viewStage.innerHTML = state.viewMode === "agenda"
-      ? agendaHtml(week, items, visibleItems)
-      : bentoHtml(week, items);
+    el.viewStage.innerHTML = agendaHtml(week, items, visibleItems);
 
     contentInteractions.enhance(el.viewStage);
   }
@@ -1594,7 +1611,8 @@
       <div class="vm-agenda">
         <header class="vm-agenda-head">
           ${weekNavHtml(week)}
-          <span class="vm-chip ${unread ? "is-unread" : ""}">${unread ? `${unread} chưa đọc` : "Đã đọc hết"}</span>
+          ${weekProgressHtml(week)}
+          ${items.length ? `<span class="vm-chip ${unread ? "is-unread" : ""}">${unread ? `${unread} chưa đọc` : "Đã đọc hết"}</span>` : ""}
           ${weekAdminHtml(week)}
         </header>
 
@@ -1683,123 +1701,6 @@
     state.readerOpen = false;
     document.body.classList.remove("vm-reader-locked");
     document.getElementById("vm-reader")?.classList.remove("is-open");
-  }
-
-  /* ---------- Bảng ô (Bento) ---------- */
-
-  function bentoHtml(week, items) {
-    const today = todayIso();
-    const s = weekState(week);
-    const days = weekDays(week);
-    const important = items.filter(item => item.priority === "important").length;
-    const top = items.find(item => item.is_pinned || item.priority === "important") || items[0];
-
-    let progress = "";
-    if (s === "current") {
-      const index = Math.max(1, days.indexOf(today) + 1 || days.filter(day => day <= today).length);
-      const left = days.length - index;
-      progress = `
-        <div class="vm-progress" role="img" aria-label="Ngày ${index} trên ${days.length}"><i style="width:${Math.round(index / days.length * 100)}%"></i></div>
-        <small>Ngày ${index}/${days.length}${left ? ` · còn ${left} ngày` : " · ngày cuối tuần"}</small>`;
-    } else if (s === "upcoming") {
-      progress = `<small>Bắt đầu sau ${daysFromToday(week.start_date)} ngày</small>`;
-    } else {
-      progress = "<small>Tuần đã kết thúc</small>";
-    }
-
-    const upcoming = items
-      .filter(item => {
-        const diff = daysFromToday(item.event_date);
-        return diff !== null && diff >= 0 && diff <= 7;
-      })
-      .sort((a, b) => a.event_date.localeCompare(b.event_date))
-      .slice(0, 4);
-
-    const latest = [...items]
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 3);
-
-    const counts = new Map();
-    items.forEach(item => {
-      const key = categoryInfo(item).key;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    });
-
-    const categoryTiles = activeCategories()
-      .filter(category => counts.has(category.slug))
-      .map(category => `
-        <button type="button" class="vm-tile vm-tile-cat ${state.categoryFilter === category.slug ? "is-active" : ""}" style="${categoryStyle(category)}"
-          data-action="filter-category" data-category="${escapeHtml(category.slug)}" aria-pressed="${state.categoryFilter === category.slug}">
-          <span class="vm-cat-icon" aria-hidden="true">${escapeHtml(category.icon || "📌")}</span>
-          <span>${escapeHtml(category.name)}</span>
-          <b>${counts.get(category.slug)}</b>
-        </button>`).join("");
-
-    const linkRow = item => `
-      <button type="button" class="vm-link-row" data-action="bento-open" data-id="${escapeHtml(item.id)}">
-        ${relativeChip(item)}<span>${escapeHtml(item.title)}</span>
-      </button>`;
-
-    return `
-      <div class="vm-bento">
-        <section class="vm-tile vm-tile-hero">
-          ${weekNavHtml(week, { showNumber: false })}
-          <h3>Tuần ${escapeHtml(week.week_number)}</h3>
-          <p>${escapeHtml(week.summary || `${formatDate(week.start_date)} → ${formatDate(week.end_date)}`)}</p>
-          ${progress}
-          <div class="vm-hero-chips">
-            <span>📣 ${items.length} thông báo</span>
-            ${important ? `<span class="is-warn">⚠️ ${important} quan trọng</span>` : ""}
-          </div>
-          ${weekAdminHtml(week)}
-        </section>
-
-        ${top ? `
-          <section class="vm-tile vm-tile-top" style="${categoryStyle(categoryInfo(top))}">
-            <h5>${top.priority === "important" || top.is_pinned ? "📌 Quan trọng nhất" : "Nổi bật"}</h5>
-            <h3>${escapeHtml(top.title)}</h3>
-            <p>${escapeHtml(announcementPreview(contentRenderer.renderStoredContent(top.content)))}</p>
-            <div class="vm-tile-foot">
-              ${relativeChip(top)}
-              <button type="button" class="button button-small" data-action="bento-open" data-id="${escapeHtml(top.id)}">Đọc ngay →</button>
-            </div>
-          </section>` : `<section class="vm-tile vm-tile-top"><h5>Tuần này</h5><p>Chưa có thông báo.</p></section>`}
-
-        <section class="vm-tile vm-tile-upcoming">
-          <h5>⏰ Sắp diễn ra</h5>
-          ${upcoming.length ? upcoming.map(linkRow).join("") : '<p class="vm-muted">Không có sự kiện trong 7 ngày tới.</p>'}
-        </section>
-
-        <section class="vm-tile vm-tile-latest">
-          <h5>🆕 Mới đăng</h5>
-          ${latest.length ? latest.map(linkRow).join("") : '<p class="vm-muted">Chưa có thông báo.</p>'}
-        </section>
-
-        <div class="vm-bento-cats">
-          <button type="button" class="vm-tile vm-tile-cat ${state.categoryFilter === "all" ? "is-active" : ""}" data-action="filter-category" data-category="all" aria-pressed="${state.categoryFilter === "all"}">
-            <span class="vm-cat-icon" aria-hidden="true">✨</span><span>Tất cả</span><b>${items.length}</b>
-          </button>
-          ${categoryTiles}
-        </div>
-      </div>`;
-  }
-
-  // Open a card in the list under the bento grid.
-  function bentoOpen(id) {
-    let toggle = el.currentAnnouncements.querySelector(`.announcement-toggle[data-id="${CSS.escape(String(id))}"]`);
-    if (!toggle && state.categoryFilter !== "all") {
-      state.categoryFilter = "all";
-      renderCurrent();
-      toggle = el.currentAnnouncements.querySelector(`.announcement-toggle[data-id="${CSS.escape(String(id))}"]`);
-    }
-    const card = toggle?.closest(".announcement-card");
-    if (!card) return;
-
-    setAnnouncementExpanded(card, true);
-    syncToggleAllButton();
-    card.classList.add("is-flash");
-    setTimeout(() => card.classList.remove("is-flash"), 1400);
-    card.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function setViewMode(mode) {
@@ -1915,12 +1816,12 @@
         </article>`;
     }).join("");
 
-    scrollYearRailToCurrent();
+    scrollYearStripToCurrent();
   }
 
-  // Bring the current (or next) week into view inside the week list: the vertical rail on
-  // wide screens, the horizontal strip on smaller ones. Only the list scrolls, never the page.
-  function scrollYearRailToCurrent() {
+  // Bring the current (or next) week into view inside the horizontal "Lịch năm học" strip.
+  // Only the strip scrolls, never the page.
+  function scrollYearStripToCurrent() {
     const strip = el.yearStrip;
     const card = strip.querySelector(".year-week-card.current, .year-week-card.upcoming");
     if (!card) return;
@@ -2885,11 +2786,6 @@
 
     if (action === "agenda-jump") {
       document.getElementById(`agenda-day-${button.dataset.day}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-
-    if (action === "bento-open") {
-      bentoOpen(id);
       return;
     }
 

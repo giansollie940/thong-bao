@@ -365,3 +365,13 @@ Danh sách; lựa chọn được nhớ trên máy người xem (có thể mở 
 
 Sửa thêm: trên điện thoại/tablet, khung Quản trị trước đây luôn mở đè lên đầu trang;
 giờ là một hàng nút gọn dưới thanh trên cùng.
+
+
+## V3.24 — Lịch tuần là giao diện mặc định
+
+Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai bản mẫu của V3.23.
+
+- Mặc định mở **🗓 Lịch tuần**; **☰ Danh sách** (thẻ thu gọn như V3.21) vẫn là lựa chọn phụ,
+  được nhớ trên máy người xem. Link cũ `?view=bento` tự chuyển về Lịch tuần.
+- Bỏ chế độ **Bảng ô**; chỉ giữ thanh tiến độ tuần **"Ngày 4/6 · còn 2 ngày"**, đặt cạnh ‹ Tuần ›.
+- Khối "Cần chú ý" chia 2 cột trên màn hình rộng; tuần không có thông báo không hiện chip đã đọc.

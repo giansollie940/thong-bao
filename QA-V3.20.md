@@ -41,3 +41,12 @@ Kiểm thử bằng Chromium (Playwright) với Supabase giả lập (10 tuần,
 - [x] Bảng ô: 8 ô; lọc theo ô chuyên mục; "Đọc ngay" / ô Mới đăng mở đúng thẻ (tự bỏ lọc nếu cần).
 - [x] Admin: Sửa/Xóa trong khung đọc và ô tuần; hàng nút Quản trị trên điện thoại không đè nội dung.
 - [x] 1440 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.
+
+## V3.24 — Lịch tuần mặc định
+
+- [x] Mở trang vào Lịch tuần; nút chuyển chỉ còn Lịch tuần / Danh sách; `?view=bento` → Lịch tuần.
+- [x] Thanh tiến độ: "Ngày 4/6 · còn 2 ngày"; tuần sắp tới "Bắt đầu sau N ngày"; tuần đã qua "Đã kết thúc".
+- [x] Khung đọc, Trước/Sau, chưa đọc, lọc chuyên mục, đổi tuần (‹ › và dropdown), tìm kiếm.
+- [x] Danh sách: khung tuần + thẻ thu gọn như trước.
+- [x] Admin (máy tính và điện thoại): Sửa/Xóa trong khung đọc và đầu tuần; hàng nút Quản trị không đè nội dung.
+- [x] 1440 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.
