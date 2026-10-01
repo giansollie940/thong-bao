@@ -375,3 +375,10 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
   được nhớ trên máy người xem. Link cũ `?view=bento` tự chuyển về Lịch tuần.
 - Bỏ chế độ **Bảng ô**; chỉ giữ thanh tiến độ tuần **"Ngày 4/6 · còn 2 ngày"**, đặt cạnh ‹ Tuần ›.
 - Khối "Cần chú ý" chia 2 cột trên màn hình rộng; tuần không có thông báo không hiện chip đã đọc.
+
+
+## V3.25 — Khung đọc rộng hơn trên laptop
+
+- Cột danh sách trong Lịch tuần co theo màn hình (≈32%, 280–420px) thay vì cố định 400px.
+- Lề trang mỏng hơn; giới hạn chiều rộng nội dung tăng từ 1260px lên 1480px.
+- Khung đọc: 1280px 525 → 644px, 1366px 611 → 700px, 1440px 685 → 748px, 1920px 772 → 990px.

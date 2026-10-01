@@ -678,3 +678,25 @@ body.vm-reader-locked .pet-restore {
     grid-column: 1 / -1;
   }
 }
+
+/* =========================================================
+   V3.25 — Wider reading area on laptops
+   ========================================================= */
+
+@media (min-width: 901px) {
+  /* Thinner page margins and a higher cap so laptops/desktops use their width. */
+  .dashboard-main {
+    width: min(100%, 1480px);
+    padding-inline: clamp(16px, 1.8vw, 28px);
+  }
+
+  /* List column scales with the screen (≈32%, 280–420px); the reader takes the rest. */
+  .vm-split {
+    grid-template-columns: minmax(280px, min(32%, 420px)) minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .vm-reader-body {
+    padding: 16px 22px 20px;
+  }
+}
