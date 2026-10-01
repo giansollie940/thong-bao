@@ -95,13 +95,13 @@
         </label>
       </div>
 
-      <section class="sidebar-weeks" aria-labelledby="sidebar-weeks-heading">
-        <div class="sidebar-weeks-heading">
-          <span id="sidebar-weeks-heading">Chọn tuần</span>
-          <small id="sidebar-weeks-count"></small>
-        </div>
-        <div class="sidebar-weeks-list" id="sidebar-weeks-list"></div>
-      </section>
+      <div class="sidebar-school-year sidebar-week-picker" aria-label="Tuần đang xem">
+        <span class="sidebar-school-year-icon" aria-hidden="true">📅</span>
+        <label class="sidebar-school-year-control" for="global-week-filter">
+          <span>Tuần</span>
+          <select id="global-week-filter" aria-label="Chọn tuần để xem thông báo"></select>
+        </label>
+      </div>
 
       <section class="sidebar-admin hidden" id="admin-toolbar" aria-label="Công cụ quản trị">
         <div class="sidebar-section-heading">

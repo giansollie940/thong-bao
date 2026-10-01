@@ -80,8 +80,7 @@
     currentWeekCard: $("#current-week-card"),
     currentAnnouncements: $("#current-announcements"),
     toggleAllAnnouncements: $("#toggle-all-announcements"),
-    sidebarWeeksList: $("#sidebar-weeks-list"),
-    sidebarWeeksCount: $("#sidebar-weeks-count"),
+    globalWeekFilter: $("#global-week-filter"),
     backToCurrentWeek: $("#back-to-current-week"),
     currentHeading: $("#current-heading"),
     currentSection: $("#current-section"),
@@ -1383,49 +1382,25 @@
     syncToggleAllButton();
   }
 
-  function renderSidebarWeeks() {
-    if (!el.sidebarWeeksList) return;
+  function renderWeekPicker() {
+    const select = el.globalWeekFilter;
+    if (!select) return;
 
     const weeks = sortedWeeks().filter(week => schoolYearKey(week) === state.activeSchoolYear);
-    if (el.sidebarWeeksCount) el.sidebarWeeksCount.textContent = weeks.length ? `${weeks.length} tuần` : "";
-
     if (!weeks.length) {
-      el.sidebarWeeksList.innerHTML = '<p class="sidebar-weeks-empty">Chưa có tuần nào.</p>';
+      select.innerHTML = '<option value="">Chưa có tuần</option>';
+      select.disabled = true;
       return;
     }
 
-    const shownId = state.currentWeek?.id;
-    el.sidebarWeeksList.innerHTML = weeks.map(week => {
-      const s = weekState(week);
-      const count = getItems(week.id).length;
-      const stateLabel = s === "current" ? "đang diễn ra" : s === "upcoming" ? "sắp tới" : "đã qua";
-
-      return `
-        <button
-          class="sidebar-week is-${s}"
-          type="button"
-          data-action="select-week"
-          data-id="${escapeHtml(week.id)}"
-          aria-current="${week.id === shownId}"
-          aria-label="Tuần ${escapeHtml(week.week_number)}, ${formatDate(week.start_date)} đến ${formatDate(week.end_date)}, ${count} thông báo, ${stateLabel}"
-        >
-          <strong>Tuần ${escapeHtml(week.week_number)}</strong>
-          <small>${formatShortDate(week.start_date)} → ${formatShortDate(week.end_date)}</small>
-          <span class="sidebar-week-count ${count ? "has-items" : ""}" aria-hidden="true">${count}</span>
-        </button>`;
+    select.innerHTML = weeks.map(week => {
+      // Short label so it fits the sidebar; "●" marks the week in progress.
+      const isCurrent = weekState(week) === "current";
+      const dayMonth = iso => iso.slice(8, 10) + "/" + iso.slice(5, 7);
+      return `<option value="${escapeHtml(week.id)}"${isCurrent ? ' title="Tuần đang diễn ra"' : ""}>Tuần ${escapeHtml(week.week_number)} · ${dayMonth(week.start_date)}–${dayMonth(week.end_date)}${isCurrent ? " ●" : ""}</option>`;
     }).join("");
-
-    const active = el.sidebarWeeksList.querySelector('[aria-current="true"]');
-    if (active) {
-      requestAnimationFrame(() => {
-        const list = el.sidebarWeeksList;
-        const listBox = list.getBoundingClientRect();
-        const box = active.getBoundingClientRect();
-        if (box.top < listBox.top || box.bottom > listBox.bottom) {
-          list.scrollTop += box.top - listBox.top - (list.clientHeight - box.height) / 2;
-        }
-      });
-    }
+    select.disabled = false;
+    select.value = state.currentWeek?.id || "";
   }
 
   // Show a week's announcements in the main panel (weekId null = back to the featured week).
@@ -1437,7 +1412,7 @@
     state.categoryFilter = "all";
     [state.currentWeek, state.currentWeekState] = displayedWeek();
 
-    renderSidebarWeeks();
+    renderWeekPicker();
     renderCurrent();
     enhanceRenderedContent();
     el.currentSection?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1609,7 +1584,7 @@
     renderAdmin();
     renderConnection();
     renderGlobalSchoolYearSwitcher();
-    renderSidebarWeeks();
+    renderWeekPicker();
     renderCurrent();
     renderSchoolYearSelectors();
     renderYearStrip();
@@ -2570,6 +2545,10 @@
 
     el.globalSchoolYearFilter?.addEventListener("change", () => {
       applyGlobalSchoolYear(el.globalSchoolYearFilter.value);
+    });
+
+    el.globalWeekFilter?.addEventListener("change", () => {
+      selectWeek(el.globalWeekFilter.value);
     });
 
     el.announcementForm.addEventListener("submit", saveAnnouncement);

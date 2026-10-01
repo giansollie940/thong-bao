@@ -22,13 +22,12 @@ Kiểm thử bằng Chromium (Playwright) với Supabase giả lập (10 tuần,
 - [x] Khung tuần có chip "⚠️ N quan trọng" khi N > 0.
 - [x] 1440 / 1280 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.
 
-## V3.22 — Chọn tuần ở thanh bên trái
+## V3.22 — Chọn tuần bằng dropdown
 
 - [x] Không còn cột bên phải; Lịch năm học là dải ngang như trước.
-- [x] Danh sách tuần ở thanh bên: tuần hiện tại có chấm xanh, tuần đang xem được tô; danh sách tự cuộn tới tuần đang xem.
+- [x] Dropdown Tuần có đủ tuần của năm học đang chọn; tuần đang diễn ra có `●`; nhãn không bị cắt ở thanh bên.
 - [x] Chọn tuần đã qua / sắp tới: tiêu đề "Tuần đang xem", nhãn "Đã kết thúc" / "Sắp tới", có nút "Về tuần hiện tại".
-- [x] "Về tuần hiện tại" và đổi năm học đưa về tuần hiện tại.
-- [x] Nút "Xem" trong Lịch năm học chọn tuần (máy tính và điện thoại), không mở hộp thoại.
-- [x] Tuần không có thông báo: "Tuần này chưa có thông báo.", khoảng cách dưới khung tuần đúng.
-- [x] Thanh bên thu gọn và màn hình ≤820px ẩn danh sách tuần.
-- [x] 1440 / 1280 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.
+- [x] "Về tuần hiện tại", nút "Xem" ở Lịch năm học và đổi năm học đều cập nhật dropdown đúng.
+- [x] Tablet: 2 ô cùng hàng trên thanh trên cùng; điện thoại: 2 ô cạnh nhau ở hàng 2.
+- [x] Thanh bên thu gọn chỉ hiện biểu tượng 📅.
+- [x] 1440 / 820 / 390px, sáng/tối: không tràn ngang, không lỗi JavaScript.
