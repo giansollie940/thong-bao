@@ -1,8 +1,14 @@
-# Bảng Thông Báo Theo Tuần — V3.26
+# Bảng Thông Báo Theo Tuần — V3.26.1
 
 Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
 dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
 khối "Cần chú ý" và khung đọc nội dung; **Danh sách** là kiểu hiển thị phụ.
+
+Trong Lịch tuần, thông báo theo ngày của tuần đang xem xuất hiện trước nhóm
+"Đang có hiệu lực" từ các tuần cũ. Khung đọc và nút Trước/Sau đi theo cùng thứ tự.
+Trong mỗi ngày vẫn ưu tiên thông báo ghim, quan trọng, rồi thời điểm đăng mới nhất.
+
+Kiểm thử hồi quy cho thứ tự lịch: `node --test tests/agenda.test.cjs`.
 
 ## Cấu trúc frontend
 
