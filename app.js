@@ -1543,6 +1543,9 @@
       else before.push(item);
     });
 
+    // Keep selection and reader navigation in the same order as the calendar.
+    const agendaItems = [...days.flatMap(day => groups.get(day)), ...before, ...after];
+
     const attention = items
       .filter(item => {
         const diff = daysFromToday(item.event_date);
@@ -1551,7 +1554,7 @@
       .sort((a, b) => String(a.event_date || "9").localeCompare(String(b.event_date || "9")));
 
     if (!items.some(item => String(item.id) === state.readerId)) {
-      const first = visibleItems.find(item => !readIds.has(String(item.id))) || visibleItems[0];
+      const first = agendaItems.find(item => !readIds.has(String(item.id))) || agendaItems[0];
       state.readerId = first ? String(first.id) : null;
     }
 
@@ -1634,13 +1637,13 @@
           <div class="vm-split">
             <div class="vm-list">
               ${visibleItems.length ? "" : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>'}
-              ${group("agenda-before", "Đang có hiệu lực", before)}
               ${days.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
+              ${group("agenda-before", "Đang có hiệu lực", before)}
               ${group("agenda-after", "Sắp tới (sau tuần này)", after)}
             </div>
 
             <aside class="vm-reader ${state.readerOpen ? "is-open" : ""}" id="vm-reader" aria-label="Nội dung thông báo">
-              ${selected ? readerHtml(selected, visibleItems) : '<p class="vm-reader-empty">Chọn một thông báo để đọc.</p>'}
+              ${selected ? readerHtml(selected, agendaItems) : '<p class="vm-reader-empty">Chọn một thông báo để đọc.</p>'}
             </aside>
           </div>` : '<div class="empty-state">Tuần này chưa có thông báo.</div>'}
       </div>`;
