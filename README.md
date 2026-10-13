@@ -8,7 +8,7 @@ Trong Lịch tuần, thông báo theo ngày của tuần đang xem xuất hiện
 "Đang có hiệu lực" từ các tuần cũ. Khung đọc và nút Trước/Sau đi theo cùng thứ tự.
 Trong mỗi ngày vẫn ưu tiên thông báo ghim, quan trọng, rồi thời điểm đăng mới nhất.
 
-Kiểm thử hồi quy cho thứ tự lịch: `node --test tests/agenda.test.cjs`.
+Kiểm thử: `node --test tests/agenda.test.cjs`.
 
 ## Cấu trúc frontend
 
@@ -16,7 +16,17 @@ Kiểm thử hồi quy cho thứ tự lịch: `node --test tests/agenda.test.cjs
 index.html                    khung trang, hộp thoại, thứ tự nạp CSS/JS
 config.js                     URL + publishable key của Supabase (không chứa secret)
 
-app.js                        dữ liệu, Supabase, CRUD, render; Lịch tuần (mục "View modes")
+js/                           ứng dụng (ES modules, nạp từ js/main.js)
+  core.js                     cấu hình Supabase, state dùng chung, tham chiếu DOM (el)
+  utils.js                    chuỗi, ngày tháng, localStorage, toast
+  weeks.js                    tuần / năm học, thông báo của tuần
+  categories.js               chuyên mục (phân loại, màu, quản lý)
+  images.js                   ảnh thông báo (tải lên, xem trước)
+  render.js                   trang chính: thẻ thông báo, Danh sách, Lịch năm học, Lưu trữ, tìm kiếm
+  agenda.js                   Lịch tuần: dải ngày, Cần chú ý, khung đọc, chưa đọc
+  data.js                     tải dữ liệu, đăng nhập/đăng xuất
+  admin.js                    trình soạn thảo và các form Admin (lưu/xóa)
+  main.js                     gắn sự kiện, init()
 content-renderer.js / .css    sanitize + render nội dung thông báo (HTML/Markdown)
 content-interactions.js / .css  Tabs + Accordion trong nội dung
 rich-editor.js / .css         trình soạn thảo Soạn thảo ↔ HTML
@@ -112,6 +122,12 @@ Dùng các bảng `weeks`, `announcements`, `categories` và bucket ảnh
 3. Không đưa service-role key, admin password hoặc secret key lên GitHub.
 
 Mỗi lần đổi CSS/JS, tăng số `?v=` trong `index.html` để trình duyệt tải bản mới.
+Với các file trong `js/`, sửa số phiên bản trong khối `<script type="importmap">`
+(và ở thẻ `<script type="module" src="./js/main.js?v=…">`).
+
+Ứng dụng dùng ES modules nên phải mở qua máy chủ web (GitHub Pages, hoặc
+`python3 -m http.server` khi thử trên máy); mở trực tiếp file `index.html` bằng
+`file://` sẽ không chạy.
 
 ## QA
 
@@ -418,3 +434,14 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
 - Gộp các rule trùng selector khi không có rule nào ở giữa chạm cùng thuộc tính.
 - Kiểm chứng: toàn bộ computed style (mọi phần tử, kể cả ::before/::after) của
   28 trạng thái giống hệt trước khi gộp (0/32.536 phần tử khác), ảnh chụp lệch ≤ 0,002%.
+
+**Tách app.js**
+- `app.js` (khoảng 3.000 dòng, một IIFE) tách thành 10 ES module trong `js/`, mỗi file có
+  `import`/`export` rõ ràng (danh sách được sinh từ phân tích cú pháp, không gõ tay).
+- Khởi tạo trình soạn thảo chuyển thành `initEditors()` trong `admin.js`; bỏ một hàm
+  `normalizeText` bị khai báo trùng.
+- `index.html` nạp `js/main.js` dạng `type="module"`; import map giữ số phiên bản ở một chỗ.
+- `tests/agenda.test.cjs` nạp module thay vì cắt chuỗi mã nguồn; 7/7 kiểm thử đạt.
+- Kiểm chứng trên trình duyệt: computed style 0/32.536 phần tử khác; các luồng Admin
+  (đăng nhập, đăng/sửa/xóa, nhập nhanh, tuần, chuyên mục, năm học, đăng xuất) cho
+  cùng kết quả và cùng thao tác ghi như bản trước khi tách.
