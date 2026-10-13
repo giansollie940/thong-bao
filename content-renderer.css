@@ -1,3 +1,14 @@
+/* Base rules moved from styles.css (V3.27).
+   They must stay ahead of the component rules below, which override them. */
+
+.announcement-content p {
+  margin-bottom: 9px;
+}
+
+.announcement-content p:last-child {
+  margin-bottom: 0;
+}
+
 /* =========================================================
    V3.16 — Rendered announcement content
    Chỉ phụ trách kiểu chữ, bảng, ảnh và các khối nội dung.

@@ -26,10 +26,9 @@ loading-diamond.js / .css     hiệu ứng tải
 sidebar-collapse.js           thu gọn thanh bên, ô tìm kiếm nổi
 pet-companion.js / .css       Minty
 
-styles.css                    lớp giao diện gốc (V2.x–V3.x)
-controls.css                  nút, ô nhập
+controls.css                  nút, ô nhập (đầu file: style nền của thành phần)
 announcement-form.css         form đăng/sửa thông báo
-macos-glossy.css              lớp giao diện macOS (V3.17–V3.18)
+theme.css                     lớp giao diện gốc V2.x–V3.18 (gộp styles.css + macos-glossy.css)
 app-layout.css                bố cục hiện tại (V3.19+), nạp sau cùng
 
 mint-garden-hero.webp         ảnh khung tuần
@@ -410,3 +409,12 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
 - Ngày mặc định là **hôm nay** khi hôm nay nằm trong tuần được chọn; nếu không,
   là ngày đầu tuần. Trước đây luôn là Thứ Hai, nên bài mới dồn vào Thứ Hai.
 - Nhập nhanh: "Ngày diễn ra mặc định", cùng quy tắc.
+
+**Gộp CSS cũ**
+- `styles.css` và `macos-glossy.css` gộp thành `theme.css`, nạp ở vị trí cũ của
+  `macos-glossy.css`. 24 rule nền của nút, ô nhập, thanh định dạng và đoạn văn
+  trong nội dung được chuyển về đầu `controls.css`, `rich-editor.css`,
+  `content-renderer.css` để vẫn bị các file thành phần ghi đè như trước.
+- Gộp các rule trùng selector khi không có rule nào ở giữa chạm cùng thuộc tính.
+- Kiểm chứng: toàn bộ computed style (mọi phần tử, kể cả ::before/::after) của
+  28 trạng thái giống hệt trước khi gộp (0/32.536 phần tử khác), ảnh chụp lệch ≤ 0,002%.
