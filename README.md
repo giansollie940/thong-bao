@@ -1,4 +1,4 @@
-# Bảng Thông Báo Theo Tuần — V3.26.1
+# Bảng Thông Báo Theo Tuần — V3.27
 
 Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
 dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
@@ -400,3 +400,13 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
   `floating-search-island.css` thành `app-layout.css`; CSS ô tìm kiếm nạp tĩnh thay vì bằng JS.
 - Bỏ inline style trong thẻ Lưu trữ; bỏ hàm `currentHtml` không dùng.
 - Dùng chung một số phiên bản `?v=3.26.0` cho mọi file CSS/JS; QA chuyển vào `docs/qa/`.
+
+
+## V3.27 — Trường "Ngày diễn ra", gộp CSS, tách app.js
+
+**Ngày diễn ra**
+- Form đăng bài: "Ngày / mốc thông báo" → **"Ngày diễn ra"**, kèm hướng dẫn
+  (Lịch tuần xếp thông báo theo ngày này; với hạn nộp, chọn ngày hạn chót).
+- Ngày mặc định là **hôm nay** khi hôm nay nằm trong tuần được chọn; nếu không,
+  là ngày đầu tuần. Trước đây luôn là Thứ Hai, nên bài mới dồn vào Thứ Hai.
+- Nhập nhanh: "Ngày diễn ra mặc định", cùng quy tắc.

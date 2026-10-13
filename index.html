@@ -362,12 +362,13 @@
         <section class="mac-form-section mac-form-section-schedule">
           <div class="mac-section-heading">
             <span class="mac-section-icon" aria-hidden="true">◷</span>
-            <div><h3>Phân loại &amp; thời gian</h3><p>Ngày thông báo, chuyên mục và thời gian hiệu lực.</p></div>
+            <div><h3>Phân loại &amp; thời gian</h3><p>Ngày diễn ra, chuyên mục và thời gian hiệu lực.</p></div>
           </div>
           <div class="mac-section-grid mac-section-grid-two">
         <div class="field">
-          <label for="announcement-date">Ngày / mốc thông báo</label>
-          <input id="announcement-date" type="date" required>
+          <label for="announcement-date">Ngày diễn ra</label>
+          <input id="announcement-date" type="date" required aria-describedby="announcement-date-hint">
+          <p class="field-hint" id="announcement-date-hint">Thông báo hiện dưới ngày này trong Lịch tuần. Với hạn nộp, chọn ngày hạn chót.</p>
         </div>
 
         <div class="field">
@@ -799,8 +800,9 @@
         </div>
 
         <div class="field">
-          <label for="bulk-date">Ngày mặc định</label>
-          <input id="bulk-date" type="date" required>
+          <label for="bulk-date">Ngày diễn ra mặc định</label>
+          <input id="bulk-date" type="date" required aria-describedby="bulk-date-hint">
+          <p class="field-hint" id="bulk-date-hint">Dùng cho mục không ghi ngày dạng dd/mm/yyyy trong nội dung.</p>
         </div>
 
         <div class="field">
@@ -1181,7 +1183,7 @@
   <script src="editor-find-replace.js?v=3.26.0"></script>
   <script src="loading-diamond.js?v=3.26.0"></script>
   <script src="sidebar-collapse.js?v=3.26.0"></script>
-  <script src="app.js?v=3.26.1"></script>
+  <script src="app.js?v=3.27.0"></script>
   <script src="pet-companion.js?v=3.26.0"></script>
 </body>
 </html>

@@ -545,6 +545,12 @@
     return state.weeks.find(w => w.id === id) || null;
   }
 
+  // Today when it falls inside the week, otherwise the week's first day.
+  function defaultEventDate(week) {
+    const today = todayIso();
+    return week.start_date <= today && today <= week.end_date ? today : week.start_date;
+  }
+
   function applyWeekDefaults(prefix) {
     const week = getSelectedWeek(`#${prefix}-week`);
     if (!week) return;
@@ -553,7 +559,7 @@
     const fromInput = $(`#${prefix}-valid-from`);
     const untilInput = $(`#${prefix}-valid-until`);
 
-    if (dateInput) dateInput.value = week.start_date;
+    if (dateInput) dateInput.value = defaultEventDate(week);
     if (fromInput) fromInput.value = week.start_date;
     if (untilInput) untilInput.value = week.end_date;
   }
@@ -2048,7 +2054,7 @@
     $("#announcement-id").value = item?.id || "";
     $("#announcement-title").value = item?.title || "";
     $("#announcement-date").value =
-      item?.event_date || targetWeek?.start_date || todayIso();
+      item?.event_date || (targetWeek ? defaultEventDate(targetWeek) : todayIso());
     $("#announcement-valid-from").value =
       item?.valid_from || targetWeek?.start_date || todayIso();
     $("#announcement-valid-until").value =
