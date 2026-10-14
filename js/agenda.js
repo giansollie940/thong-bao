@@ -180,8 +180,13 @@ export function agendaHtml(week, items, visibleItems) {
     else before.push(item);
   });
 
+  // In the current week today leads, then the days ahead, then the days already past (latest first).
+  const dayOrder = days.includes(today)
+    ? [...days.filter(day => day >= today), ...days.filter(day => day < today).reverse()]
+    : days;
+
   // Keep selection and reader navigation in the same order as the calendar.
-  const agendaItems = [...fresh, ...days.flatMap(day => groups.get(day)), ...before, ...after];
+  const agendaItems = [...fresh, ...dayOrder.flatMap(day => groups.get(day)), ...before, ...after];
 
   const attention = items
     .filter(item => {
@@ -275,7 +280,7 @@ export function agendaHtml(week, items, visibleItems) {
           <div class="vm-list">
             ${visibleItems.length ? "" : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>'}
             ${group("agenda-fresh", "🆕 Mới đăng", fresh)}
-            ${days.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
+            ${dayOrder.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
             ${group("agenda-before", "Đang có hiệu lực", before)}
             ${group("agenda-after", "Sắp tới (sau tuần này)", after)}
           </div>

@@ -237,8 +237,8 @@ export function weekDays(week) {
   return days;
 }
 
-// Posted within the last 3 days: these lead the weekly calendar in a "Mới đăng" group.
-const FRESH_POST_MS = 3 * 24 * 3600e3;
+// Posted within the last 24 hours: these lead the weekly calendar in a "Mới đăng" group.
+const FRESH_POST_MS = 24 * 3600e3;
 
 export function isFreshlyPosted(item, now = Date.now()) {
   const age = now - Date.parse(item.created_at);
