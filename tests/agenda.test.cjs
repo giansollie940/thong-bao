@@ -113,3 +113,41 @@ test('the same-day pinned/important ordering and source data are preserved', asy
   assert.deepEqual(rowIds(api.agendaHtml(week, items, items)), ['pinned', 'important', 'new', 'old']);
   assert.equal(JSON.stringify(entries), original);
 });
+
+// "Mới đăng": notices posted in the last 3 days lead the weekly calendar.
+const justNow = (hoursAgo = 1) => new Date(Date.now() - hoursAgo * 3600e3).toISOString();
+
+test('notices posted in the last 3 days lead in a "Mới đăng" group without repeating in their day', async () => {
+  const fresh = item('demo', '2026-10-07', { created_at: justNow(2) });
+  const { html } = await render([...fixtures, fresh]);
+  assert.deepEqual(rowIds(html), ['demo', 'monday', 'tuesday', 'ongoing', 'future']);
+  assert.ok(html.includes('id="agenda-fresh"'));
+  assert.ok(html.indexOf('id="agenda-fresh"') < html.indexOf('id="agenda-day-2026-10-05"'));
+});
+
+test('several fresh notices are newest first, and older ones never enter the group', async () => {
+  const items = [...fixtures, item('older-new', '2026-10-05', { created_at: justNow(30) }), item('newest', '2026-10-08', { created_at: justNow(1) })];
+  assert.deepEqual(rowIds((await render(items)).html).slice(0, 2), ['newest', 'older-new']);
+  assert.ok(!(await render(fixtures)).html.includes('id="agenda-fresh"'));
+  const stale = item('stale', '2026-10-05', { created_at: justNow(24 * 4) });
+  assert.ok(!(await render([...fixtures, stale])).html.includes('id="agenda-fresh"'));
+});
+
+test('the reader starts at the newest unread post and steps on into the day groups', async () => {
+  const fresh = item('demo', '2026-10-07', { created_at: justNow(2) });
+  const { api, html } = await render([...fixtures, fresh]);
+  assert.equal(api.state.readerId, 'demo');
+  const reader = html.split('<aside')[1];
+  assert.match(reader, /data-id="monday"[^>]*aria-label="Thông báo sau"/);
+});
+
+test('the list view puts pinned notices first, then the newest posts', async () => {
+  const { newestFirst } = await load('weeks.js');
+  const entries = [
+    item('important-old', '2026-10-05', { priority: 'important', created_at: '2026-10-01T00:00:00Z' }),
+    item('normal-new', '2026-10-05', { created_at: '2026-10-04T00:00:00Z' }),
+    item('pinned-old', '2026-10-05', { is_pinned: true, created_at: '2026-09-01T00:00:00Z' })
+  ];
+  assert.deepEqual(newestFirst(entries).map(e => e.id), ['pinned-old', 'normal-new', 'important-old']);
+  assert.deepEqual(entries.map(e => e.id), ['important-old', 'normal-new', 'pinned-old']);
+});

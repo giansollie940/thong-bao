@@ -236,3 +236,18 @@ export function weekDays(week) {
   }
   return days;
 }
+
+// Posted within the last 3 days: these lead the weekly calendar in a "Mới đăng" group.
+const FRESH_POST_MS = 3 * 24 * 3600e3;
+
+export function isFreshlyPosted(item, now = Date.now()) {
+  const age = now - Date.parse(item.created_at);
+  return Number.isFinite(age) && age >= -5 * 60e3 && age <= FRESH_POST_MS;
+}
+
+// List view order: pinned notices first, then the newest post.
+export function newestFirst(items) {
+  return [...items].sort((a, b) =>
+    Number(Boolean(b.is_pinned)) - Number(Boolean(a.is_pinned)) ||
+    new Date(b.created_at) - new Date(a.created_at));
+}

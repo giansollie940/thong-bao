@@ -33,6 +33,7 @@ import {
   writeStorage
 } from "./utils.js";
 import {
+  isFreshlyPosted,
   schoolYearKey,
   sortedWeeks,
   weekDays,
@@ -165,7 +166,14 @@ export function agendaHtml(week, items, visibleItems) {
   const before = [];
   const after = [];
 
+  // Newly posted notices lead the list (newest first) instead of sitting under their day.
+  const fresh = visibleItems
+    .filter(item => isFreshlyPosted(item))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const freshIds = new Set(fresh.map(item => item.id));
+
   visibleItems.forEach(item => {
+    if (freshIds.has(item.id)) return;
     const day = item.event_date;
     if (day && groups.has(day)) groups.get(day).push(item);
     else if (day && day > week.end_date) after.push(item);
@@ -173,7 +181,7 @@ export function agendaHtml(week, items, visibleItems) {
   });
 
   // Keep selection and reader navigation in the same order as the calendar.
-  const agendaItems = [...days.flatMap(day => groups.get(day)), ...before, ...after];
+  const agendaItems = [...fresh, ...days.flatMap(day => groups.get(day)), ...before, ...after];
 
   const attention = items
     .filter(item => {
@@ -266,6 +274,7 @@ export function agendaHtml(week, items, visibleItems) {
         <div class="vm-split">
           <div class="vm-list">
             ${visibleItems.length ? "" : '<div class="empty-state">Không có thông báo trong chuyên mục này.</div>'}
+            ${group("agenda-fresh", "🆕 Mới đăng", fresh)}
             ${days.map(day => group(`agenda-day-${day}`, dayTitle(day), groups.get(day))).join("")}
             ${group("agenda-before", "Đang có hiệu lực", before)}
             ${group("agenda-after", "Sắp tới (sau tuần này)", after)}

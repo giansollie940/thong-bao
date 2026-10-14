@@ -1,8 +1,12 @@
-# Bảng Thông Báo Theo Tuần — V3.27
+# Bảng Thông Báo Theo Tuần — V3.27.1
 
 Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
 dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
 khối "Cần chú ý" và khung đọc nội dung; **Danh sách** là kiểu hiển thị phụ.
+
+Thông báo **đăng trong 3 ngày gần nhất** nằm trong nhóm "🆕 Mới đăng" ở đầu Lịch tuần
+(mới nhất trên cùng, không lặp lại ở nhóm ngày). Kiểu Danh sách xếp thông báo ghim
+trước, sau đó mới đăng nhất.
 
 Trong Lịch tuần, thông báo theo ngày của tuần đang xem xuất hiện trước nhóm
 "Đang có hiệu lực" từ các tuần cũ. Khung đọc và nút Trước/Sau đi theo cùng thứ tự.
@@ -445,3 +449,13 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
 - Kiểm chứng trên trình duyệt: computed style 0/32.536 phần tử khác; các luồng Admin
   (đăng nhập, đăng/sửa/xóa, nhập nhanh, tuần, chuyên mục, năm học, đăng xuất) cho
   cùng kết quả và cùng thao tác ghi như bản trước khi tách.
+
+
+## V3.27.1 — Thông báo mới đăng lên đầu
+
+- Lịch tuần: nhóm **"🆕 Mới đăng"** đứng đầu danh sách, gồm các thông báo có thời điểm
+  đăng (`created_at`) trong 72 giờ qua, mới nhất trước. Chúng không lặp lại ở nhóm ngày;
+  khung đọc mở sẵn bài mới nhất chưa đọc và nút Sau đi tiếp vào các nhóm ngày.
+- Danh sách: ghim trước, sau đó mới đăng nhất (trước đây "Quan trọng" được xếp trên bài mới hơn).
+- Trước đây bài vừa đăng bị xếp theo ngày diễn ra nên có thể nằm dưới các bài cũ.
+- Kiểm thử: `node --test tests/agenda.test.cjs` (11/11, thêm 4 kiểm thử cho hành vi mới).
