@@ -1,3 +1,88 @@
+/* Base rules moved from styles.css (V3.27).
+   They must stay ahead of the component rules below, which override them. */
+
+.button,
+.icon-button,
+.text-button,
+.mini-action {
+  border: 0;
+}
+
+.field input,
+.field textarea,
+.field select {
+  border-radius: 14px;
+  background: var(--surface-solid);
+  border-color: var(--line);
+}
+
+input,
+textarea,
+select {
+  border-color: var(--line);
+}
+
+.format-button:hover,
+.format-button:focus-visible,
+.format-button-wide {
+  min-width: 38px;
+}
+
+.modal label {
+  font-weight: 700;
+}
+
+.field label {
+  margin-bottom: 6px;
+}
+
+.button {
+  padding: 10px 16px;
+}
+
+.modal-actions {
+  margin-top: 18px;
+}
+
+.button-glass,
+.button-glass-danger {
+  border: 1px solid rgba(255,255,255,.24);
+}
+
+.button-glass-danger {
+  border-color: rgba(255, 218, 222, .38);
+}
+
+.format-button {
+  border: 1px solid color-mix(in srgb, var(--brand) 10%, var(--line));
+}
+
+.format-button {
+  border-color: var(--line);
+}
+
+.format-button:hover {
+  border-color: color-mix(in srgb, var(--brand) 10%, var(--line));
+  background:
+    linear-gradient(145deg, var(--surface-solid), color-mix(in srgb, var(--brand-soft) 42%, var(--surface-solid)));
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+
 /* =========================================================
    V3.13 — Smart Hover Interaction System
    Mỗi nhóm control có hiệu ứng phù hợp chức năng.

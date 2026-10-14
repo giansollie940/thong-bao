@@ -1,3 +1,26 @@
+/* Base rules moved from styles.css (V3.27).
+   They must stay ahead of the component rules below, which override them. */
+
+.format-toolbar {
+  border: 1px solid var(--line);
+  padding: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-radius: 16px 16px 0 0;
+}
+
+@media (max-width: 820px) {
+  #announcement-dialog .format-toolbar {
+    gap: 5px;
+  }
+}
+
+@media (max-width: 640px) {
+  .format-toolbar {
+    gap: 5px;
+  }
+}
+
 /* =========================================================
    V3.16 — Rich Editor
    Soạn thảo | HTML luôn nằm ngang.

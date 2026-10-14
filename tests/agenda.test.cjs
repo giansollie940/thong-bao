@@ -1,30 +1,38 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
 
-// Exercise the existing renderer without starting auth or fetching live data.
-function app() {
-  const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
-  const sandbox = {
-    window: {
-      WeeklyContent: { renderStoredContent: text => text, toPlainText: text => text, getStoredMode: () => 'markdown' },
-      WeeklyInteractions: {},
-      matchMedia: () => ({ matches: true })
-    },
-    document: {
-      querySelector: () => null,
-      createElement: () => ({ set innerHTML(value) { this.textContent = value; } })
-    },
-    localStorage: { getItem: () => null, setItem() {} },
-    DOMParser: class {
-      parseFromString(text) { return { body: { textContent: text } }; }
-    },
-    console
-  };
-  vm.runInNewContext(source.slice(0, source.lastIndexOf('  init().catch')) +
-    '  globalThis.app = { state, agendaHtml, getItems, readIds };\n})();', sandbox);
-  return sandbox.app;
+// Exercise the renderer modules without starting auth or fetching live data:
+// js/main.js (which calls init()) is never imported.
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+
+globalThis.window = {
+  WeeklyContent: { renderStoredContent: text => text, toPlainText: text => text, getStoredMode: () => 'markdown' },
+  WeeklyInteractions: {},
+  matchMedia: () => ({ matches: true })
+};
+globalThis.document = {
+  querySelector: () => null,
+  createElement: () => ({ set innerHTML(value) { this.textContent = value; } })
+};
+globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
+globalThis.DOMParser = class {
+  parseFromString(text) { return { body: { textContent: text } }; }
+};
+
+const load = name => import(pathToFileURL(path.join(__dirname, '..', 'js', name)).href);
+
+// Modules are cached between tests, so reset the shared state each time.
+async function app() {
+  const [{ state }, { agendaHtml, readIds }, { getItems }] =
+    await Promise.all([load('core.js'), load('agenda.js'), load('weeks.js')]);
+  Object.assign(state, {
+    weeks: [], announcements: [], categories: [], categoryFilter: 'all',
+    readerId: null, readerOpen: false, selectedWeekId: null
+  });
+  state.announcementOpen.clear();
+  readIds.clear();
+  return { state, agendaHtml, getItems, readIds };
 }
 
 const week = {
@@ -42,8 +50,8 @@ const fixtures = [
   item('future', '2026-10-12', { valid_from: '2026-10-05', valid_until: '2026-10-12' })
 ];
 
-function render(items = fixtures, visible = items, selected = null) {
-  const api = app();
+async function render(items = fixtures, visible = items, selected = null) {
+  const api = await app();
   api.state.weeks = [week];
   api.state.readerId = selected;
   return { api, html: api.agendaHtml(week, items, visible) };
@@ -54,44 +62,44 @@ function rowIds(html) {
   return [...list.matchAll(/data-action="open-reader" data-id="([^"]+)"/g)].map(match => match[1]);
 }
 
-test('current-week dates come before older ongoing notices and future events', () => {
-  const { html } = render();
+test('current-week dates come before older ongoing notices and future events', async () => {
+  const { html } = await render();
   assert.deepEqual(rowIds(html), ['monday', 'tuesday', 'ongoing', 'future']);
   assert.ok(html.includes('id="agenda-day-2026-10-05"'));
   assert.ok(html.includes('id="agenda-day-2026-10-06"'));
 });
 
-test('the initial reader selects the first unread notice in visible calendar order', () => {
-  const { api } = render();
+test('the initial reader selects the first unread notice in visible calendar order', async () => {
+  const { api } = await render();
   assert.equal(api.state.readerId, 'monday');
 });
 
-test('reader next/previous follow the displayed order across group boundaries', () => {
-  const { html } = render(fixtures, fixtures, 'tuesday');
+test('reader next/previous follow the displayed order across group boundaries', async () => {
+  const { html } = await render(fixtures, fixtures, 'tuesday');
   const reader = html.split('<aside')[1];
   assert.match(reader, /data-id="monday"[^>]*aria-label="Thông báo trước"/);
   assert.match(reader, /data-id="ongoing"[^>]*aria-label="Thông báo sau"/);
 });
 
-test('an active category retains only its notices in the same order', () => {
+test('an active category retains only its notices in the same order', async () => {
   const visible = fixtures.filter(entry => entry.id === 'ongoing' || entry.id === 'monday');
-  const { html } = render(fixtures, visible);
+  const { html } = await render(fixtures, visible);
   assert.deepEqual(rowIds(html), ['monday', 'ongoing']);
 });
 
-test('undated and ongoing-only notices remain visible without duplicate rows', () => {
+test('undated and ongoing-only notices remain visible without duplicate rows', async () => {
   const items = [fixtures[0], item('undated', null)];
-  const { html } = render(items);
+  const { html } = await render(items);
   assert.deepEqual(rowIds(html), ['ongoing', 'undated']);
 });
 
-test('empty weeks and empty category results show their existing empty states', () => {
-  assert.match(render([]).html, /Tuần này chưa có thông báo/);
-  assert.match(render(fixtures, []).html, /Không có thông báo trong chuyên mục này/);
+test('empty weeks and empty category results show their existing empty states', async () => {
+  assert.match((await render([])).html, /Tuần này chưa có thông báo/);
+  assert.match((await render(fixtures, [])).html, /Không có thông báo trong chuyên mục này/);
 });
 
-test('the same-day pinned/important ordering and source data are preserved', () => {
-  const api = app();
+test('the same-day pinned/important ordering and source data are preserved', async () => {
+  const api = await app();
   api.state.weeks = [week];
   const entries = [
     item('old', '2026-10-05', { created_at: '2026-10-01T00:00:00Z' }),
