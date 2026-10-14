@@ -14,7 +14,10 @@ Trong Lịch tuần, thông báo theo ngày của tuần đang xem xuất hiện
 "Đang có hiệu lực" từ các tuần cũ. Khung đọc và nút Trước/Sau đi theo cùng thứ tự.
 Trong mỗi ngày vẫn ưu tiên thông báo ghim, quan trọng, rồi thời điểm đăng mới nhất.
 
-Kiểm thử: `node --test tests/agenda.test.cjs`.
+Kiểm thử: `node --test tests/agenda.test.cjs`, cùng các test trình duyệt (Playwright, dùng
+Supabase giả) `node tests/browser/smoke.cjs` và `node tests/browser/admin-flow.cjs`.
+
+Hướng dẫn cho AI / người tiếp nhận dự án: [`AGENTS.md`](AGENTS.md) và `docs/agent/`.
 
 ## Cấu trúc frontend
 
