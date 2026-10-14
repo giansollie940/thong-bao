@@ -1,8 +1,14 @@
-# Bảng Thông Báo Theo Tuần — V3.27
+# Bảng Thông Báo Theo Tuần — V3.27.2
 
 Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
 dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
 khối "Cần chú ý" và khung đọc nội dung; **Danh sách** là kiểu hiển thị phụ.
+
+Trong tuần hiện tại, Lịch tuần xếp **ngày hôm nay lên đầu**, tiếp theo là các ngày sắp tới,
+rồi đến các ngày đã qua (ngày gần nhất trước). Dải ngày phía trên vẫn theo thứ tự lịch.
+Thông báo **đăng trong 24 giờ qua** nằm trong nhóm "🆕 Mới đăng" trên cùng
+(mới nhất trước, không lặp lại ở nhóm ngày). Kiểu Danh sách xếp thông báo ghim
+trước, sau đó mới đăng nhất.
 
 Trong Lịch tuần, thông báo theo ngày của tuần đang xem xuất hiện trước nhóm
 "Đang có hiệu lực" từ các tuần cũ. Khung đọc và nút Trước/Sau đi theo cùng thứ tự.
@@ -445,3 +451,22 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
 - Kiểm chứng trên trình duyệt: computed style 0/32.536 phần tử khác; các luồng Admin
   (đăng nhập, đăng/sửa/xóa, nhập nhanh, tuần, chuyên mục, năm học, đăng xuất) cho
   cùng kết quả và cùng thao tác ghi như bản trước khi tách.
+
+
+## V3.27.2 — Hôm nay lên đầu Lịch tuần
+
+- Tuần hiện tại: nhóm **Hôm nay** đứng đầu, sau đó các ngày sắp tới, rồi các ngày đã qua
+  (gần nhất trước). Ví dụ thứ Tư: T4 → T5 → T6 → T7 → T3 → T2. Tuần cũ và tuần sắp tới
+  vẫn theo thứ tự T2 → T7. Khung đọc và nút Trước/Sau đi theo cùng thứ tự.
+- Nhóm "🆕 Mới đăng" rút từ 72 giờ còn **24 giờ**. Với 72 giờ, các bài đăng từ thứ Hai
+  vẫn ở nhóm này đến thứ Tư nên các nhóm ngày gần như trống.
+- Kiểm thử: `node --test tests/agenda.test.cjs` (12/12, thêm 1 kiểm thử cho tuần hiện tại).
+
+## V3.27.1 — Thông báo mới đăng lên đầu
+
+- Lịch tuần: nhóm **"🆕 Mới đăng"** đứng đầu danh sách, gồm các thông báo có thời điểm
+  đăng (`created_at`) trong 72 giờ qua, mới nhất trước. Chúng không lặp lại ở nhóm ngày;
+  khung đọc mở sẵn bài mới nhất chưa đọc và nút Sau đi tiếp vào các nhóm ngày.
+- Danh sách: ghim trước, sau đó mới đăng nhất (trước đây "Quan trọng" được xếp trên bài mới hơn).
+- Trước đây bài vừa đăng bị xếp theo ngày diễn ra nên có thể nằm dưới các bài cũ.
+- Kiểm thử: `node --test tests/agenda.test.cjs` (11/11, thêm 4 kiểm thử cho hành vi mới).

@@ -37,6 +37,7 @@ import {
   displayedWeek,
   getItems,
   getSchoolYearGroups,
+  newestFirst,
   normalizeYearFilter,
   schoolYearKey,
   schoolYearLabel,
@@ -429,7 +430,7 @@ export function renderCurrent() {
     : items.filter(item => categoryInfo(item).key === state.categoryFilter);
 
   el.currentAnnouncements.innerHTML = visibleItems.length
-    ? visibleItems.map(item => announcementCard(item)).join("")
+    ? newestFirst(visibleItems).map(item => announcementCard(item)).join("")
     : `<div class="empty-state">${items.length ? "Không có thông báo trong chuyên mục này." : "Tuần này chưa có thông báo."}</div>`;
 
   syncToggleAllButton();

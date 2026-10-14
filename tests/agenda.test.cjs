@@ -113,3 +113,67 @@ test('the same-day pinned/important ordering and source data are preserved', asy
   assert.deepEqual(rowIds(api.agendaHtml(week, items, items)), ['pinned', 'important', 'new', 'old']);
   assert.equal(JSON.stringify(entries), original);
 });
+
+// "Mới đăng": notices posted in the last 24 hours lead the weekly calendar.
+const justNow = (hoursAgo = 1) => new Date(Date.now() - hoursAgo * 3600e3).toISOString();
+
+test('notices posted in the last 24 hours lead in a "Mới đăng" group without repeating in their day', async () => {
+  const fresh = item('demo', '2026-10-07', { created_at: justNow(2) });
+  const { html } = await render([...fixtures, fresh]);
+  assert.deepEqual(rowIds(html), ['demo', 'monday', 'tuesday', 'ongoing', 'future']);
+  assert.ok(html.includes('id="agenda-fresh"'));
+  assert.ok(html.indexOf('id="agenda-fresh"') < html.indexOf('id="agenda-day-2026-10-05"'));
+});
+
+test('several fresh notices are newest first, and older ones never enter the group', async () => {
+  const items = [...fixtures, item('older-new', '2026-10-05', { created_at: justNow(20) }), item('newest', '2026-10-08', { created_at: justNow(1) })];
+  assert.deepEqual(rowIds((await render(items)).html).slice(0, 2), ['newest', 'older-new']);
+  assert.ok(!(await render(fixtures)).html.includes('id="agenda-fresh"'));
+  const stale = item('stale', '2026-10-05', { created_at: justNow(30) });
+  assert.ok(!(await render([...fixtures, stale])).html.includes('id="agenda-fresh"'));
+});
+
+test('the reader starts at the newest unread post and steps on into the day groups', async () => {
+  const fresh = item('demo', '2026-10-07', { created_at: justNow(2) });
+  const { api, html } = await render([...fixtures, fresh]);
+  assert.equal(api.state.readerId, 'demo');
+  const reader = html.split('<aside')[1];
+  assert.match(reader, /data-id="monday"[^>]*aria-label="Thông báo sau"/);
+});
+
+test('the list view puts pinned notices first, then the newest posts', async () => {
+  const { newestFirst } = await load('weeks.js');
+  const entries = [
+    item('important-old', '2026-10-05', { priority: 'important', created_at: '2026-10-01T00:00:00Z' }),
+    item('normal-new', '2026-10-05', { created_at: '2026-10-04T00:00:00Z' }),
+    item('pinned-old', '2026-10-05', { is_pinned: true, created_at: '2026-09-01T00:00:00Z' })
+  ];
+  assert.deepEqual(newestFirst(entries).map(e => e.id), ['pinned-old', 'normal-new', 'important-old']);
+  assert.deepEqual(entries.map(e => e.id), ['important-old', 'normal-new', 'pinned-old']);
+});
+
+// In the current week, today's group leads; later days follow, then the days already past.
+async function currentWeek() {
+  const { todayIso } = await load('utils.js');
+  const shift = n => new Date(Date.parse(todayIso()) + n * 86400e3).toISOString().slice(0, 10);
+  const days = { yesterday: shift(-1), before: shift(-2), today: shift(0), tomorrow: shift(1) };
+  const current = { ...week, id: 'current', start_date: days.before, end_date: shift(3) };
+  return { days, current };
+}
+
+test("today's notices lead the current week, then upcoming days, then past days (most recent first)", async () => {
+  const { days, current } = await currentWeek();
+  const items = [
+    item('before', days.before), item('yesterday', days.yesterday),
+    item('today', days.today), item('tomorrow', days.tomorrow)
+  ].map(entry => ({ ...entry, week_id: current.id }));
+  const api = await app();
+  api.state.weeks = [current];
+  const html = api.agendaHtml(current, items, items);
+  assert.deepEqual(rowIds(html), ['today', 'tomorrow', 'yesterday', 'before']);
+  assert.equal(api.state.readerId, 'today');
+  assert.ok(html.indexOf(`id="agenda-day-${days.today}"`) < html.indexOf(`id="agenda-day-${days.before}"`));
+  // The day strip stays in calendar order.
+  const strip = [...html.split('<div class="vm-days">')[1].split('</div>')[0].matchAll(/data-day="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(strip, [...strip].sort());
+});
