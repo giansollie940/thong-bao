@@ -177,3 +177,15 @@ test("today's notices lead the current week, then upcoming days, then past days 
   const strip = [...html.split('<div class="vm-days">')[1].split('</div>')[0].matchAll(/data-day="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(strip, [...strip].sort());
 });
+
+// The compact banner on top of Lịch tuần carries the week's own summary line.
+test('the agenda banner shows the week summary, escaped, and omits the line when there is none', async () => {
+  const api = await app();
+  const summarised = { ...week, summary: 'Tuần kiểm tra <giữa kỳ>' };
+  api.state.weeks = [summarised];
+  const head = api.agendaHtml(summarised, fixtures, fixtures).split('</header>')[0];
+  assert.match(head, /class="vm-agenda-head vm-banner"/);
+  assert.match(head, /<p class="vm-banner-summary">Tuần kiểm tra &lt;giữa kỳ&gt;<\/p>/);
+  const plain = (await render()).html.split('</header>')[0];
+  assert.ok(!plain.includes('vm-banner-summary'));
+});

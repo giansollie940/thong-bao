@@ -2,12 +2,13 @@
 
 ## Trạng thái hiện tại
 
-- `main` đang ở **V3.27.2**. Đã merge PR #1, #2, #3, #4, #6, #7 (từ nhánh
-  `claude/optimize-notification-app-ui-kdgabc`). Không còn PR nào đang mở.
-- Mọi kiểm tra đều đạt: `node --test tests/agenda.test.cjs` (12/12), `tests/browser/smoke.cjs`,
+- Đến V3.27.2 đã merge vào `main` qua PR #1, #2, #3, #4, #6, #7 (từ nhánh
+  `claude/optimize-notification-app-ui-kdgabc`). V3.28 (banner gọn) và bộ tài liệu này đi
+  chung một PR sau đó; số phiên bản mới nhất luôn ở tiêu đề README.
+- Mọi kiểm tra đều đạt: `node --test tests/agenda.test.cjs` (13/13), `tests/browser/smoke.cjs`,
   `tests/browser/admin-flow.cjs`.
-- Trang thật sau khi merge V3.27.2 **chưa được kiểm chứng** vì agent không truy cập được.
-  Người dùng được nhờ xem lại và chụp màn hình nếu còn sai.
+- Agent không truy cập được trang thật; sau mỗi lần merge, người dùng tự xem lại và chụp màn
+  hình nếu còn sai.
 
 ## Việc còn mở và gợi ý (chưa ai yêu cầu, hãy hỏi người dùng trước)
 

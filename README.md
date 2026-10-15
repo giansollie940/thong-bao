@@ -1,4 +1,4 @@
-# Bảng Thông Báo Theo Tuần — V3.27.2
+# Bảng Thông Báo Theo Tuần — V3.28
 
 Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
 dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
@@ -455,6 +455,15 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
   (đăng nhập, đăng/sửa/xóa, nhập nhanh, tuần, chuyên mục, năm học, đăng xuất) cho
   cùng kết quả và cùng thao tác ghi như bản trước khi tách.
 
+
+## V3.28 — Banner gọn trên Lịch tuần
+
+- Lịch tuần có lại banner hình trường (cùng ảnh với kiểu Danh sách) nhưng **gọn**: cao khoảng
+  113px trên laptop, 107px trên điện thoại, thay vì 175px / 252px như banner đầy đủ.
+- Banner gồm: ‹ Tuần › và ngày, **tóm tắt của tuần** (trước đây Lịch tuần không hiện dòng này),
+  thanh tiến độ "Ngày 5/6 · còn 1 ngày" và số bài chưa đọc. Nút Sửa/Xóa tuần của Admin nằm bên phải.
+- Thông báo đầu tiên chỉ bị đẩy xuống khoảng 12px (điện thoại) và 48px (laptop).
+- Có màu riêng cho chế độ tối. Kiểm thử: `node --test tests/agenda.test.cjs` (13/13).
 
 ## V3.27.2 — Hôm nay lên đầu Lịch tuần
 
