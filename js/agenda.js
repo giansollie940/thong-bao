@@ -114,8 +114,8 @@ function weekProgressHtml(week) {
 function weekAdminHtml(week) {
   return isAdmin() ? `
     <span class="vm-admin">
-      <button class="button button-ghost button-small" data-action="edit-week" data-id="${week.id}">✎ Sửa tuần</button>
-      <button class="button button-danger button-small" data-action="delete-week" data-id="${week.id}">⌫ Xóa tuần</button>
+      <button class="button button-glass button-small" data-action="edit-week" data-id="${week.id}">✎ Sửa tuần</button>
+      <button class="button button-glass-danger button-small" data-action="delete-week" data-id="${week.id}">⌫ Xóa tuần</button>
     </span>` : "";
 }
 
@@ -254,11 +254,16 @@ export function agendaHtml(week, items, visibleItems) {
 
   return `
     <div class="vm-agenda">
-      <header class="vm-agenda-head">
-        ${weekNavHtml(week)}
-        ${weekProgressHtml(week)}
-        ${items.length ? `<span class="vm-chip ${unread ? "is-unread" : ""}">${unread ? `${unread} chưa đọc` : "Đã đọc hết"}</span>` : ""}
-        ${weekAdminHtml(week)}
+      <header class="vm-agenda-head vm-banner">
+        <div class="vm-banner-row">
+          ${weekNavHtml(week)}
+          ${weekAdminHtml(week)}
+        </div>
+        ${week.summary ? `<p class="vm-banner-summary">${escapeHtml(week.summary)}</p>` : ""}
+        <div class="vm-banner-row">
+          ${weekProgressHtml(week)}
+          ${items.length ? `<span class="vm-chip ${unread ? "is-unread" : ""}">${unread ? `${unread} chưa đọc` : "Đã đọc hết"}</span>` : ""}
+        </div>
       </header>
 
       <div class="vm-days">${strip}</div>

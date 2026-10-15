@@ -753,6 +753,119 @@ html[data-theme="dark"] .vm-chip.is-soon { color: #ffc56b; }
   margin-left: auto;
 }
 
+/* Compact Mint Garden banner: same art as the list-view hero, about 100px tall. */
+.vm-banner {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 14px 18px;
+  border-radius: 20px;
+  color: #fff;
+  background:
+    linear-gradient(90deg,
+      rgba(18, 84, 66, .80) 0%,
+      rgba(24, 98, 77, .62) 42%,
+      rgba(39, 125, 97, .16) 72%,
+      rgba(39, 125, 97, 0) 88%),
+    url("mint-garden-hero.webp") right 58% / cover no-repeat;
+  box-shadow:
+    0 12px 28px rgba(67, 122, 104, .16),
+    0 0 0 1px rgba(255, 255, 255, .20) inset;
+  text-shadow: 0 1px 3px rgba(10, 48, 38, .45);
+}
+
+html[data-theme="dark"] .vm-banner {
+  background:
+    linear-gradient(90deg,
+      rgba(8, 44, 38, .88) 0%,
+      rgba(13, 64, 54, .70) 44%,
+      rgba(20, 86, 70, .28) 72%,
+      rgba(20, 86, 70, .10) 90%),
+    url("mint-garden-hero.webp") right 58% / cover no-repeat;
+}
+
+.vm-banner-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.vm-banner-summary {
+  max-width: 62ch;
+  margin: 0;
+  color: rgba(255, 255, 255, .95);
+  font-size: .92rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.vm-banner .vm-weeknav strong {
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.vm-banner .vm-weeknav span,
+.vm-banner .vm-progress-text {
+  color: rgba(255, 255, 255, .88);
+}
+
+.vm-banner .vm-weeknav-step {
+  border-color: rgba(255, 255, 255, .34);
+  background: rgba(12, 66, 52, .32);
+  color: #fff;
+}
+
+.vm-banner .vm-progress {
+  background: rgba(255, 255, 255, .28);
+}
+
+.vm-banner .vm-progress i {
+  background: linear-gradient(90deg, #c8f5df, #fff);
+}
+
+/* Admin buttons sit over the bright half of the art: give them solid backs. */
+.vm-banner .vm-admin .button {
+  border-color: rgba(255, 255, 255, .38);
+  background: rgba(12, 66, 52, .72);
+  color: #fff;
+  text-shadow: none;
+}
+
+.vm-banner .vm-admin .button-glass-danger {
+  background: rgba(150, 32, 44, .82);
+}
+
+.vm-banner .vm-chip {
+  border-color: rgba(255, 255, 255, .34);
+  background: rgba(12, 66, 52, .34);
+  color: #fff;
+  text-shadow: none;
+}
+
+@media (max-width: 620px) {
+  .vm-banner {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background:
+      linear-gradient(180deg,
+        rgba(18, 84, 66, .80) 0%,
+        rgba(24, 98, 77, .64) 62%,
+        rgba(39, 125, 97, .30) 100%),
+      url("mint-garden-hero.webp") 63% 30% / cover no-repeat;
+  }
+
+  html[data-theme="dark"] .vm-banner {
+    background:
+      linear-gradient(180deg, rgba(8, 44, 38, .88), rgba(13, 64, 54, .66)),
+      url("mint-garden-hero.webp") 63% 30% / cover no-repeat;
+  }
+
+  .vm-banner-summary {
+    font-size: .86rem;
+  }
+}
+
 .vm-days {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
