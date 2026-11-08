@@ -176,12 +176,20 @@ function initDialogs() {
       attributeFilter: ["open"]
     });
 
+    // Hộp có form nhập liệu chỉ đóng bằng Hủy, × hoặc Lưu: bấm ra ngoài hay nhấn Esc
+    // không làm mất phần đang nhập. Hộp chỉ để xem (ảnh, lưu trữ) vẫn đóng khi bấm ra ngoài.
+    const keepsInput = Boolean(dialog.querySelector("form"));
+
     dialog.addEventListener("click", event => {
-      if (event.target === dialog) dialog.close();
+      if (event.target === dialog && !keepsInput) dialog.close();
     });
 
     dialog.addEventListener("close", updateDialogState);
-    dialog.addEventListener("cancel", () => {
+    dialog.addEventListener("cancel", event => {
+      if (keepsInput) {
+        event.preventDefault();
+        return;
+      }
       window.requestAnimationFrame(updateDialogState);
     });
   });

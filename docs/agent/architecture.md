@@ -73,6 +73,16 @@ rich-editor → editor-formatting → editor-find-replace → loading-diamond �
 CSS nguy hiểm). Nội dung bắt đầu bằng `<!--weekly-html:v1-->` là HTML, còn lại là Markdown.
 Khi sửa sanitizer, kiểm lại các mục trong README: "HTML an toàn", "Tabs", "Accordion".
 
+## Hộp thoại và dán ảnh
+
+- `initDialogs()` trong `js/main.js`: hộp `<dialog>` có `<form>` chỉ đóng bằng nút `.close-dialog`
+  (Hủy, ×) hoặc code sau khi lưu; bấm nền ngoài và Esc (`cancel`) bị chặn. Hộp không có form vẫn đóng
+  khi bấm ra ngoài. Test trình duyệt phải đóng hộp bằng `.close-dialog`, không dùng Escape.
+- Dán ảnh: `rich-editor.js` nhận `onImagePaste(file) → url` (truyền `uploadInlineImage` từ
+  `js/images.js`). Ảnh nằm trong nội dung dưới dạng `<img src="https://…/announcement-images/…">`,
+  không gắn vào cột `image_path`, nên xóa thông báo không xóa các ảnh này khỏi Storage.
+  `editor.pendingUploads()` > 0 thì chặn lưu và chặn đổi chế độ Soạn thảo/HTML.
+
 ## Lưu trên trình duyệt (localStorage)
 
 `weekly-board-view` (agenda | list), `weekly-board-read-v1` (các bài đã đọc), `weekly-board-theme`,
@@ -92,6 +102,9 @@ Mọi lệnh đọc/ghi đều bọc try/catch (chế độ ẩn danh).
   - Cài Playwright: `npm i -g playwright && npx playwright install chromium`
     (bỏ qua bước này nếu máy đã có sẵn).
   - Muốn có ảnh chụp: `node tests/browser/smoke.cjs <thư-mục>`.
+  - `editor-paste.cjs`: dán ảnh (kể cả ảnh lớn, tải chậm) và hộp nhập liệu không tự đóng.
+  - Dữ liệu giả xếp tuần theo ngày thật; vào Chủ nhật, "tuần hiện tại" của nó là tuần bắt đầu ngày mai,
+    giống như app.
 - Khi refactor CSS hoặc cấu trúc mà không định đổi giao diện, cách kiểm chứng đã dùng là:
   chụp computed style của mọi phần tử trong nhiều trạng thái trước và sau khi sửa, rồi so sánh.
   Mục tiêu là 0 khác biệt. Chụp cả hai bản trong cùng một ngày, vì giao diện thay đổi theo ngày.

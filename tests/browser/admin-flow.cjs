@@ -10,6 +10,11 @@ const { loadPlaywright, openApp } = require('./harness.cjs');
   const writes = () => page.evaluate(() => (window.__FAKE_WRITES || []).map(w => `${w.table}:${w.op}`));
   const toast = () => page.$eval('#toast', el => el.textContent.trim()).catch(() => '');
   const click = selector => page.evaluate(s => document.querySelector(s).click(), selector);
+  // Form dialogs close only through × / Hủy / Lưu (not Escape or an outside click).
+  const closeDialog = id => page.evaluate(dialogId => {
+    const dialog = document.getElementById(dialogId);
+    if (dialog?.open) dialog.querySelector('.close-dialog').click();
+  }, id);
 
   async function step(name, expected, run) {
     const before = (await writes()).length;
@@ -65,7 +70,7 @@ const { loadPlaywright, openApp } = require('./harness.cjs');
     await page.fill('#category-icon', '📚');
     await page.click('#category-form [type=submit]');
   });
-  await page.keyboard.press('Escape');
+  await closeDialog('categories-dialog');
   await step('school year', 'weeks:insert', async () => {
     await page.click('#school-year-button');
     await page.fill('#school-year-name', '2027-2028');
@@ -75,7 +80,7 @@ const { loadPlaywright, openApp } = require('./harness.cjs');
     await page.click('#school-year-preview-button');
     await page.click('#school-year-form [type=submit]');
   });
-  await page.keyboard.press('Escape');
+  await closeDialog('school-year-dialog');
   await step('theme toggle', null, () => page.click('#theme-toggle'));
   await step('logout', null, async () => {
     await page.click('#logout-button');

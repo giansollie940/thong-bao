@@ -464,3 +464,21 @@ html[data-theme="dark"] .html-line-numbers {
 html[data-theme="dark"] .mac-segmented-control { background: #1d2025; border-color: #3a4149; }
 html[data-theme="dark"] .mac-segmented-control .editor-view-tab.active { background: #343a42; border-color: #4a535d; color: #f2f4f6; }
 html[data-theme="dark"] #announcement-dialog .canvas-rich-editor { background: #20242a; border-color: #3b434c; }
+
+/* Ảnh dán vào nội dung: vừa khung soạn thảo; chỗ chờ khi ảnh đang tải lên. */
+.visual-rich-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.visual-rich-editor .editor-image-uploading {
+  display: inline-block;
+  margin: 2px 0;
+  padding: 6px 10px;
+  border: 1px dashed currentColor;
+  border-radius: 8px;
+  color: var(--mac-muted, #6b7280);
+  font-size: .85em;
+  user-select: none;
+}
