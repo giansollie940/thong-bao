@@ -35,13 +35,22 @@
     A("a7", "w1", "Sinh hoạt dưới cờ chủ đề An toàn giao thông", "Toàn trường chào cờ lúc 7h00 thứ Bảy. Học sinh mặc đồng phục, đội mũ bảo hiểm mẫu.", "Hoạt động", { event_date: rel(5) }),
   ];
   (window.__FAKE_PATCH || (() => {}))({ weeks, announcements, A, iso, rel, now });
+  // window.__FAKE_NO_ATTACHMENTS = true simulates a database without the announcements.attachments column.
+  const noAttachments = () => Boolean(window.__FAKE_NO_ATTACHMENTS);
+  if (noAttachments()) announcements.forEach(a => { delete a.attachments; });
   const data = { weeks, announcements, categories: null };
+  const missingColumn = { code: "42703", message: "column announcements.attachments does not exist" };
   function q(table) {
     const rows = data[table];
     const res = { data: rows ? rows.slice() : [], error: null };
+    const touchesAttachments = value => table === "announcements" && noAttachments() &&
+      (String(value).includes("attachments") || (value && typeof value === "object" && "attachments" in value));
+    const fail = () => { res.data = null; res.error = missingColumn; };
     const log = (op, payload) => (window.__FAKE_WRITES ||= []).push({ table, op, payload });
-    const b = { select: () => b, order: () => b, eq: () => b, in: () => b, neq: () => b, limit: () => b, single: () => b, maybeSingle: () => b,
-      insert: x => (log('insert', x), b), update: x => (log('update', x), b), delete: () => (log('delete'), b), upsert: x => (log('upsert', x), b),
+    const b = { select: cols => { if (touchesAttachments(cols)) fail(); return b; }, order: () => b, eq: () => b, in: () => b, neq: () => b, limit: () => b, single: () => b, maybeSingle: () => b,
+      insert: x => { log('insert', x); if (touchesAttachments(x)) fail(); return b; },
+      update: x => { log('update', x); if (touchesAttachments(x)) fail(); return b; },
+      delete: () => (log('delete'), b), upsert: x => (log('upsert', x), b),
       then: (ok, bad) => Promise.resolve(res).then(ok, bad) };
     return b;
   }
@@ -52,6 +61,6 @@
     storage: { from: bucket => ({
       getPublicUrl: path => ({ data: { publicUrl: `https://fake.supabase.co/storage/v1/object/public/${bucket}/${path}` } }),
       upload: async (path, file) => { await new Promise(resolve => setTimeout(resolve, window.__FAKE_UPLOAD_DELAY || 0)); (window.__FAKE_WRITES ||= []).push({ table: "storage:" + bucket, op: "upload", payload: { path, type: file?.type, size: file?.size } }); return { data: { path }, error: null }; },
-      remove: async () => ({ error: null }) }) }
+      remove: async paths => { (window.__FAKE_WRITES ||= []).push({ table: "storage:" + bucket, op: "remove", payload: paths }); return { error: null }; } }) }
   }) };
 })();

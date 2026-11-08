@@ -1,6 +1,9 @@
 // render.js — Hiển thị trang chính: thẻ thông báo, kiểu Danh sách, ô chọn tuần, Lịch năm học, Lưu trữ, tìm kiếm.
 
 import {
+  attachmentListHtml
+} from "./attachments.js";
+import {
   closeReader,
   renderViewStage
 } from "./agenda.js";
@@ -306,6 +309,8 @@ function announcementCard(item, showWeek = false) {
             }
 
             <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${renderedContent}</div>
+
+            ${attachmentListHtml(item)}
 
             <div class="card-actions">
               <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>

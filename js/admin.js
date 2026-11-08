@@ -16,6 +16,15 @@ import {
   loadData
 } from "./data.js";
 import {
+  ATTACHMENT_ACCEPT,
+  MAX_ATTACHMENTS,
+  attachmentsOf,
+  formatFileSize,
+  removeAttachmentFiles,
+  uploadAttachment,
+  validateAttachment
+} from "./attachments.js";
+import {
   cleanupImageIfUnused,
   clearImagePreview,
   getImagePublicUrl,
@@ -106,6 +115,42 @@ function parseQuickInput(raw = "") {
   }).filter(x => x.title && x.content);
 }
 
+// Tệp đính kèm trong form: `kept` là tệp đã lưu còn giữ, `added` là tệp mới chọn (chưa tải lên).
+const attachmentDraft = { kept: [], added: [] };
+
+function renderAttachmentDraft() {
+  const list = $("#announcement-attachment-list");
+  if (!list) return;
+  const rows = [
+    ...attachmentDraft.kept.map((entry, index) => ({ name: entry.name, size: entry.size, note: "Đã lưu", key: `kept:${index}` })),
+    ...attachmentDraft.added.map((file, index) => ({ name: file.name, size: file.size, note: "Sẽ tải lên khi lưu", key: `added:${index}` }))
+  ];
+  list.innerHTML = rows.map(row => `
+    <li>
+      <span class="attachment-name">${escapeHtml(row.name)}</span>
+      <small>${escapeHtml(formatFileSize(row.size))} · ${row.note}</small>
+      <button type="button" class="button button-ghost button-small" data-remove-attachment="${row.key}" aria-label="Bỏ tệp ${escapeHtml(row.name)}">✕ Bỏ</button>
+    </li>`).join("");
+}
+
+export function addAttachmentFiles(files) {
+  const problems = [];
+  for (const file of files) {
+    const problem = validateAttachment(file);
+    if (problem) problems.push(problem);
+    else if (attachmentDraft.kept.length + attachmentDraft.added.length >= MAX_ATTACHMENTS) problems.push(`${file.name}: mỗi thông báo tối đa ${MAX_ATTACHMENTS} tệp.`);
+    else attachmentDraft.added.push(file);
+  }
+  setMessage(el.announcementMessage, problems.length ? `Không đính kèm được: ${problems.join(" ")}` : "");
+  renderAttachmentDraft();
+}
+
+export function removeAttachmentDraft(key) {
+  const [group, index] = String(key).split(":");
+  attachmentDraft[group]?.splice(Number(index), 1);
+  renderAttachmentDraft();
+}
+
 export function openAnnouncementForm(item = null) {
   if (!isAdmin()) return;
 
@@ -175,6 +220,12 @@ export function openAnnouncementForm(item = null) {
     clearImagePreview(preview);
     removeRow.classList.add("hidden");
   }
+
+  attachmentDraft.kept = attachmentsOf(item);
+  attachmentDraft.added = [];
+  $("#announcement-files").setAttribute("accept", ATTACHMENT_ACCEPT);
+  $("#announcement-attachments-field").classList.toggle("hidden", !state.attachmentsEnabled);
+  renderAttachmentDraft();
 
   el.announcementDialogTitle.textContent = item ? "Sửa thông báo" : "Đăng thông báo mới";
   el.announcementDialog.showModal();
@@ -263,6 +314,24 @@ export async function saveAnnouncement(event) {
     ? ($("#announcement-image-alt").value.trim() || title)
     : null;
 
+  let attachments = null;
+  const uploadedAttachments = [];
+  if (state.attachmentsEnabled) {
+    try {
+      for (const [index, file] of attachmentDraft.added.entries()) {
+        setMessage(el.announcementMessage, `Đang tải tệp ${index + 1}/${attachmentDraft.added.length}: ${file.name}...`);
+        uploadedAttachments.push(await uploadAttachment(file));
+      }
+    } catch (error) {
+      console.error(error);
+      await removeAttachmentFiles(uploadedAttachments.map(entry => entry.path));
+      if (uploadedPath) await removeStorageImage(uploadedPath);
+      setMessage(el.announcementMessage, error?.message || "Không tải được tệp đính kèm.");
+      return;
+    }
+    attachments = [...attachmentDraft.kept, ...uploadedAttachments];
+  }
+
   const payload = {
     week_id: targetWeek.id,
     title,
@@ -280,6 +349,7 @@ export async function saveAnnouncement(event) {
     valid_until: validUntil,
     image_path: imagePath,
     image_alt: imageAlt,
+    ...(attachments ? { attachments } : {}),
     priority: $("#announcement-priority").value,
     is_pinned: $("#announcement-pinned").checked,
     updated_at: new Date().toISOString()
@@ -296,6 +366,7 @@ export async function saveAnnouncement(event) {
   if (error) {
     console.error(error);
     if (uploadedPath) await removeStorageImage(uploadedPath);
+    await removeAttachmentFiles(uploadedAttachments.map(entry => entry.path));
     setMessage(
       el.announcementMessage,
       "Không lưu được. Hãy kiểm tra kết nối Supabase, Storage và quyền RLS."
@@ -305,6 +376,11 @@ export async function saveAnnouncement(event) {
 
   if (existing?.image_path && existing.image_path !== imagePath) {
     await cleanupImageIfUnused(existing.image_path, [existing.id]);
+  }
+
+  if (attachments) {
+    const keptPaths = new Set(attachments.map(entry => entry.path));
+    await removeAttachmentFiles(attachmentsOf(existing).map(entry => entry.path).filter(path => !keptPaths.has(path)));
   }
 
   clearImagePreview($("#announcement-image-preview"));
@@ -331,6 +407,8 @@ export async function deleteAnnouncement(id) {
   if (item.image_path) {
     await cleanupImageIfUnused(item.image_path, [id]);
   }
+
+  await removeAttachmentFiles(attachmentsOf(item).map(entry => entry.path));
 
   await loadData();
   showToast("Đã xóa thông báo.");

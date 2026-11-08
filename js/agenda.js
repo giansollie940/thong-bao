@@ -1,6 +1,10 @@
 // agenda.js — Kiểu hiển thị Lịch tuần: dải ngày, "Cần chú ý", danh sách theo ngày, khung đọc, chưa đọc.
 
 import {
+  attachmentCountHtml,
+  attachmentListHtml
+} from "./attachments.js";
+import {
   activeCategories,
   categoryDisplayColor,
   categoryInfo,
@@ -229,6 +233,7 @@ export function agendaHtml(week, items, visibleItems) {
         </span>
         <span class="vm-row-side">
           ${relativeChip(item) || `<span class="vm-row-date">${item.event_date ? dayMonth(item.event_date) : ""}</span>`}
+          ${attachmentCountHtml(item)}
           <span class="vm-row-cat">${escapeHtml(category.icon || "📌")}</span>
         </span>
       </button>`;
@@ -324,6 +329,7 @@ function readerHtml(item, list) {
       })()}${item.valid_from || item.valid_until ? ` · Hiệu lực ${escapeHtml(formatDate(item.valid_from || item.event_date))} → ${escapeHtml(formatDate(item.valid_until || item.valid_from || item.event_date))}` : ""}</p>
       ${item.image_path ? `<button class="announcement-image-button" type="button" data-action="open-image" data-id="${escapeHtml(item.id)}"><img src="${escapeHtml(getImagePublicUrl(item.image_path))}" alt="${escapeHtml(item.image_alt || item.title)}" loading="lazy" decoding="async"></button>` : ""}
       <div class="announcement-content ${contentMode === "html" ? "html-content" : ""}">${contentRenderer.renderStoredContent(item.content)}</div>
+      ${attachmentListHtml(item)}
       <div class="card-actions">
         <button class="button button-ghost button-small card-command" data-action="copy-announcement" data-id="${escapeHtml(item.id)}"><span aria-hidden="true">⧉</span><span>Sao chép</span></button>
         ${isAdmin() ? `
