@@ -1,4 +1,4 @@
-# Bảng Thông Báo Theo Tuần — V3.29
+# Bảng Thông Báo Theo Tuần — V3.30
 
 Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
 dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
@@ -121,7 +121,8 @@ alignment... được giữ để giao diện HTML không bị biến từ ngang
 
 ## Database
 
-Dùng các bảng `weeks`, `announcements`, `categories` và bucket ảnh
+Dùng các bảng `weeks`, `announcements`, `categories`, bucket `announcement-files` (tệp đính kèm,
+xem `docs/sql/V3.30-attachments.sql`) và bucket ảnh
 `announcement-images` trên Supabase. Từ V3.16 đến V3.26 **không thay đổi schema**.
 
 ## Deploy GitHub Pages
@@ -455,6 +456,19 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
   (đăng nhập, đăng/sửa/xóa, nhập nhanh, tuần, chuyên mục, năm học, đăng xuất) cho
   cùng kết quả và cùng thao tác ghi như bản trước khi tách.
 
+
+## V3.30 — Tệp đính kèm cho thông báo
+
+- Form đăng/sửa thông báo có mục **Tệp đính kèm**: chọn một lúc nhiều tệp PDF, Word, Excel,
+  PowerPoint, OpenDocument, ảnh, TXT/CSV; tối đa **10 MB mỗi tệp**, **10 tệp** mỗi thông báo. Tệp sai loại
+  hoặc quá nặng bị từ chối kèm tên tệp. Bỏ được từng tệp trước khi lưu.
+- Người đọc thấy mục **📎 Tệp đính kèm** dưới nội dung (Lịch tuần và Danh sách): biểu tượng theo loại,
+  tên, dung lượng, nút mở (tab mới) và **Tải về**. Dòng thông báo trong Lịch tuần có thêm "📎 2".
+- Bỏ tệp khi sửa hoặc xóa thông báo thì tệp cũng bị xóa khỏi kho lưu.
+- **Cần chạy một lần** `docs/sql/V3.30-attachments.sql` trong Supabase → SQL Editor (thêm cột
+  `announcements.attachments` và bucket `announcement-files`). Trước khi chạy, mục Tệp đính kèm tự ẩn
+  và đăng bài vẫn bình thường.
+- Kiểm thử: `node tests/browser/attachments.cjs` (mới).
 
 ## V3.29 — Dán ảnh vào thông báo, hộp nhập liệu không tự đóng
 

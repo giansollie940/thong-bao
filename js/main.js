@@ -1,6 +1,8 @@
 // main.js — Điểm khởi động: gắn sự kiện, giao diện sáng/tối, hộp thoại, init().
 
 import {
+  addAttachmentFiles,
+  removeAttachmentDraft,
   copyAnnouncement,
   deleteAnnouncement,
   deleteWeek,
@@ -247,6 +249,16 @@ function initEvents() {
       $("#announcement-image-preview"),
       $("#announcement-image-alt")
     );
+  });
+
+  $("#announcement-files").addEventListener("change", event => {
+    addAttachmentFiles([...event.target.files]);
+    event.target.value = "";
+  });
+
+  $("#announcement-attachment-list").addEventListener("click", event => {
+    const button = event.target.closest("[data-remove-attachment]");
+    if (button) removeAttachmentDraft(button.dataset.removeAttachment);
   });
 
   $("#bulk-image").addEventListener("change", () => {

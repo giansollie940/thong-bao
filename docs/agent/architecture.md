@@ -83,6 +83,16 @@ Khi sửa sanitizer, kiểm lại các mục trong README: "HTML an toàn", "Tab
   không gắn vào cột `image_path`, nên xóa thông báo không xóa các ảnh này khỏi Storage.
   `editor.pendingUploads()` > 0 thì chặn lưu và chặn đổi chế độ Soạn thảo/HTML.
 
+## Tệp đính kèm
+
+- `js/attachments.js`: kiểm tra loại/dung lượng, tải lên bucket `announcement-files` (khóa ASCII, tên gốc
+  giữ trong dữ liệu), hiển thị danh sách. Dữ liệu ở cột `announcements.attachments` (jsonb mảng
+  `{path, name, size, type}`), tạo bằng `docs/sql/V3.30-attachments.sql`.
+- `state.attachmentsEnabled` (đặt trong `loadData`) cho biết cột đã có chưa; chưa có thì ẩn mục trong
+  form và không gửi trường `attachments`, để đăng bài không lỗi.
+- Loại MIME gửi lên Storage lấy theo đuôi tệp (không theo `file.type` của trình duyệt), phải khớp danh
+  sách `allowed_mime_types` của bucket trong file SQL.
+
 ## Lưu trên trình duyệt (localStorage)
 
 `weekly-board-view` (agenda | list), `weekly-board-read-v1` (các bài đã đọc), `weekly-board-theme`,
@@ -103,6 +113,8 @@ Mọi lệnh đọc/ghi đều bọc try/catch (chế độ ẩn danh).
     (bỏ qua bước này nếu máy đã có sẵn).
   - Muốn có ảnh chụp: `node tests/browser/smoke.cjs <thư-mục>`.
   - `editor-paste.cjs`: dán ảnh (kể cả ảnh lớn, tải chậm) và hộp nhập liệu không tự đóng.
+  - `attachments.cjs`: tệp đính kèm (người đọc, Admin thêm/bỏ/lưu/xóa, database chưa có cột).
+    `window.__FAKE_NO_ATTACHMENTS = true` giả lập database chưa chạy file SQL.
   - Dữ liệu giả xếp tuần theo ngày thật; vào Chủ nhật, "tuần hiện tại" của nó là tuần bắt đầu ngày mai,
     giống như app.
 - Khi refactor CSS hoặc cấu trúc mà không định đổi giao diện, cách kiểm chứng đã dùng là:

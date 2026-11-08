@@ -68,6 +68,8 @@ export const state = {
   viewMode: "agenda",
   readerId: null,
   readerOpen: false,
+  // announcements.attachments có trong database chưa (FEAT tệp đính kèm, V3.30).
+  attachmentsEnabled: false,
   schoolYearPreview: [],
   activeSchoolYear: "",
   yearFilter: "",

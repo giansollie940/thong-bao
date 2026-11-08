@@ -1,6 +1,9 @@
 // data.js — Tải dữ liệu từ Supabase (hoặc dữ liệu mẫu khi chưa cấu hình) và đăng nhập Admin.
 
 import {
+  detectAttachmentSupport
+} from "./attachments.js";
+import {
   DEFAULT_CATEGORIES
 } from "./categories.js";
 import {
@@ -104,6 +107,7 @@ export async function loadData() {
       state.weeks = weeks || [];
       state.announcements = items || [];
       state.categories = categories || [];
+      state.attachmentsEnabled = await detectAttachmentSupport(state.announcements);
     }
 
     const groups = getSchoolYearGroups();

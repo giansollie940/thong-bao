@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="announcement-form.css?v=3.26.0">
   <link rel="stylesheet" href="theme.css?v=3.27.0">
   <link rel="stylesheet" href="pet-companion.css?v=3.26.0">
-  <link rel="stylesheet" href="app-layout.css?v=3.28.0">
+  <link rel="stylesheet" href="app-layout.css?v=3.30.0">
 
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="./favicon.png" sizes="192x192">
@@ -706,6 +706,13 @@
           <input id="announcement-remove-image" type="checkbox">
           <label for="announcement-remove-image">Xóa ảnh hiện tại khi lưu</label>
         </div>
+
+        <div class="field field-span-2 hidden" id="announcement-attachments-field">
+          <label for="announcement-files">Tệp đính kèm <span class="optional-label">(không bắt buộc)</span></label>
+          <input id="announcement-files" type="file" multiple>
+          <p class="field-hint">PDF, Word, Excel, PowerPoint, ảnh, TXT/CSV · tối đa 10 MB mỗi tệp, 10 tệp mỗi thông báo.</p>
+          <ul class="attachment-editor-list" id="announcement-attachment-list" aria-live="polite"></ul>
+        </div>
         </section>
       </div>
 
@@ -1186,20 +1193,21 @@
   <script type="importmap">
   {
     "imports": {
-      "./js/core.js": "./js/core.js?v=3.29.0",
-      "./js/utils.js": "./js/utils.js?v=3.29.0",
-      "./js/weeks.js": "./js/weeks.js?v=3.29.0",
-      "./js/categories.js": "./js/categories.js?v=3.29.0",
-      "./js/images.js": "./js/images.js?v=3.29.0",
-      "./js/render.js": "./js/render.js?v=3.29.0",
-      "./js/agenda.js": "./js/agenda.js?v=3.29.0",
-      "./js/data.js": "./js/data.js?v=3.29.0",
-      "./js/admin.js": "./js/admin.js?v=3.29.0",
-      "./js/main.js": "./js/main.js?v=3.29.0"
+      "./js/core.js": "./js/core.js?v=3.30.0",
+      "./js/attachments.js": "./js/attachments.js?v=3.30.0",
+      "./js/utils.js": "./js/utils.js?v=3.30.0",
+      "./js/weeks.js": "./js/weeks.js?v=3.30.0",
+      "./js/categories.js": "./js/categories.js?v=3.30.0",
+      "./js/images.js": "./js/images.js?v=3.30.0",
+      "./js/render.js": "./js/render.js?v=3.30.0",
+      "./js/agenda.js": "./js/agenda.js?v=3.30.0",
+      "./js/data.js": "./js/data.js?v=3.30.0",
+      "./js/admin.js": "./js/admin.js?v=3.30.0",
+      "./js/main.js": "./js/main.js?v=3.30.0"
     }
   }
   </script>
-  <script type="module" src="./js/main.js?v=3.29.0"></script>
+  <script type="module" src="./js/main.js?v=3.30.0"></script>
   <script src="pet-companion.js?v=3.26.0"></script>
 </body>
 </html>

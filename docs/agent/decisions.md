@@ -18,6 +18,7 @@ trình bày lý do và hỏi người dùng trước. Chi tiết của từng ph
 | V3.27.2 | "Mới đăng" giữ bài trong **24 giờ** (ban đầu là 3 ngày). | Agent tự đề xuất và đã báo người dùng: với 3 ngày, bài đăng từ thứ Hai làm trống các nhóm ngày. Người dùng có thể muốn đổi lại; hằng số là `FRESH_POST_MS` trong `js/weeks.js`. |
 | V3.28 | Lịch tuần có **banner gọn** (khoảng 110px) với hình trường, ‹ Tuần ›, tóm tắt tuần, tiến độ. Không dùng banner đầy đủ. | "tôi muốn vẫn còn banner hình phía trên trong giao diện theo tuần". Người dùng chọn "Banner gọn (Khuyên dùng)" để danh sách không bị đẩy xuống. |
 | V3.29 | Dán ảnh trực tiếp vào nội dung thông báo (tải lên bucket ảnh, tự thu nhỏ ảnh lớn). Hộp có form chỉ đóng bằng Hủy, × hoặc Lưu (chặn cả bấm ra ngoài lẫn Esc). | "cho phép dán ảnh trực tiếp vào thông báo", "bấm hủy hoặc lưu thông báo thì nó mới đóng tránh trường hợp click ra ngoài thì bong bóng đó đóng lại liền". Chặn Esc là agent tự thêm cho đúng ý "chỉ Hủy hoặc Lưu". |
+| V3.30 | Tệp đính kèm hiện thành **danh sách dưới nội dung** (không chèn link vào nội dung); nhận tài liệu phổ biến (PDF, Word, Excel, PowerPoint, ảnh, TXT/CSV), **10 MB/tệp**, 10 tệp. Xóa thông báo thì xóa tệp. | "thêm tính năng đính kèm tài liệu đa dạng, không chỉ là ảnh". Người dùng chọn cả ba phương án "(Khuyên dùng)". |
 
 ## Nguyên tắc rút ra
 
