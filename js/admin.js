@@ -21,7 +21,8 @@ import {
   getImagePublicUrl,
   removeStorageImage,
   showImagePreview,
-  uploadAnnouncementImage
+  uploadAnnouncementImage,
+  uploadInlineImage
 } from "./images.js";
 import {
   addDays,
@@ -55,7 +56,9 @@ export function initEditors() {
     window.WeeklyRichEditor?.create({
       root: $("#announcement-rich-editor"),
       renderer: contentRenderer,
-      onToast: showToast
+      onToast: showToast,
+      // Dán ảnh (Ctrl+V) vào nội dung: tải lên bucket ảnh thông báo rồi chèn <img>.
+      onImagePaste: uploadInlineImage
     });
 
   if (!announcementEditor) {
@@ -182,6 +185,11 @@ export async function saveAnnouncement(event) {
 
   if (!client || !isAdmin()) {
     setMessage(el.announcementMessage, "Bạn chưa đăng nhập quản trị.");
+    return;
+  }
+
+  if (announcementEditor.pendingUploads() > 0) {
+    setMessage(el.announcementMessage, "Ảnh vừa dán đang tải lên, chờ vài giây rồi bấm lưu lại.");
     return;
   }
 

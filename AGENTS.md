@@ -44,6 +44,7 @@ hiện tại, việc còn mở và lịch sử làm việc với người dùng.
    node --test tests/agenda.test.cjs     # logic Lịch tuần, không cần trình duyệt
    node tests/browser/smoke.cjs          # Lịch tuần + Danh sách ở 1440px/390px, có Supabase giả
    node tests/browser/admin-flow.cjs     # đăng nhập, đăng/sửa/xóa, tuần, chuyên mục, năm học
+   node tests/browser/editor-paste.cjs   # dán ảnh vào nội dung, hộp nhập liệu không tự đóng
    ```
 4. Tăng phiên bản (`?v=` và tiêu đề README). Thêm một mục `## V…` ngắn vào README và tạo
    `docs/qa/QA-V….md` liệt kê những gì đã kiểm.

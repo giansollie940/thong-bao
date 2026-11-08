@@ -1,4 +1,4 @@
-# Bảng Thông Báo Theo Tuần — V3.28
+# Bảng Thông Báo Theo Tuần — V3.29
 
 Ứng dụng web tĩnh (GitHub Pages) hiển thị thông báo của trường theo tuần,
 dữ liệu lưu trên Supabase. Giao diện mặc định là **Lịch tuần**: tuần chia theo ngày,
@@ -455,6 +455,19 @@ Chọn hướng **Lịch tuần theo ngày + khung đọc** sau khi so sánh hai
   (đăng nhập, đăng/sửa/xóa, nhập nhanh, tuần, chuyên mục, năm học, đăng xuất) cho
   cùng kết quả và cùng thao tác ghi như bản trước khi tách.
 
+
+## V3.29 — Dán ảnh vào thông báo, hộp nhập liệu không tự đóng
+
+- **Dán ảnh trực tiếp** (Ctrl+V / ⌘V) vào nội dung thông báo, ở cả chế độ Soạn thảo lẫn HTML:
+  ảnh được tải lên bucket `announcement-images` rồi chèn đúng chỗ con trỏ. Trong lúc tải hiện ô
+  "Đang tải ảnh…"; bấm Lưu khi ảnh chưa tải xong sẽ được nhắc chờ.
+- Ảnh lớn (ví dụ ảnh chụp màn hình) được thu về tối đa 1600px chiều ngang và đổi sang WebP trước khi
+  tải lên: ảnh chụp 5 MB còn khoảng 0,9 MB. Ảnh nhỏ giữ nguyên.
+- Dán đoạn văn có kèm ảnh (từ Word, trang web) vẫn dán như trước; chỉ ảnh đơn thuần mới được tải lên.
+- **Hộp nhập liệu** (đăng/sửa thông báo, tuần, nhập nhanh, năm học, chuyên mục, đăng nhập) chỉ đóng khi
+  bấm **Hủy**, **×** hoặc **Lưu**; bấm ra ngoài hay nhấn Esc không còn làm mất phần đang nhập.
+  Hộp chỉ để xem (ảnh, lưu trữ) vẫn đóng khi bấm ra ngoài.
+- Kiểm thử: `node tests/browser/editor-paste.cjs` (mới).
 
 ## V3.28 — Banner gọn trên Lịch tuần
 

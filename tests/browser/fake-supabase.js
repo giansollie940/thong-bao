@@ -5,7 +5,10 @@
   const iso = d => d.toISOString().slice(0, 10);
   const weeks = [];
   const now = new Date(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date()) + "T00:00:00Z");
-  const monday = new Date(now.getTime() - ((now.getUTCDay() + 6) % 7) * 864e5);
+  // On Sunday the app already features the coming week, so the fake's "current" week starts tomorrow.
+  const monday = now.getUTCDay() === 0
+    ? new Date(now.getTime() + 864e5)
+    : new Date(now.getTime() - ((now.getUTCDay() + 6) % 7) * 864e5);
   const start = new Date(monday.getTime() - 3 * 7 * 864e5);
   const rel = days => iso(new Date(monday.getTime() + days * 864e5));
   for (let i = 0; i < 10; i++) {
@@ -46,6 +49,9 @@
     from: t => q(t),
     auth: { signInWithPassword: async () => ({ data: { user: { id: "u", email: "a@b" }, session: {} }, error: null }), signOut: async () => ({ error: null }), getSession: async () => ({ data: { session: window.__FAKE_ADMIN ? { user: { id: "u", email: "a@b" } } : null }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) },
-    storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: "" } }), upload: async () => ({ data: {}, error: null }), remove: async () => ({ error: null }) }) }
+    storage: { from: bucket => ({
+      getPublicUrl: path => ({ data: { publicUrl: `https://fake.supabase.co/storage/v1/object/public/${bucket}/${path}` } }),
+      upload: async (path, file) => { await new Promise(resolve => setTimeout(resolve, window.__FAKE_UPLOAD_DELAY || 0)); (window.__FAKE_WRITES ||= []).push({ table: "storage:" + bucket, op: "upload", payload: { path, type: file?.type, size: file?.size } }); return { data: { path }, error: null }; },
+      remove: async () => ({ error: null }) }) }
   }) };
 })();

@@ -17,6 +17,7 @@ trình bày lý do và hỏi người dùng trước. Chi tiết của từng ph
 | V3.27.2 | Tuần đang diễn ra: **hôm nay lên đầu**, rồi các ngày sắp tới, rồi các ngày đã qua. | "hôm nay là thứ 4 thì thông báo của thứ tư phải xếp đầu chứ" |
 | V3.27.2 | "Mới đăng" giữ bài trong **24 giờ** (ban đầu là 3 ngày). | Agent tự đề xuất và đã báo người dùng: với 3 ngày, bài đăng từ thứ Hai làm trống các nhóm ngày. Người dùng có thể muốn đổi lại; hằng số là `FRESH_POST_MS` trong `js/weeks.js`. |
 | V3.28 | Lịch tuần có **banner gọn** (khoảng 110px) với hình trường, ‹ Tuần ›, tóm tắt tuần, tiến độ. Không dùng banner đầy đủ. | "tôi muốn vẫn còn banner hình phía trên trong giao diện theo tuần". Người dùng chọn "Banner gọn (Khuyên dùng)" để danh sách không bị đẩy xuống. |
+| V3.29 | Dán ảnh trực tiếp vào nội dung thông báo (tải lên bucket ảnh, tự thu nhỏ ảnh lớn). Hộp có form chỉ đóng bằng Hủy, × hoặc Lưu (chặn cả bấm ra ngoài lẫn Esc). | "cho phép dán ảnh trực tiếp vào thông báo", "bấm hủy hoặc lưu thông báo thì nó mới đóng tránh trường hợp click ra ngoài thì bong bóng đó đóng lại liền". Chặn Esc là agent tự thêm cho đúng ý "chỉ Hủy hoặc Lưu". |
 
 ## Nguyên tắc rút ra
 

@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  function create({ root, renderer, onToast = () => {} } = {}) {
+  // onImagePaste(file) tải ảnh lên và trả về địa chỉ ảnh; không truyền thì dán ảnh như cũ.
+  function create({ root, renderer, onToast = () => {}, onImagePaste = null } = {}) {
     if (!root || !renderer) {
       throw new Error("Thiếu root hoặc content renderer.");
     }
@@ -38,6 +39,93 @@
     };
 
     const sanitize = value => renderer.sanitizeHtml(value || "");
+
+    // ---- Dán ảnh (ảnh chụp màn hình, ảnh sao chép) ----
+    let pendingImageUploads = 0;
+
+    function clipboardImages(clipboard) {
+      if (!onImagePaste) return [];
+      return [...(clipboard?.files || [])].filter(file => file.type.startsWith("image/"));
+    }
+
+    // Đoạn văn bản có kèm ảnh (Word, trang web) vẫn dán như HTML; chỉ ảnh đơn thuần mới tải lên.
+    function htmlHasText(html) {
+      if (!html) return false;
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      return Boolean(doc.body.textContent.trim());
+    }
+
+    function updateUploadStatus() {
+      root.classList.toggle("is-uploading-image", pendingImageUploads > 0);
+      if (pendingImageUploads > 0) {
+        status.textContent = `Đang tải ${pendingImageUploads} ảnh…`;
+      } else {
+        status.textContent = currentView === "visual" ? "Soạn thảo trực quan" : "HTML an toàn";
+      }
+    }
+
+    async function uploadPastedImage(file) {
+      pendingImageUploads += 1;
+      updateUploadStatus();
+      try {
+        return await onImagePaste(file);
+      } catch (error) {
+        onToast(error?.message || "Không dán được ảnh.");
+        return "";
+      } finally {
+        pendingImageUploads -= 1;
+        updateUploadStatus();
+      }
+    }
+
+    function pasteVisualImages(files) {
+      const range = currentVisualRange();
+      if (!range) return;
+      range.deleteContents();
+
+      for (const file of files) {
+        const holder = document.createElement("span");
+        holder.className = "editor-image-uploading";
+        holder.contentEditable = "false";
+        holder.textContent = "Đang tải ảnh…";
+        range.insertNode(holder);
+        range.setStartAfter(holder);
+        range.collapse(true);
+        placeCaretAfter(holder);
+
+        uploadPastedImage(file).then(url => {
+          // Hộp đã đóng hoặc nội dung đã được thay trong lúc tải: bỏ qua.
+          if (!holder.isConnected) return;
+          if (url) {
+            const image = document.createElement("img");
+            image.src = url;
+            image.alt = "";
+            holder.replaceWith(image);
+          } else {
+            holder.remove();
+          }
+          if (currentView === "visual") syncVisualToSource();
+        });
+      }
+    }
+
+    function pasteSourceImages(files) {
+      const start = source.selectionStart;
+      const end = source.selectionEnd;
+      source.setRangeText("", start, end, "end");
+
+      Promise.all(files.map(uploadPastedImage)).then(urls => {
+        const tags = urls.filter(Boolean).map(url => `<img src="${url.replace(/"/g, "&quot;")}" alt="">`).join("\n");
+        if (!tags) return;
+        const at = Math.min(start, source.value.length);
+        source.setRangeText(tags, at, at, "end");
+        source.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    }
+
+    function pendingUploads() {
+      return pendingImageUploads;
+    }
 
     function updateLineNumbers() {
       const count = Math.max(1, source.value.split("\n").length);
@@ -970,6 +1058,10 @@
 
     function setView(view, { focus = true } = {}) {
       if (!["visual", "html"].includes(view)) return;
+      if (view !== currentView && pendingImageUploads > 0) {
+        onToast("Chờ ảnh tải xong rồi hãy đổi chế độ soạn thảo.");
+        return;
+      }
 
       if (currentView === "visual" && view === "html") {
         syncVisualToSource();
@@ -2427,6 +2519,13 @@
         clipboard?.getData("text/html") || "";
       const pastedText =
         clipboard?.getData("text/plain") || "";
+      const images = clipboardImages(clipboard);
+
+      if (images.length && !htmlHasText(pastedHtml)) {
+        pasteVisualImages(images);
+        return;
+      }
+
       const range = currentVisualRange();
 
       if (!range) return;
@@ -2615,6 +2714,12 @@
       "paste",
       pasteVisual
     );
+    source.addEventListener("paste", event => {
+      const images = clipboardImages(event.clipboardData);
+      if (!images.length || event.clipboardData.getData("text/plain")) return;
+      event.preventDefault();
+      pasteSourceImages(images);
+    });
     visual.addEventListener(
       "keydown",
       handleVisualKeydown
@@ -2741,6 +2846,7 @@
       clearFormatting,
       captureSelection,
       restoreSelection,
+      pendingUploads,
       focus: () => {
         if (currentView === "html") {
           source.focus();

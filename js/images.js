@@ -67,6 +67,47 @@ export async function uploadAnnouncementImage(file) {
   return path;
 }
 
+// Ảnh dán vào nội dung (thường là ảnh chụp màn hình PNG rất nặng): thu về tối đa
+// 1600px chiều ngang và đổi sang WebP/JPEG khi cần, để vừa giới hạn 5 MB và tải nhanh.
+const INLINE_MAX_WIDTH = 1600;
+const INLINE_KEEP_BYTES = 1.5 * 1024 * 1024;
+
+async function prepareInlineImage(file) {
+  const keepAsIs = ["image/jpeg", "image/png", "image/webp"].includes(file.type) && file.size <= INLINE_KEEP_BYTES;
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) {
+    if (keepAsIs) return file;
+    throw new Error("Không đọc được ảnh vừa dán.");
+  }
+
+  const scale = Math.min(1, INLINE_MAX_WIDTH / bitmap.width);
+  if (keepAsIs && scale === 1) {
+    bitmap.close?.();
+    return file;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+
+  for (const type of ["image/webp", "image/jpeg"]) {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, type, 0.85));
+    if (blob?.type === type) return new File([blob], `pasted.${imageExtension({ type })}`, { type });
+  }
+  throw new Error("Không nén được ảnh vừa dán.");
+}
+
+// Tải ảnh dán vào nội dung lên cùng bucket ảnh thông báo; trả về địa chỉ công khai.
+export async function uploadInlineImage(file) {
+  if (!client) throw new Error("Chưa kết nối Supabase nên chưa dán ảnh được.");
+  const path = await uploadAnnouncementImage(await prepareInlineImage(file));
+  const url = getImagePublicUrl(path);
+  if (!url) throw new Error("Không lấy được địa chỉ ảnh sau khi tải lên.");
+  return url;
+}
+
 export async function removeStorageImage(path) {
   if (!client || !path) return;
   const { error } = await client.storage.from(IMAGE_BUCKET).remove([path]);
